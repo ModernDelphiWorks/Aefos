@@ -45,6 +45,12 @@ depurador), opera o Form Designer e mais.
 - 🎨 Fluxo **Design ↔ Code** — adicione um componente e veja a IDE virar Design; adicione
   código e veja virar Code.
 
+## Telas
+
+| 💬 Chat (modo Agent) | 🖥️ Terminal |
+|:---:|:---:|
+| ![Aefos Chat](assets/chat.png) | ![Aefos Terminal](assets/terminal.png) |
+
 ## Documentação
 
 📖 **[Manual do Usuário](https://moderndelphiworks.github.io/Aefos/)** (PT-BR / EN) — instalação, primeiros passos,

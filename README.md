@@ -52,6 +52,12 @@ Designer, and more.
 - 🎨 **Design ↔ Code** flow — add a component and watch the IDE flip to Design; add
   code and watch it flip to Code.
 
+## Screenshots
+
+| 💬 Chat (Agent mode) | 🖥️ Terminal |
+|:---:|:---:|
+| ![Aefos Chat](assets/chat.png) | ![Aefos Terminal](assets/terminal.png) |
+
 ## Documentation
 
 📖 **[User Manual](https://moderndelphiworks.github.io/Aefos/)** (PT-BR / EN) — install, first steps, Chat, Terminal,

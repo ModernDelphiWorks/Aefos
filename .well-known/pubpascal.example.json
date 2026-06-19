@@ -1,0 +1,13 @@
+{
+  "$comment": "EXAMPLE / TEMPLATE — not the live claim. When you publish Aefos on PubPascal, the portal generates the real manifest; save it as .well-known/pubpascal.json (drop the .example) with the real 'verify' nonce it gives you. This file is in a PUBLIC repo, so it must contain NO secrets — only public identifiers. Ownership is proven by the fact that only someone with write access to this repo can commit the file with the matching nonce.",
+  "schema": "https://www.pubpascal.dev/schema/package-manifest-1.json",
+  "portal": "https://www.pubpascal.dev",
+  "package": "aefos",
+  "packageUrl": "https://www.pubpascal.dev/packages/aefos",
+  "repository": "https://github.com/ModernDelphiWorks/Aefos",
+  "badge": "https://www.pubpascal.dev/badge/aefos/cra.svg",
+  "sbom": "sbom/aefos-0.17.0.cdx.json",
+  "security": "SECURITY.md",
+  "changelog": "CHANGELOG.md",
+  "verify": "REPLACE_WITH_PORTAL_NONCE"
+}

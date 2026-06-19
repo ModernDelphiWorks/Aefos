@@ -12,7 +12,7 @@ que você já usa (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 [![Versão](https://img.shields.io/badge/vers%C3%A3o-0.17.0--beta-orange)](CHANGELOG.md)
 [![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6)](#requisitos)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-EULA%20%E2%80%94%20Community%20gr%C3%A1tis-blue)](LICENSE)
-[![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Pol%C3%ADtica%20de%20Seguran%C3%A7a-success)](sbom/)
+[![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Pol%C3%ADtica%20de%20Seguran%C3%A7a-success)](https://www.pubpascal.dev/packages/aefos)
 
 [⬇️ Download](../../releases) · [📖 Manual do Usuário](https://moderndelphiworks.github.io/Aefos/) · [🐛 Reportar bug](../../issues/new/choose) · [🔒 Segurança](SECURITY.md)
 

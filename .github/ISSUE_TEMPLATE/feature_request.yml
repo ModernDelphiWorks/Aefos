@@ -1,0 +1,46 @@
+name: "💡 Feature request"
+description: "Suggest an idea or improvement for Aefos AI"
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! 💡
+
+        > ⚠️ **This issue is PUBLIC and permanent.** Do not include secrets,
+        > personal data, or proprietary code. By submitting, you accept the
+        > [Submission Terms](../blob/main/TERMS-ISSUES.md), including the feedback
+        > license (we may implement your idea without obligation to you).
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues and discussions for a similar request.
+          required: true
+        - label: I agree to the Submission Terms (including the feedback license).
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the pain point or use case.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

@@ -1,0 +1,13 @@
+# A global gitignore (~/.gitignore_global) may exclude `docs/` — re-include it here
+# so the user manual is tracked in this public repo.
+!/docs/
+!/docs/manual/
+!/docs/manual/en/
+
+# Manual — generated HTML (build artifact; CI rebuilds for Pages)
+docs/manual/_html/
+docs/manual/_html-en/
+
+# OS / editor noise
+Thumbs.db
+.DS_Store

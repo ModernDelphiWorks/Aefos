@@ -1,0 +1,140 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:9f4b6d2a-7c31-4e08-9a5b-aefos0170sbom",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-06-19T12:00:00Z",
+    "lifecycles": [{ "phase": "build" }],
+    "tools": [
+      {
+        "vendor": "Aefos AI",
+        "name": "aefos-sbom (hand-authored from THIRD-PARTY-NOTICES)",
+        "version": "1.0"
+      }
+    ],
+    "authors": [
+      { "name": "TecSis Info", "email": "tecsisinfo.com.br@gmail.com" }
+    ],
+    "supplier": {
+      "name": "Aefos AI (TecSis Info)",
+      "url": ["https://www.pubpascal.dev"]
+    },
+    "component": {
+      "type": "application",
+      "bom-ref": "aefos-ai@0.17.0",
+      "name": "Aefos AI",
+      "version": "0.17.0",
+      "description": "RAD Studio (Delphi 13) plugin suite: in-IDE AI Chat + Terminal + in-process MCP server. A harness for external AI CLIs (Claude Code, Codex, GitHub Copilot CLI, Gemini). Bundles no AI model and manages no credentials.",
+      "supplier": {
+        "name": "Aefos AI (TecSis Info)",
+        "url": ["https://www.pubpascal.dev"]
+      },
+      "licenses": [
+        { "license": { "name": "Aefos AI EULA (proprietary, Community free)" } }
+      ],
+      "externalReferences": [
+        { "type": "website", "url": "https://www.pubpascal.dev" },
+        { "type": "license", "url": "LICENSE" }
+      ],
+      "properties": [
+        { "name": "aefos:platform", "value": "Windows" },
+        { "name": "aefos:ide", "value": "RAD Studio Delphi 13 (BDS 37.0)" }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "bom-ref": "marked@14.1.4",
+      "name": "marked",
+      "version": "14.1.4",
+      "description": "Markdown parser/renderer (embedded JS) used by the Aefos Chat output panel.",
+      "scope": "required",
+      "purl": "pkg:npm/marked@14.1.4",
+      "licenses": [{ "license": { "id": "MIT" } }],
+      "externalReferences": [
+        { "type": "website", "url": "https://github.com/markedjs/marked" },
+        { "type": "vcs", "url": "https://github.com/markedjs/marked" }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "highlight.js@11.11.1",
+      "name": "highlight.js",
+      "version": "11.11.1",
+      "description": "Syntax highlighter (embedded JS + CSS theme) used by the Aefos Chat output panel.",
+      "scope": "required",
+      "purl": "pkg:npm/highlight.js@11.11.1",
+      "licenses": [{ "license": { "id": "BSD-3-Clause" } }],
+      "externalReferences": [
+        { "type": "website", "url": "https://highlightjs.org" },
+        { "type": "vcs", "url": "https://github.com/highlightjs/highlight.js" }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "libvterm@934bc2f",
+      "name": "libvterm",
+      "version": "0.0.0+git.934bc2fbf21800ac3458a499df8820ca5fb45fd3",
+      "description": "Terminal (VTerm) emulation layer, vendored and compiled into the Aefos Terminal. Fork of leonerd's libvterm.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "MIT" } }],
+      "externalReferences": [
+        { "type": "website", "url": "https://www.leonerd.org.uk/code/libvterm" },
+        { "type": "vcs", "url": "https://github.com/neovim/libvterm" }
+      ],
+      "properties": [
+        { "name": "aefos:upstream-commit", "value": "934bc2fbf21800ac3458a499df8820ca5fb45fd3" }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "sqlite",
+      "name": "SQLite",
+      "description": "Embedded SQL database engine, statically linked via the Embarcadero FireDAC static SQLite wrapper (no sqlite3.dll shipped).",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "blessing" } }],
+      "externalReferences": [
+        { "type": "website", "url": "https://www.sqlite.org" }
+      ],
+      "properties": [
+        { "name": "aefos:linkage", "value": "static (FireDAC)" },
+        { "name": "aefos:version-todo", "value": "Confirm the SQLite version bundled with RAD Studio Delphi 13 FireDAC static and set component.version (purl: pkg:generic/sqlite@<ver>)." }
+      ]
+    },
+    {
+      "type": "data",
+      "bom-ref": "caskaydiacove-nerd-font",
+      "name": "CaskaydiaCove Nerd Font (Cascadia Code)",
+      "description": "Default monospaced glyph font shipped with the Aefos Terminal. Nerd Fonts-patched variant of Microsoft Cascadia Code.",
+      "scope": "required",
+      "licenses": [{ "license": { "id": "OFL-1.1" } }],
+      "externalReferences": [
+        { "type": "website", "url": "https://github.com/microsoft/cascadia-code" },
+        { "type": "other", "url": "https://github.com/ryanoasis/nerd-fonts" }
+      ],
+      "properties": [
+        { "name": "aefos:asset", "value": "CaskaydiaCoveNerdFontMono-Regular.ttf" },
+        { "name": "aefos:version-todo", "value": "Confirm the Cascadia Code / CaskaydiaCove release version from the font name table and set component.version." }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "aefos-ai@0.17.0",
+      "dependsOn": [
+        "marked@14.1.4",
+        "highlight.js@11.11.1",
+        "libvterm@934bc2f",
+        "sqlite",
+        "caskaydiacove-nerd-font"
+      ]
+    },
+    { "ref": "marked@14.1.4", "dependsOn": [] },
+    { "ref": "highlight.js@11.11.1", "dependsOn": [] },
+    { "ref": "libvterm@934bc2f", "dependsOn": [] },
+    { "ref": "sqlite", "dependsOn": [] },
+    { "ref": "caskaydiacove-nerd-font", "dependsOn": [] }
+  ]
+}

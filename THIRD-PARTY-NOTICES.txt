@@ -1,0 +1,280 @@
+===============================================================================
+ AEFOS AI — THIRD-PARTY NOTICES
+===============================================================================
+
+The Aefos AI software ("Software") is proprietary and distributed in binary
+form. It includes, embeds, statically links, or otherwise incorporates the
+third-party components listed below. Each such component remains subject to its
+own license, reproduced in full in this file. Nothing in the Aefos AI End User
+License Agreement (EULA) limits the rights granted to you under these
+third-party licenses.
+
+Components NOT bundled (external dependencies the Software detects or invokes but
+does not redistribute) are listed at the end for transparency.
+
+Last reviewed: June 2026.
+
+-------------------------------------------------------------------------------
+ INDEX
+-------------------------------------------------------------------------------
+ 1. libvterm ......................... MIT License
+ 2. marked (v14.1.4) ................. MIT License
+ 3. highlight.js (v11.11.1) .......... BSD 3-Clause License
+ 4. Cascadia Code / CaskaydiaCove
+    Nerd Font ........................ SIL Open Font License 1.1
+ 5. SQLite ........................... Public Domain
+ -- External (not bundled): Microsoft WebView2 Runtime; Embarcadero RAD Studio
+    runtime (RTL/VCL/FireDAC); user-supplied AI command-line tools.
+
+
+===============================================================================
+ 1. libvterm
+===============================================================================
+Used by: the Aefos Terminal (terminal emulation layer).
+Homepage: https://www.leonerd.org.uk/code/libvterm
+Incorporation: source vendored under source/terminal/ThirdParty/libvterm and
+compiled into the Aefos.OTA.Terminal package.
+
+    The MIT License
+
+    Copyright (c) 2008 Paul Evans <leonerd@leonerd.org.uk>
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+
+
+===============================================================================
+ 2. marked (v14.1.4)
+===============================================================================
+Used by: the Aefos Chat output panel (Markdown rendering).
+Homepage: https://github.com/markedjs/marked
+Incorporation: the minified JavaScript bundle is embedded as a string constant
+in the Aefos.OTA.Chat package and executed inside the chat WebView.
+
+    MIT License
+
+    Copyright (c) 2018+, MarkedJS (https://github.com/markedjs/)
+    Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+
+
+===============================================================================
+ 3. highlight.js (v11.11.1)
+===============================================================================
+Used by: the Aefos Chat output panel (syntax highlighting).
+Homepage: https://github.com/highlightjs/highlight.js
+Incorporation: the minified JavaScript bundle and CSS theme are embedded as
+string constants in the Aefos.OTA.Chat package and executed inside the chat
+WebView.
+
+    BSD 3-Clause License
+
+    Copyright (c) 2006, Ivan Sagalaev.
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this
+      list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above copyright notice,
+      this list of conditions and the following disclaimer in the documentation
+      and/or other materials provided with the distribution.
+
+    * Neither the name of the copyright holder nor the names of its contributors
+      may be used to endorse or promote products derived from this software
+      without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+    ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+
+
+===============================================================================
+ 4. Cascadia Code / CaskaydiaCove Nerd Font
+===============================================================================
+Used by: the Aefos Terminal (default monospaced glyph font).
+Homepage: https://github.com/microsoft/cascadia-code
+Nerd Fonts patch: https://github.com/ryanoasis/nerd-fonts
+Incorporation: the font file (CaskaydiaCoveNerdFontMono-Regular.ttf) is bundled
+with the Software. "CaskaydiaCove" is the Nerd Fonts-patched variant of
+Microsoft's "Cascadia Code", which is licensed under the SIL Open Font License
+1.1. The Nerd Fonts patcher tooling is itself MIT-licensed
+(Copyright (c) 2014, Ryan L McIntyre); the resulting font remains under the OFL.
+
+    Copyright (c) 2019 - Present, Microsoft Corporation
+    (Cascadia Code), with Reserved Font Name "Cascadia Code" and "Cascadia
+    Mono". Patched glyphs incorporated by the Nerd Fonts project.
+
+    This Font Software is licensed under the SIL Open Font License, Version 1.1.
+
+    -----------------------------------------------------------
+    SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+    -----------------------------------------------------------
+
+    PREAMBLE
+    The goals of the Open Font License (OFL) are to stimulate worldwide
+    development of collaborative font projects, to support the font creation
+    efforts of academic and linguistic communities, and to provide a free and
+    open framework in which fonts may be shared and improved in partnership
+    with others.
+
+    The OFL allows the licensed fonts to be used, studied, modified and
+    redistributed freely as long as they are not sold by themselves. The fonts,
+    including any derivative works, can be bundled, embedded, redistributed
+    and/or sold with any software provided that any reserved names are not used
+    by derivative works. The fonts and derivatives, however, cannot be released
+    under any other type of license. The requirement for fonts to remain under
+    this license does not apply to any document created using the fonts or their
+    derivatives.
+
+    DEFINITIONS
+    "Font Software" refers to the set of files released by the Copyright
+    Holder(s) under this license and clearly marked as such. This may include
+    source files, build scripts and documentation.
+
+    "Reserved Font Name" refers to any names specified as such after the
+    copyright statement(s).
+
+    "Original Version" refers to the collection of Font Software components as
+    distributed by the Copyright Holder(s).
+
+    "Modified Version" refers to any derivative made by adding to, deleting, or
+    substituting -- in part or in whole -- any of the components of the Original
+    Version, by changing formats or by porting the Font Software to a new
+    environment.
+
+    "Author" refers to any designer, engineer, programmer, technical writer or
+    other person who contributed to the Font Software.
+
+    PERMISSION & CONDITIONS
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of the Font Software, to use, study, copy, merge, embed, modify, redistribute,
+    and sell modified and unmodified copies of the Font Software, subject to the
+    following conditions:
+
+    1) Neither the Font Software nor any of its individual components, in
+    Original or Modified Versions, may be sold by itself.
+
+    2) Original or Modified Versions of the Font Software may be bundled,
+    redistributed and/or sold with any software, provided that each copy
+    contains the above copyright notice and this license. These can be included
+    either as stand-alone text files, human-readable headers or in the
+    appropriate machine-readable metadata fields within text or binary files as
+    long as those fields can be easily viewed by the user.
+
+    3) No Modified Version of the Font Software may use the Reserved Font Name(s)
+    unless explicit written permission is granted by the corresponding Copyright
+    Holder. This restriction only applies to the primary font name as presented
+    to the users.
+
+    4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font
+    Software shall not be used to promote, endorse or advertise any Modified
+    Version, except to acknowledge the contribution(s) of the Copyright Holder(s)
+    and the Author(s) or with their explicit written permission.
+
+    5) The Font Software, modified or unmodified, in part or in whole, must be
+    distributed entirely under this license, and must not be distributed under
+    any other license. The requirement for fonts to remain under this license
+    does not apply to any document created using the Font Software.
+
+    TERMINATION
+    This license becomes null and void if any of the above conditions are not
+    met.
+
+    DISCLAIMER
+    THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF COPYRIGHT, PATENT,
+    TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE
+    FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, INCLUDING ANY GENERAL, SPECIAL,
+    INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, WHETHER IN AN ACTION OF
+    CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF THE USE OR INABILITY TO USE
+    THE FONT SOFTWARE OR FROM OTHER DEALINGS IN THE FONT SOFTWARE.
+
+
+===============================================================================
+ 5. SQLite
+===============================================================================
+Used by: the Aefos.Data persistence foundation (chat sessions, audit store).
+Homepage: https://www.sqlite.org
+Incorporation: statically linked via the Embarcadero FireDAC static SQLite
+wrapper. No sqlite3.dll is shipped.
+
+    SQLite is in the Public Domain.
+
+    The author(s) disclaim copyright to the SQLite source code. In place of a
+    legal notice, here is a blessing:
+
+        May you do good and not evil.
+        May you find forgiveness for yourself and forgive others.
+        May you share freely, never taking more than you give.
+
+    No attribution is legally required for public-domain code; it is provided
+    here for transparency.
+
+
+===============================================================================
+ EXTERNAL DEPENDENCIES (NOT bundled with the Software)
+===============================================================================
+The following are required or invoked by the Software at runtime but are NOT
+redistributed by Aefos AI. They remain governed solely by their own terms.
+
+ * Microsoft Edge WebView2 Runtime — detected and, where missing, the user is
+   pointed at Microsoft's official installer. Not redistributed.
+   https://aka.ms/webview2
+
+ * Embarcadero RAD Studio runtime packages (RTL, VCL, FireDAC, ToolsAPI/IDE) —
+   present on the target machine as part of the user's own RAD Studio
+   installation. Not redistributed.
+
+ * User-supplied AI command-line tools (e.g. Claude Code, Codex, GitHub Copilot
+   CLI, Gemini) — bring-your-own. Not bundled; not credentialed. Your use of any
+   such tool, and any content you send to it, is governed by that tool/provider's
+   own terms and privacy policy. See the Aefos AI EULA, Section 6.
+
+-------------------------------------------------------------------------------
+ To report an omission or correction in these notices, contact
+ tecsisinfo.com.br@gmail.com.
+-------------------------------------------------------------------------------

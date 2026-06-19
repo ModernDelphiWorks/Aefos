@@ -1,0 +1,91 @@
+name: Deploy manual to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/manual/**"
+      - "LICENSE"
+      - "PRIVACY*.md"
+      - "THIRD-PARTY-NOTICES.txt"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install builder deps
+        run: pip install markdown
+
+      - name: Build the manual (PT + EN)
+        run: |
+          python docs/manual/build-html.py pt
+          python docs/manual/build-html.py en
+
+      - name: Assemble the published site
+        run: |
+          set -e
+          mkdir -p _site
+          cp -r docs/manual/_html    _site/pt
+          cp -r docs/manual/_html-en _site/en
+          # Legal documents the manual links to (kept at site root).
+          cp LICENSE PRIVACY.md PRIVACY.pt-BR.md THIRD-PARTY-NOTICES.txt _site/ || true
+          # Fix cross-language switcher (folders renamed _html -> pt, _html-en -> en).
+          sed -i 's|../_html-en/|../en/|g' _site/pt/*.html
+          sed -i 's|../_html/|../pt/|g'    _site/en/*.html
+          # Legal links escape one level too far now that pages live in pt/ and en/.
+          sed -i 's|\.\./\.\./\.\./|../|g' _site/pt/*.html _site/en/*.html
+          # Disable Jekyll so nothing is dropped.
+          touch _site/.nojekyll
+          # Landing page.
+          cat > _site/index.html <<'HTML'
+          <!doctype html><html lang="en"><head><meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1">
+          <title>Aefos AI — User Manual</title>
+          <style>
+          body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+          background:#0d1117;color:#c9d1d9;font:16px/1.6 -apple-system,Segoe UI,Roboto,sans-serif;text-align:center}
+          .card{max-width:520px;padding:40px}
+          h1{color:#fff;font-size:34px;margin:0 0 8px}.t{color:#8b949e;margin:0 0 28px}
+          a.btn{display:inline-block;margin:8px;padding:12px 22px;border:1px solid #30363d;border-radius:10px;
+          color:#fff;text-decoration:none;background:#161b22}a.btn:hover{border-color:#58a6ff}
+          .lnk{margin-top:24px;font-size:14px}.lnk a{color:#58a6ff}
+          </style></head><body><div class="card">
+          <h1>Aefos AI</h1><p class="t">User Manual · Manual do Usuário</p>
+          <a class="btn" href="en/README.html">🇺🇸 English</a>
+          <a class="btn" href="pt/README.html">🇧🇷 Português</a>
+          <p class="lnk"><a href="https://github.com/ModernDelphiWorks/Aefos">GitHub</a> ·
+          <a href="LICENSE">License</a> · <a href="PRIVACY.md">Privacy</a></p>
+          </div></body></html>
+          HTML
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

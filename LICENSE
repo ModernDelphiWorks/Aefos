@@ -1,0 +1,353 @@
+# AEFOS AI END USER LICENSE AGREEMENT (EULA)
+
+**Last Updated:** June 2026
+
+This End User License Agreement ("Agreement") is a legal agreement between you ("User", "Customer", "you") and Aefos AI ("Aefos", "we", "us", or "our") governing your installation, access, and use of the Aefos AI software, including Community, Pro, and Enterprise editions, related plugins, agents, tools, integrations, updates, documentation, and associated services (collectively, the "Software").
+
+By installing, accessing, or using the Software, you agree to be bound by this Agreement.
+
+If you do not agree to these terms, do not install or use the Software.
+
+**Acceptance, authority, and eligibility.** If you accept this Agreement or use the
+Software on behalf of a company, organization, government body, or other legal
+entity, "you" and "your" refer to that entity, and you represent and warrant that
+you have the authority to bind that entity to this Agreement. You must be at least 18
+years old, or the age of legal majority in your jurisdiction, to use the Software,
+which is intended for software-development professionals and is not directed to
+anyone under the age of 13.
+
+---
+
+# PLAIN-LANGUAGE SUMMARY (non-binding)
+
+This summary is provided for convenience only. It is **not** a substitute for the
+numbered terms below, which are the binding agreement; if there is any conflict,
+the numbered terms control.
+
+* **The Community Edition is free — for everyone.** Individuals, commercial
+  companies, enterprises, educational institutions, non-profits, and government
+  organizations may all use it **at no charge**, including for **internal
+  commercial and business purposes**.
+* **No fee, no per-seat charge, no headcount limit, and no penalty** apply to
+  Community Edition internal use. A company of any size may roll it out across its
+  organization for internal software development for free.
+* **You own everything you create** with the Software — your code, content, and
+  outputs are yours.
+* **Pro and Enterprise editions are optional.** They add paid convenience,
+  automation, support, and governance features; they are never required for the
+  core free use described above.
+* **What you may not do:** resell, redistribute, rebrand, host as a competing
+  service, or build a competing product out of the Software itself (see Section 4).
+* **You use it at your own risk.** The Software can autonomously read, change, and
+  delete code and run commands (often via third-party AI tools you choose). **You
+  are responsible for reviewing every change, keeping backups, and verifying any
+  generated output before using it.** The Software is provided "AS IS", with no
+  warranty, and the maintainer's liability is limited (see Sections 10–13).
+
+---
+
+# 1. LICENSE GRANT
+
+Subject to compliance with this Agreement, Aefos grants you a limited, non-exclusive, non-transferable, non-sublicensable license to install and use the Software.
+
+The license granted under this Agreement is a license to use the Software and does not transfer ownership of the Software or any intellectual property rights.
+
+---
+
+# 2. EDITIONS
+
+## 2.1 Community Edition
+
+The Community Edition may be used **free of charge** by:
+
+* Individual users
+* Educational institutions
+* Non-profit organizations
+* Commercial businesses and enterprises of any size
+* Government organizations
+
+**Internal commercial and business use is expressly permitted at no charge.** This
+includes installing and using the Community Edition across your organization, by an
+unlimited number of employees, contractors, and seats, for internal software
+development, evaluation, and production work.
+
+No fee, subscription, registration, headcount limit, organization-size limit, or
+usage penalty is imposed on Community Edition internal use. Aefos will not charge,
+audit-penalize, or otherwise restrict a company solely because it is a commercial or
+enterprise entity using the Community Edition for its own internal purposes.
+
+The Community Edition license is **perpetual for the version you install** and does
+not expire so long as you comply with this Agreement.
+
+## 2.2 Pro Edition
+
+The Pro Edition is available through a paid subscription and may include additional features, tools, integrations, models, automation capabilities, support, or usage limits.
+
+## 2.3 Enterprise Edition
+
+The Enterprise Edition is licensed under a separate commercial agreement and may include enterprise-specific functionality, support, deployment options, compliance features, and custom licensing terms.
+
+---
+
+# 3. PERMITTED USE
+
+You may:
+
+* Use the Software for personal purposes.
+* Use the Software for educational purposes.
+* Use the Software within commercial organizations and enterprises, for internal business purposes, by an unlimited number of users and seats (Community Edition, at no charge).
+* Use the Software to develop commercial software, products, or services.
+* Use outputs generated by the Software for commercial purposes.
+* Create extensions, integrations, scripts, and workflows that interact with the Software through supported mechanisms.
+
+Ownership of any code, documentation, content, or other outputs generated through your use of the Software remains with you, subject to applicable third-party model, API, or service terms.
+
+---
+
+# 4. RESTRICTIONS
+
+Unless expressly authorized in writing by Aefos, you may not:
+
+* Sell, rent, lease, sublicense, distribute, or transfer the Software.
+* Redistribute Software binaries.
+* Offer the Software as a hosted, managed, cloud, SaaS, or competing service.
+* Modify, repackage, or rebrand the Software for redistribution.
+* Remove or alter copyright, trademark, licensing, or attribution notices.
+* Circumvent licensing, subscription, activation, security, or usage controls.
+* Use the Software to create a competing AI development platform, IDE assistant, agent framework, or substantially similar commercial product derived from the Software.
+* Reverse engineer, decompile, disassemble, or attempt to derive source code except where such restriction is prohibited by applicable law.
+
+---
+
+# 5. INTELLECTUAL PROPERTY
+
+The Software is licensed, not sold.
+
+Aefos and its licensors retain all right, title, and interest in and to the Software, including:
+
+* Source code
+* Binaries
+* User interfaces
+* Trademarks
+* Logos
+* Documentation
+* Agent systems
+* Workflows
+* Architecture
+* Proprietary technologies
+
+No rights are granted except those expressly stated in this Agreement.
+
+---
+
+# 6. THIRD-PARTY SERVICES
+
+The Software may integrate with third-party services, including AI providers, APIs, cloud services, package registries, development tools, and external platforms.
+
+Your use of such services may be subject to separate terms, conditions, privacy policies, fees, or limitations imposed by the respective providers.
+
+Aefos is not responsible for third-party services or their availability.
+
+---
+
+# 7. UPDATES
+
+Aefos may provide updates, patches, bug fixes, feature enhancements, security updates, or new versions.
+
+Certain updates may require an active subscription.
+
+Aefos is not obligated to provide updates for any specific period.
+
+---
+
+# 8. TELEMETRY AND DIAGNOSTICS
+
+The Software may collect limited technical and diagnostic information necessary to:
+
+* Maintain service reliability
+* Improve product quality
+* Detect abuse
+* Enforce licensing
+* Diagnose software issues
+
+Such information does not intentionally include source code, proprietary business information, or user content unless explicitly authorized by the user.
+
+Data collection practices are governed by the Aefos Privacy Policy (see the
+`PRIVACY.md` file distributed with the Software) and by applicable data-protection
+law, including the Brazilian General Data Protection Law (Lei nº 13.709/2018 —
+"LGPD").
+
+---
+
+# 9. OPEN SOURCE COMPONENTS
+
+The Software may include or interact with open-source and other third-party
+software components.
+
+Such components remain subject to their respective licenses, which are reproduced in
+full in the `THIRD-PARTY-NOTICES.txt` file distributed with the Software.
+
+Nothing in this Agreement limits rights granted under those applicable third-party or
+open-source licenses.
+
+---
+
+# 10. DISCLAIMER OF WARRANTIES
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE."
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, AEFOS DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING WARRANTIES OF:
+
+* MERCHANTABILITY
+* FITNESS FOR A PARTICULAR PURPOSE
+* NON-INFRINGEMENT
+* ACCURACY
+* RELIABILITY
+* AVAILABILITY
+
+AEFOS DOES NOT WARRANT THAT THE SOFTWARE WILL OPERATE WITHOUT INTERRUPTION OR ERROR.
+
+AEFOS DOES NOT AUTHOR, CONTROL, OR ENDORSE, AND DOES NOT WARRANT THE ACCURACY, SECURITY, LEGALITY, NON-INFRINGEMENT, OR FITNESS OF, ANY CODE, TEXT, OR OTHER OUTPUT GENERATED BY OR THROUGH THE SOFTWARE OR BY ANY THIRD-PARTY AI MODEL, AGENT, OR COMMAND-LINE TOOL THAT THE SOFTWARE INVOKES. ALL SUCH OUTPUT MUST BE REVIEWED AND VALIDATED BY YOU BEFORE USE.
+
+PRE-RELEASE, BETA, "COMMUNITY", AND SIMILAR EVALUATION BUILDS MAY CONTAIN DEFECTS AND ARE PROVIDED WITHOUT ANY SERVICE-LEVEL COMMITMENT, SUPPORT OBLIGATION, OR WARRANTY, AND MAY BE CHANGED, SUSPENDED, OR DISCONTINUED AT ANY TIME WITHOUT LIABILITY.
+
+---
+
+# 11. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, AEFOS SHALL NOT BE LIABLE FOR:
+
+* INDIRECT DAMAGES
+* INCIDENTAL DAMAGES
+* SPECIAL DAMAGES
+* CONSEQUENTIAL DAMAGES
+* LOSS OF PROFITS
+* LOSS OF REVENUE
+* LOSS OF BUSINESS
+* LOSS OF DATA
+* BUSINESS INTERRUPTION
+
+IN NO EVENT SHALL AEFOS'S TOTAL LIABILITY EXCEED THE AMOUNT PAID BY THE CUSTOMER FOR THE SOFTWARE DURING THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+
+IF NO FEES WERE PAID, AEFOS'S TOTAL LIABILITY SHALL NOT EXCEED ONE HUNDRED U.S. DOLLARS (USD $100).
+
+The limitations and exclusions in this Section and in Section 10 apply only to the extent permitted by applicable law. Where you use the Software as a consumer ("consumidor") and the Brazilian Consumer Protection Code (Law No. 8.078/1990) applies, nothing in this Agreement excludes or limits liability that, under that Code, cannot lawfully be excluded or limited.
+
+---
+
+# 12. ASSUMPTION OF RISK; AI AND AGENT FEATURES; USER RESPONSIBILITY
+
+The Software includes autonomous, agent-based, and AI-assisted features that can, at your direction or on your behalf, read, generate, modify, move, rename, and delete source code and files; change project, editor, and IDE state; and execute build, run, version-control, shell, and command-line operations — including by delegating to third-party AI command-line tools and models that **you** select and configure. The Software is a harness: it bundles no AI model and manages no credentials, and the substantive output is produced by those third-party tools.
+
+You acknowledge and agree that:
+
+* These capabilities carry **inherent risk**, including the risk of unintended code changes, data loss, build or runtime failures, security vulnerabilities, and incorrect, insecure, or infringing output.
+* **You are solely responsible** for supervising and reviewing every action and output of the Software before accepting it (for example, through the inline change-review/consent mechanisms the Software provides), for maintaining adequate backups and version control, and for independently verifying the correctness, security, legality, and fitness of any result before relying on it or using it in production.
+* You are solely responsible for your use of the Software, for complying with all applicable laws and with the terms of any third-party tool, model, or service you use with it, and for ensuring you have the rights to any code, data, or content you process with it.
+* **You use the Software at your own risk.**
+
+To the maximum extent permitted by applicable law, Aefos is not responsible or liable for any code change, deletion, data loss, build or runtime effect, security issue, third-party output, or other result arising from your use of these features or from any third-party AI tool, model, or service.
+
+---
+
+# 13. INDEMNIFICATION
+
+To the maximum extent permitted by applicable law, you agree to defend, indemnify, and hold harmless Aefos and its maintainer(s), contributors, officers, agents, and licensors (the "Indemnified Parties") from and against any and all third-party claims, demands, actions, proceedings, damages, losses, liabilities, fines, costs, and expenses (including reasonable attorneys' fees and legal costs) arising out of or related to:
+
+* (a) your use, misuse, or inability to use the Software;
+* (b) your violation of this Agreement or of any applicable law, regulation, or sanction;
+* (c) your violation or infringement of any third-party right, including intellectual property, personality, privacy, or data-protection rights;
+* (d) any code, data, content, or output you create, modify, process, distribute, or deploy using the Software; and
+* (e) your use of any third-party AI tool, model, service, or command-line interface in connection with the Software.
+
+The Indemnified Parties may, at their option and expense, participate in the defense of any such claim with counsel of their choosing. This Section does not apply to the extent a claim results from the Indemnified Parties' own willful misconduct, and, where you act as a consumer ("consumidor") and the Brazilian Consumer Protection Code (Law No. 8.078/1990) applies, it applies only to the extent permitted by that Code.
+
+---
+
+# 14. TERMINATION
+
+This Agreement automatically terminates if you violate its terms.
+
+Upon termination, you must cease all use of the Software and destroy all copies in your possession or control.
+
+Sections relating to intellectual property, assumption of risk and user responsibility, indemnification, disclaimers, liability limitations, and governing law shall survive termination.
+
+---
+
+# 15. EXPORT CONTROL AND SANCTIONS
+
+The Software may be subject to export control and economic sanctions laws, including those of Brazil, the United States, and other applicable jurisdictions. You agree to comply with all such export, re-export, import, and sanctions laws and regulations.
+
+You represent and warrant that: (a) you are not located in, organized under the laws of, or ordinarily resident in any country or territory subject to comprehensive governmental or international sanctions; (b) you are not identified on, and are not owned or controlled by or acting on behalf of any person identified on, any applicable list of restricted or prohibited parties; and (c) you will not use, export, re-export, or provide the Software for any prohibited end use, including any use related to the development of nuclear, chemical, or biological weapons, missile technology, or any prohibited military end use.
+
+---
+
+# 16. FEEDBACK
+
+If you provide Aefos with any ideas, suggestions, enhancement requests, bug reports, code contributions, or other feedback regarding the Software ("Feedback"), you grant Aefos a worldwide, perpetual, irrevocable, royalty-free, fully paid-up, transferable, and sublicensable license to use, reproduce, modify, exploit, and incorporate that Feedback into the Software and into any Aefos product or documentation, for any purpose and without obligation or compensation to you. You are not required to provide Feedback, and you should not provide Feedback you are not authorized to share.
+
+---
+
+# 17. U.S. GOVERNMENT END USERS
+
+The Software is "Commercial Computer Software" and "Commercial Computer Software Documentation" as those terms are used in 48 C.F.R. 12.212 and 48 C.F.R. 227.7202. If the Software is acquired by or on behalf of any unit or agency of the United States Government, it is provided only with the rights set forth in this Agreement, consistent with FAR 12.212 and DFARS 227.7202.
+
+---
+
+# 18. GOVERNING LAW; JURISDICTION; WAIVERS
+
+This Agreement shall be governed by and construed in accordance with the laws of the Federative Republic of Brazil, without regard to conflict-of-law principles, including, where applicable, Law No. 9.609/1998 (Software Law), Law No. 9.610/1998 (Copyright Law), Law No. 12.965/2014 (Internet Civil Framework), and Law No. 13.709/2018 (LGPD). The United Nations Convention on Contracts for the International Sale of Goods does not apply to this Agreement.
+
+The parties elect the courts of the Judicial District (Comarca) of Aracruz, State of Espírito Santo, Brazil, as the exclusive venue for any dispute arising from or relating to this Agreement, and each party irrevocably submits to that jurisdiction and waives any objection of inconvenient forum — **except** where applicable mandatory law (including the Brazilian Consumer Protection Code, Law No. 8.078/1990, "CDC") requires a different venue (such as the consumer's domicile), in which case that mandatory venue prevails.
+
+To the maximum extent permitted by applicable law, any dispute shall be resolved on an individual basis only, and you waive any right to bring or participate in a class, collective, or representative action and any right to a trial by jury. This waiver does not apply where, and only to the extent that, applicable mandatory law (including the CDC and the Brazilian rules governing collective actions) does not permit it.
+
+This Agreement is drafted in English, which is the controlling language; any translation is provided for convenience only. Nothing in this Agreement limits any non-waivable right or remedy granted to you by applicable law, including the acts a lawful licensee may perform under Article 6 of Law No. 9.609/1998 regardless of any contractual restriction.
+
+---
+
+# 19. GENERAL PROVISIONS
+
+**Entire Agreement.** This Agreement — together with the `PRIVACY.md` and `THIRD-PARTY-NOTICES.txt` files distributed with the Software and any applicable Pro/Enterprise order — is the entire agreement between you and Aefos regarding the Software and supersedes all prior or contemporaneous understandings on that subject.
+
+**Severability.** If any provision of this Agreement is held invalid or unenforceable, that provision will be limited or severed to the minimum extent necessary, and the remaining provisions will remain in full force and effect.
+
+**No Waiver.** Aefos's failure to enforce any right or provision of this Agreement is not a waiver of that right or provision.
+
+**Assignment.** You may not assign or transfer this Agreement or any rights under it, by operation of law or otherwise, without Aefos's prior written consent; any attempted assignment in violation of this Section is void. Aefos may freely assign or transfer this Agreement.
+
+**Force Majeure.** Aefos is not liable for any delay or failure to perform resulting from causes beyond its reasonable control.
+
+**No Agency.** Nothing in this Agreement creates any partnership, joint venture, agency, fiduciary, or employment relationship between the parties.
+
+**Notices.** Legal notices to Aefos must be sent to the contact in Section 21.
+
+**Headings.** Section headings are for convenience only and do not affect interpretation.
+
+**Survival.** Provisions that by their nature should survive termination — including Sections 5, 10, 11, 12, 13, 16, 18, and 19 — survive any expiration or termination of this Agreement.
+
+---
+
+# 20. CHANGES TO THIS AGREEMENT
+
+Aefos may modify this Agreement from time to time.
+
+Updated versions will be published through official distribution channels.
+
+Continued use of the Software after publication of an updated Agreement constitutes acceptance of the revised terms, to the extent permitted by applicable law.
+
+---
+
+# 21. CONTACT
+
+For licensing, legal, partnership, or compliance inquiries:
+
+Aefos AI
+
+Email: [tecsisinfo.com.br@gmail.com](mailto:tecsisinfo.com.br@gmail.com)
+
+Official distribution channel: https://www.pubpascal.dev
+
+---
+
+By installing, accessing, or using Aefos AI Community, Pro, or Enterprise Edition, you acknowledge that you have read, understood, and agree to be bound by this Agreement.

@@ -1,0 +1,94 @@
+name: "🐛 Bug report"
+description: "Report a problem with Aefos AI"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! 🙏
+
+        > ⚠️ **This issue is PUBLIC and permanent.** Do **not** paste secrets,
+        > personal data, customer data, or proprietary source code. If you need to
+        > show code, use a **minimal, sanitized** example. By submitting, you accept
+        > the [Submission Terms](../blob/main/TERMS-ISSUES.md).
+        >
+        > 🔒 **Security vulnerability?** Do **not** report it here — follow
+        > [SECURITY.md](../blob/main/SECURITY.md).
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight
+      options:
+        - label: I searched existing issues and didn't find a duplicate.
+          required: true
+        - label: My report contains no secrets, personal data, or proprietary code (only a minimal, sanitized example if any).
+          required: true
+        - label: I agree to the Submission Terms.
+          required: true
+
+  - type: input
+    id: aefos-version
+    attributes:
+      label: Aefos AI version
+      placeholder: "e.g. 0.17.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: AI provider (CLI) in use
+      options:
+        - Claude Code
+        - Codex
+        - GitHub Copilot CLI
+        - Gemini
+        - Not relevant / none
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Windows version + RAD Studio / Delphi version
+      placeholder: "e.g. Windows 11 + RAD Studio Delphi 13 (BDS 37.0)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: One step per line.
+      placeholder: |
+        1. Open ...
+        2. In View → Aefos AI (Chat) → Open Chat, type ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots (sanitized)
+      description: "Redact secrets and personal data. Logs may be under %APPDATA%\\Aefos."
+      render: text
+    validations:
+      required: false

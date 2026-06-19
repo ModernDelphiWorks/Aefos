@@ -4,7 +4,7 @@ contact_links:
     url: https://github.com/ModernDelphiWorks/Aefos/security/advisories/new
     about: Never report security issues in public. Use private vulnerability reporting.
   - name: 📖 User Manual
-    url: https://www.pubpascal.dev
+    url: https://moderndelphiworks.github.io/Aefos/
     about: Install, configuration, and troubleshooting — check here first.
   - name: ❓ Questions & Discussions
     url: https://github.com/ModernDelphiWorks/Aefos/discussions

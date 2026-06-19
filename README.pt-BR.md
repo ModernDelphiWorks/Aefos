@@ -14,7 +14,7 @@ que você já usa (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-EULA%20%E2%80%94%20Community%20gr%C3%A1tis-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Pol%C3%ADtica%20de%20Seguran%C3%A7a-success)](sbom/)
 
-[⬇️ Download](../../releases) · [📖 Manual do Usuário](<PAGES_URL>) · [🐛 Reportar bug](../../issues/new/choose) · [🔒 Segurança](SECURITY.md)
+[⬇️ Download](../../releases) · [📖 Manual do Usuário](https://moderndelphiworks.github.io/Aefos/) · [🐛 Reportar bug](../../issues/new/choose) · [🔒 Segurança](SECURITY.md)
 
 [English](README.md) · **Português (PT-BR)**
 
@@ -47,7 +47,7 @@ depurador), opera o Form Designer e mais.
 
 ## Documentação
 
-📖 **[Manual do Usuário](<PAGES_URL>)** (PT-BR / EN) — instalação, primeiros passos,
+📖 **[Manual do Usuário](https://moderndelphiworks.github.io/Aefos/)** (PT-BR / EN) — instalação, primeiros passos,
 Chat, Terminal, provedores, configuração, licenciamento e solução de problemas.
 
 ## Download e instalação
@@ -58,7 +58,7 @@ Chat, Terminal, provedores, configuração, licenciamento e solução de problem
 3. Reinicie a RAD Studio — aparecem os menus **View → Aefos AI (Chat)** e
    **View → Aefos AI (Terminal)**.
 
-Passos completos no [manual](<PAGES_URL>).
+Passos completos no [manual](https://moderndelphiworks.github.io/Aefos/).
 
 ## Requisitos
 

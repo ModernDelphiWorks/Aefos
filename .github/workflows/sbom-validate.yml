@@ -24,8 +24,8 @@ jobs:
           set -e
           for f in sbom/*.cdx.json; do
             echo "::group::Validating $f"
-            npx --yes @cyclonedx/cyclonedx-cli@latest validate \
-              --input-file "$f" --fail-on-errors
+            docker run --rm -v "$PWD":/data cyclonedx/cyclonedx-cli:latest \
+              validate --input-file "/data/$f" --input-format json --fail-on-errors
             echo "::endgroup::"
           done
 

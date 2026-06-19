@@ -1,6 +1,6 @@
 <!--
   MAINTAINER: set these before publishing
-  - Replace <PAGES_URL> with the GitHub Pages / custom-domain URL (e.g. https://aefos.pubpascal.dev)
+  - Replace https://moderndelphiworks.github.io/Aefos/ with the GitHub Pages / custom-domain URL (e.g. https://aefos.pubpascal.dev)
   - Replace <REPO_URL> with https://github.com/ModernDelphiWorks/Aefos
   - Releases link assumes this repo hosts the installer as a Release asset.
   This is the PUBLIC repo (downloads + manual + issues). The source code is private.
@@ -21,7 +21,7 @@ already use (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 [![License](https://img.shields.io/badge/license-EULA%20%E2%80%94%20Community%20free-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Security%20policy-success)](sbom/)
 
-[⬇️ Download](../../releases) · [📖 User Manual](<PAGES_URL>) · [🐛 Report a bug](../../issues/new/choose) · [🔒 Security](SECURITY.md)
+[⬇️ Download](../../releases) · [📖 User Manual](https://moderndelphiworks.github.io/Aefos/) · [🐛 Report a bug](../../issues/new/choose) · [🔒 Security](SECURITY.md)
 
 **English** · [Português (PT-BR)](README.pt-BR.md)
 
@@ -54,7 +54,7 @@ Designer, and more.
 
 ## Documentation
 
-📖 **[User Manual](<PAGES_URL>)** (PT-BR / EN) — install, first steps, Chat, Terminal,
+📖 **[User Manual](https://moderndelphiworks.github.io/Aefos/)** (PT-BR / EN) — install, first steps, Chat, Terminal,
 providers, configuration, licensing, and troubleshooting.
 
 ## Download & install
@@ -65,7 +65,7 @@ providers, configuration, licensing, and troubleshooting.
 3. Restart RAD Studio — the **View → Aefos AI (Chat)** and **View → Aefos AI
    (Terminal)** menus appear.
 
-Full steps in the [manual](<PAGES_URL>).
+Full steps in the [manual](https://moderndelphiworks.github.io/Aefos/).
 
 ## Requirements
 

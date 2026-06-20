@@ -14,9 +14,11 @@ configuração de MCP — sem você precisar mexer em pastas manualmente.
    aberta.
 2. **Execute** `Aefos-Setup-<versão>.exe`. É **por-usuário** (não precisa de
    administrador).
-   - Durante a instalação, o Aefos **detecta** se você já tem o CLI de IA, o Python e
-     o WebView2. Se faltar algo, ele te orienta para a fonte oficial — **nunca**
-     instala binários de terceiros por você.
+   - Durante a instalação, o Aefos **detecta** o CLI de IA, o Python e o WebView2.
+     O **WebView2 Runtime** (componente oficial da Microsoft, exigido pelo Chat) é
+     **instalado automaticamente** se estiver faltando, a partir do bootstrapper
+     oficial da Microsoft. Para o **CLI de IA** e o **Python**, o Aefos apenas te
+     orienta para a fonte oficial — **nunca** instala binários de terceiros por você.
 3. **Reinicie a RAD Studio.** Os pacotes `Aefos AI - Chat` e `Aefos AI - Terminal`
    já vêm registrados.
 4. **Confirme:** no menu **View** da IDE aparecem os submenus **Aefos AI (Chat)** e
@@ -31,10 +33,12 @@ Depois de reabrir a IDE, confira:
 - [ ] **View → Aefos AI (Chat) → Open Chat** abre o painel de chat.
 - [ ] (Se você instalou) **View → Aefos AI (Terminal)** abre o terminal.
 
-## Habilitando o Markdown rico (WebView2)
+## Markdown rico (WebView2)
 
-Se o Chat estiver mostrando **texto simples** em vez de Markdown formatado, instale o
-**WebView2 Runtime**: <https://aka.ms/webview2>. Depois reinicie a IDE.
+O Chat renderiza via **WebView2**, que o instalador provisiona automaticamente. Se o
+Chat aparecer **em branco/preto** ou mostrando **texto simples**, normalmente é o
+WebView2 ausente — reexecute o instalador (ele instala o runtime) ou instale-o
+manualmente: <https://aka.ms/webview2>. Depois reinicie a IDE.
 
 ## Onde as coisas ficam
 
@@ -43,6 +47,30 @@ Se o Chat estiver mostrando **texto simples** em vez de Markdown formatado, inst
 | Configuração global de MCP | `%APPDATA%\Aefos\aefos-mcp.json` |
 | Bridge de MCP (Terminal) | `%APPDATA%\Aefos\mcp-bridge.ps1` |
 | PyTools (ferramentas Python) | `%APPDATA%\Aefos\pytools` |
+
+## Atualizando para uma nova versão
+
+Na **mesma máquina**, sua licença é preservada — você **não precisa desativar nada**.
+
+**Caminho recomendado (mesma máquina):**
+
+1. **Feche a RAD Studio.**
+2. **Execute** o novo `Aefos-Setup-<versão>.exe` — pode instalar **por cima** da
+   versão atual (não precisa desinstalar).
+3. **Reabra a IDE.** Sua licença (inclusive a **Free**) continua ativa, e o Chat passa
+   a usar o WebView2 que o instalador provisiona.
+
+**Reinstalação limpa — ou troca de máquina:**
+
+1. Abra a IDE → **Aefos → License…** → **copie sua chave** e clique
+   **Deactivate (free seat)**.
+2. **Feche a IDE** e **desinstale** a versão atual.
+3. **Instale** a versão nova.
+4. Reabra a IDE → **Aefos → License…** → **cole a chave** → **Activate**.
+
+> O **Deactivate** só é obrigatório para mover o seat para **outra máquina**. A
+> licença fica em `%APPDATA%\Aefos\license.dat` e **não** é apagada na desinstalação —
+> por isso, na mesma máquina, a atualização não exige desativar nem redigitar a chave.
 
 ## Desinstalação
 

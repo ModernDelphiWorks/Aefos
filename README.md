@@ -67,9 +67,15 @@ providers, configuration, licensing, and troubleshooting.
 
 1. Get the latest installer from **[Releases](../../releases)**
    (`Aefos-Setup-<version>.exe`).
-2. Close RAD Studio, run the installer (per-user, no admin).
+2. Close RAD Studio, run the installer (per-user, no admin). It **auto-installs the
+   WebView2 runtime** (required by the Chat) if it's missing.
 3. Restart RAD Studio — the **View → Aefos AI (Chat)** and **View → Aefos AI
    (Terminal)** menus appear.
+
+**Updating?** On the same machine, just install the new version over the old one —
+your license (including the Free tier) is preserved, no need to deactivate. To move
+to another machine, **Deactivate** the seat under **Aefos → License…** first, then
+activate it on the new one.
 
 Full steps in the [manual](https://moderndelphiworks.github.io/Aefos/).
 
@@ -80,7 +86,7 @@ Full steps in the [manual](https://moderndelphiworks.github.io/Aefos/).
 | IDE | RAD Studio **Delphi 13** (BDS 37.0) |
 | OS | **Windows** |
 | AI CLI | At least one: Claude Code / Codex / GitHub Copilot CLI / Gemini (bring your own) |
-| Rich Markdown (optional) | [WebView2 Runtime](https://aka.ms/webview2) |
+| Rich Markdown | [WebView2 Runtime](https://aka.ms/webview2) — the installer provisions it automatically |
 
 ## Editions
 

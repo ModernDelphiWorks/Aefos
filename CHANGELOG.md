@@ -8,6 +8,13 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [0.19.1-beta] - 2026-06-20
+
+### Fixed
+- **No more crash on a click in the Chat right after it opens.** A mouse event
+  arriving while the WebView host was still initialising could raise an error inside
+  the IDE; mouse input is now ignored until the host is ready (and never fatal).
+
 ## [0.19.0-beta] - 2026-06-20
 
 ### Fixed
@@ -88,7 +95,8 @@ Dates are in `YYYY-MM-DD`.
 - Published a machine-readable **SBOM** (CycloneDX 1.5) and a **security disclosure
   policy** (coordinated vulnerability disclosure).
 
-[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.19.1...HEAD
+[0.19.1-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.19.0...v0.19.1
 [0.19.0-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.18.0...v0.19.0
 [0.18.0-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.17.0...v0.18.0
 [0.17.0-beta]: https://github.com/ModernDelphiWorks/Aefos/releases/tag/v0.17.0

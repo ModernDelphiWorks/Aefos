@@ -76,6 +76,11 @@ jobs:
           HTML
 
       - uses: actions/configure-pages@v5
+        with:
+          # Auto-enable Pages (build_type=workflow) if it's off, so a fresh repo /
+          # accidentally-disabled Pages can't break the deploy again ("Get Pages site
+          # failed... has Pages enabled" — the 404 that took the manual offline).
+          enablement: true
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

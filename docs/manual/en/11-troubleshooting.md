@@ -16,6 +16,7 @@ Common symptoms and how to fix them. If nothing here helps, see
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
 | Chat shows **plain text**, no Markdown | WebView2 Runtime missing | Install WebView2: <https://aka.ms/webview2> and restart the IDE |
+| Chat is **fully black** (not plain text, not the brief flicker) | (rare) WebView2 Runtime missing — the Chat already runs **with GPU acceleration off by default**, so GPU/driver black no longer happens | Re-run the installer (it bundles + installs WebView2 offline). To **force** GPU acceleration (if your machine has a good GPU), set `AEFOS_WEBVIEW_ENABLE_GPU=1` and restart the IDE |
 | Sending a message **"does nothing"** | No AI CLI configured/installed | Configure the provider in **Options → Aefos** and install/log in to the CLI ([Providers](08-ai-providers.md)) |
 | The agent doesn't use the project tools (MCP) | MCP not connected for that CLI | Run **Test MCP** in **Options → Aefos**; check the selected provider |
 | The docked panel flickers/blacks out briefly on submit | Docked-window composition behavior | Usually recovers on its own; if it persists, use the **floating** panel |

@@ -16,6 +16,7 @@ Sintomas comuns e como resolver. Se nada aqui ajudar, veja
 | Sintoma | Causa provável | Solução |
 |---------|----------------|---------|
 | Chat mostra **texto simples**, sem Markdown | WebView2 Runtime ausente | Instale o WebView2: <https://aka.ms/webview2> e reinicie a IDE |
+| Chat **totalmente preto** (não é texto simples nem o pisca momentâneo) | (raro) WebView2 Runtime ausente — o Chat já roda **sem aceleração de GPU por padrão**, então o preto causado por GPU/driver não ocorre mais | Reexecute o instalador (ele embute e instala o WebView2 offline). Para **forçar** a aceleração por GPU (se sua máquina tem GPU boa), defina `AEFOS_WEBVIEW_ENABLE_GPU=1` e reinicie a IDE |
 | Enviar mensagem **"não faz nada"** | Nenhum CLI de IA configurado/instalado | Configure o provedor em **Options → Aefos** e instale/logue o CLI ([Provedores](08-provedores-de-ia.md)) |
 | O agente não usa as ferramentas do projeto (MCP) | MCP não conectado para aquele CLI | Rode **Test MCP** em **Options → Aefos**; confira o provedor selecionado |
 | O painel docado pisca/preto por um instante ao enviar | Comportamento de composição da janela docada | Em geral se recupera sozinho; se persistir, use o painel **flutuante** |

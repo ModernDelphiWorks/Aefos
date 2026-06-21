@@ -8,6 +8,23 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [0.21.0-beta] - 2026-06-21
+
+### Added
+- **The Chat welcome shortcuts now do real work.** Explain, Refactor, Test, Document,
+  Find and Optimize each run a focused, built-in command — **Refactor / Test / Document /
+  Optimize apply their changes through the editor** so they show up in the change-review
+  for you to accept or reject; Explain and Find answer read-only. They're also available
+  by typing `/` in the message box.
+- **Polished slash-command picker.** Typing `/` shows a tidy panel — header, scrollable
+  list and a footer with the keyboard hints (↑↓ navigate · Enter run · Esc close).
+
+### Changed
+- **"Thinking…" indicator** now shows an animated robot while the assistant works, with
+  cleaner spacing.
+- Clicking a welcome shortcut now fills the message box directly (it previously popped an
+  empty bar).
+
 ## [0.20.0-beta] - 2026-06-21
 
 ### Added

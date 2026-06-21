@@ -4,6 +4,8 @@ The Aefos **Terminal** is a real terminal docked inside the IDE (VTerm emulation
 with the same OTA reach as the Chat. You can run your AI CLI, shell commands, git —
 all without switching windows.
 
+![Aefos Terminal docked in the IDE, with VTerm emulation](../assets/terminal.png)
+
 > The Terminal is part of the **Pro** edition. See [Licensing & editions](10-licensing.md).
 
 ## Opening the Terminal
@@ -45,5 +47,10 @@ to a compatible family (e.g. a *Nerd Font*).
 Both the Chat and the Terminal use the same MCP engine underneath. An agent launched
 **from the terminal** can also act on the project, with the same consent and audit
 guarantees.
+
+The **editor change review** (the before/after diff with accept / reject / annotate in the
+gutter) is the same for both — when the terminal agent edits code, you review it exactly
+like in the Chat. See
+[Reviewing changes](05-using-the-chat.md#reviewing-changes-see-the-before-and-the-after).
 
 ➡️ Next: [AI providers](08-ai-providers.md)

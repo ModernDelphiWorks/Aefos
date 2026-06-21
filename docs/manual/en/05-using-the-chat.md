@@ -2,6 +2,8 @@
 
 The Chat panel is where you talk to the AI and put it to work on your project.
 
+![Aefos Chat panel in Agent mode, docked in the IDE](../assets/chat.png)
+
 ## Agent mode vs. Chat mode
 
 | Mode | What it does | When to use |
@@ -51,6 +53,9 @@ In the **gutter** (on the left) each change has three buttons:
 There's also an **Accept all / Reject all** pill when several changes are pending — they
 accumulate **without blocking** the agent. **Saving** the file (or running) **accepts**
 the pending changes and clears the review.
+
+The same review applies to edits made from the **Chat and the Terminal** — it lives in a
+shared IDE layer, so the accept/reject/annotate flow is identical in both.
 
 > The review is shown for code edits (e.g. editing a unit, replacing a snippet). See
 > [What the agent does in your project](06-what-the-agent-does.md).

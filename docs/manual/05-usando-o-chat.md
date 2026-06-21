@@ -3,6 +3,8 @@
 O painel de Chat é onde você conversa com a IA e a coloca para trabalhar no seu
 projeto.
 
+![Painel de Chat do Aefos no modo Agent, docado na IDE](assets/chat.png)
+
 ## Modo Agent vs. modo Chat
 
 | Modo | O que faz | Quando usar |
@@ -52,6 +54,9 @@ Na **calha** (à esquerda), cada mudança tem três botões:
 Há ainda a pílula **Aceitar tudo / Rejeitar tudo** quando há várias mudanças pendentes —
 elas se acumulam **sem travar** o agente. **Salvar** o arquivo (ou rodar) **aceita** as
 mudanças pendentes e limpa a revisão.
+
+A mesma revisão vale para edições feitas pelo **Chat e pelo Terminal** — ela vive numa
+camada compartilhada da IDE, então o fluxo aceitar/rejeitar/anotar é idêntico nos dois.
 
 > A revisão aparece para edições de código (ex.: editar uma unit, substituir trecho).
 > Veja [O que o agente faz no seu projeto](06-o-que-o-agente-faz.md).

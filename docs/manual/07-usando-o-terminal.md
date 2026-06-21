@@ -4,6 +4,8 @@ O **Terminal** do Aefos é um terminal de verdade docado dentro da IDE (emulaç�
 VTerm), com o mesmo alcance OTA do Chat. Dá para rodar seu CLI de IA, comandos de
 shell, git — tudo sem trocar de janela.
 
+![Terminal do Aefos docado na IDE, com emulação VTerm](assets/terminal.png)
+
 > O Terminal faz parte da edição **Pro**. Veja [Licenciamento e edições](10-licenciamento.md).
 
 ## Abrindo o Terminal
@@ -46,5 +48,10 @@ fonte do terminal nas opções para uma família compatível (ex.: uma *Nerd Fon
 Tanto o Chat quanto o Terminal usam o mesmo motor MCP por baixo. Um agente lançado
 **pelo terminal** também consegue agir no projeto, com as mesmas garantias de
 consentimento e auditoria.
+
+Inclusive a **revisão de alterações no editor** (o diff antes/depois com aceitar /
+rejeitar / anotar na calha) é a mesma para os dois — quando o agente do terminal edita
+código, você revê exatamente como no Chat. Veja
+[Revisão de alterações](05-usando-o-chat.md#revisão-de-alterações-veja-o-antes-e-o-depois).
 
 ➡️ Próximo: [Provedores de IA](08-provedores-de-ia.md)

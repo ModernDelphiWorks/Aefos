@@ -39,7 +39,7 @@ Whenever the agent **changes code**, Aefos shows the change **inside the editor*
 and the new text in **green right below** — so you see exactly what will change before
 deciding (it also works for wide and multi-line edits).
 
-![Change review: the before (struck-out red) stacked above the after (green), with the ✓/✗/✎ controls in the gutter](assets/change-review.png)
+![Change review: the before (struck-out red) stacked above the after (green), with the ✓/✗/✎ controls in the gutter](../assets/change-review.png)
 
 In the **gutter** (on the left) each change has three buttons:
 

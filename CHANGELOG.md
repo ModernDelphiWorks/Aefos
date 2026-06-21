@@ -8,6 +8,25 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [0.20.0-beta] - 2026-06-21
+
+### Added
+- **See what an AI edit changes before you accept it.** When the assistant edits
+  your code, the change now shows inline as a **before/after diff** — the original
+  lines struck out in red, stacked above the new lines in green — so you can tell at
+  a glance what was replaced (works for wide and multi-line edits).
+- **Per-change Approve / Reject / Annotate, right in the gutter.** Each pending change
+  gets ✓ (keep), ✗ (undo) and ✎ (leave a note) controls, plus an **Approve All / Reject
+  All** pill. Multiple changes accumulate without blocking the assistant.
+- **Your notes reach the assistant.** A note you attach to a change is delivered back
+  to the AI, tagged as approved or rejected, so it learns your feedback on each edit.
+- **Available in both Chat and Terminal.** The change-review works the same in the AI
+  Chat and the AI Terminal.
+
+### Changed
+- **Saving accepts pending changes.** Saving the file (or running) keeps the new text
+  and clears the review markers — it never writes a half-reviewed, duplicated file.
+
 ## [0.19.1-beta] - 2026-06-20
 
 ### Fixed

@@ -3,7 +3,7 @@
 # Usage: python build-html.py [pt|en]
 #   pt (default) -> reads *.md here, writes _html/
 #   en           -> reads en/*.md,  writes _html-en/
-import sys, re, pathlib, html as _html
+import sys, re, pathlib, html as _html, shutil
 import markdown
 
 LANG = (sys.argv[1] if len(sys.argv) > 1 else "pt").lower()
@@ -120,5 +120,11 @@ for fn, label in TOC:
             f'<body><div class="wrap">{sidebar(fn)}<main>{body}</main></div></body></html>')
     (OUT / (fn[:-3] + ".html")).write_text(page, encoding="utf-8")
     built += 1
+
+# Ship the manual images alongside the HTML so screenshots resolve offline. The canonical
+# assets live in docs/manual/assets/ (referenced as assets/ from PT pages, ../assets/ from EN).
+ASSETS = HERE / "assets"
+if ASSETS.is_dir():
+    shutil.copytree(ASSETS, OUT / "assets", dirs_exist_ok=True)
 
 print(f"[{LANG}] built {built} pages -> {OUT}")

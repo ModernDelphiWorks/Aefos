@@ -16,7 +16,7 @@
 In-IDE AI **Chat** + **Terminal** for RAD Studio Delphi 13, powered by the AI CLI you
 already use (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 
-[![Version](https://img.shields.io/badge/version-0.19.1--beta-orange)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.20.0--beta-orange)](CHANGELOG.md)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D6)](#requirements)
 [![License](https://img.shields.io/badge/license-EULA%20%E2%80%94%20Community%20free-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Security%20policy-success)](https://www.pubpascal.dev/packages/aefos)
@@ -47,8 +47,9 @@ Designer, and more.
   build/run, git, live Form Designer).
 - 🖥️ **Docked Terminal** (real VTerm) with a command palette, profiles, and history.
 - 🔀 **Multi-provider** — Claude Code, Codex, GitHub Copilot CLI, Gemini.
-- ✅ **Inline diff** of every AI change, with accept/reject (Tab/Esc) — nothing is
-  applied without your approval.
+- ✅ **Change review** — every AI edit shows as a **stacked before/after diff** (original
+  struck out in red above the new lines in green) with per-change **accept / reject /
+  annotate** controls in the gutter. Nothing is applied without your approval.
 - 🎨 **Design ↔ Code** flow — add a component and watch the IDE flip to Design; add
   code and watch it flip to Code.
 
@@ -57,6 +58,11 @@ Designer, and more.
 | 💬 Chat (Agent mode) | 🖥️ Terminal |
 |:---:|:---:|
 | ![Aefos Chat](assets/chat.png) | ![Aefos Terminal](assets/terminal.png) |
+
+**Change review** — see exactly what each AI edit changes, then accept, reject or
+annotate it right in the editor gutter:
+
+![Change review: stacked before/after diff with gutter accept/reject/annotate controls](assets/change-review.png)
 
 ## Documentation
 

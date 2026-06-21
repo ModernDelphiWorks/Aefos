@@ -32,20 +32,27 @@ replicated to the format the active CLI expects.
 In Agent mode, Aefos packages your **Delphi project context** (via OTA) so the AI
 answers with knowledge of what is open — instead of generic answers.
 
-## Inline diff: accept or reject changes
+## Reviewing changes: see the before and the after
 
-Whenever the agent is about to **change code**, Aefos shows the change as an **inline
-diff** in the editor, VS Code style:
+Whenever the agent **changes code**, Aefos shows the change **inside the editor** as a
+**stacked before/after diff**: the original text appears struck out in **red on top**,
+and the new text in **green right below** — so you see exactly what will change before
+deciding (it also works for wide and multi-line edits).
 
-- Removed lines in **red**, added lines in **green**.
-- Clickable **✓ (apply)** and **✗ (reject)** buttons.
-- Shortcuts: **Tab** applies, **Esc** rejects.
+![Change review: the before (struck-out red) stacked above the after (green), with the ✓/✗/✎ controls in the gutter](assets/change-review.png)
 
-Nothing is written without your approval. If you reject, the change is discarded and
-the agent gets that result back (instead of mutating the file).
+In the **gutter** (on the left) each change has three buttons:
 
-> The diff is shown for code edits (e.g. editing a unit, replacing a snippet,
-> rewriting the editor content). See
+- **✓ accept** — keep the new text.
+- **✗ reject** — undo it and restore the original.
+- **✎ annotate** — write a note that is **delivered to the agent** (tagged accepted or
+  rejected), so it learns your feedback on that edit.
+
+There's also an **Accept all / Reject all** pill when several changes are pending — they
+accumulate **without blocking** the agent. **Saving** the file (or running) **accepts**
+the pending changes and clears the review.
+
+> The review is shown for code edits (e.g. editing a unit, replacing a snippet). See
 > [What the agent does in your project](06-what-the-agent-does.md).
 
 ## Safety: consent and audit

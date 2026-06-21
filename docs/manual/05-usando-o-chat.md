@@ -33,21 +33,28 @@ replicadas automaticamente para o formato que o CLI ativo espera.
 No modo Agent, o Aefos empacota o **contexto do seu projeto Delphi** (via OTA) para
 que a IA responda com conhecimento do que está aberto — em vez de respostas genéricas.
 
-## Diff inline: aceitar ou rejeitar alterações
+## Revisão de alterações: veja o antes e o depois
 
-Sempre que o agente vai **alterar código**, o Aefos mostra a mudança como um **diff
-inline** no editor, no estilo VS Code:
+Sempre que o agente **altera código**, o Aefos mostra a mudança **dentro do editor**,
+como um diff **antes/depois empilhado**: o texto original aparece em **vermelho riscado
+em cima**, e o novo em **verde logo abaixo** — então você vê exatamente o que vai mudar
+antes de decidir (funciona também para linhas largas e blocos de várias linhas).
 
-- Linhas removidas em **vermelho**, adicionadas em **verde**.
-- Botões clicáveis **✓ (aplicar)** e **✗ (rejeitar)**.
-- Atalhos: **Tab** aplica, **Esc** rejeita.
+![Revisão de alterações: antes (vermelho riscado) em cima, depois (verde) embaixo, com os controles ✓/✗/✎ na calha](assets/change-review.png)
 
-Nada é gravado sem o seu aval. Se você rejeitar, a alteração é descartada e o agente
-recebe esse retorno (em vez de mutar o arquivo).
+Na **calha** (à esquerda), cada mudança tem três botões:
 
-> O diff é mostrado para edições de código (ex.: editar uma unit, substituir trecho,
-> reescrever o conteúdo do editor). Veja
-> [O que o agente faz no seu projeto](06-o-que-o-agente-faz.md).
+- **✓ aceitar** — mantém o novo texto.
+- **✗ rejeitar** — desfaz e restaura o original.
+- **✎ anotar** — escreve uma nota que é **entregue ao agente** (marcada como aceita ou
+  rejeitada), para ele aprender o seu retorno sobre aquela edição.
+
+Há ainda a pílula **Aceitar tudo / Rejeitar tudo** quando há várias mudanças pendentes —
+elas se acumulam **sem travar** o agente. **Salvar** o arquivo (ou rodar) **aceita** as
+mudanças pendentes e limpa a revisão.
+
+> A revisão aparece para edições de código (ex.: editar uma unit, substituir trecho).
+> Veja [O que o agente faz no seu projeto](06-o-que-o-agente-faz.md).
 
 ## Segurança: consentimento e auditoria
 

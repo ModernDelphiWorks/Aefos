@@ -15,7 +15,7 @@ this — the agent uses the tools on its own — but it helps to know what it ca
 | **Form Designer (live)** | Add/remove components on the open form, set properties, create event handlers |
 | **Refactor** | Rename, scaffolding |
 
-> All changes go through **consent + inline diff + audit** (see
+> All changes go through **consent + before/after review + audit** (see
 > [Using the Chat](05-using-the-chat.md)).
 
 ## The Design ↔ Code "magic"

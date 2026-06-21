@@ -16,8 +16,8 @@ fazer.
 | **Form Designer (vivo)** | Adicionar/remover componentes no formulário aberto, definir propriedades, criar event handlers |
 | **Refactor** | Renomear, scaffolding |
 
-> Todas as alterações passam por **consentimento + diff inline + auditoria** (veja
-> [Usando o Chat](05-usando-o-chat.md)).
+> Todas as alterações passam por **consentimento + revisão antes/depois + auditoria**
+> (veja [Usando o Chat](05-usando-o-chat.md)).
 
 ## A "mágica" do Design ↔ Code
 

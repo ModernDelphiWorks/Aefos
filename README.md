@@ -16,7 +16,7 @@
 In-IDE AI **Chat** + **Terminal** for RAD Studio Delphi 13, powered by the AI CLI you
 already use (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 
-[![Version](https://img.shields.io/badge/version-0.21.0--beta-orange)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.22.0--beta-orange)](CHANGELOG.md)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D6)](#requirements)
 [![License](https://img.shields.io/badge/license-EULA%20%E2%80%94%20Community%20free-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Security%20policy-success)](https://www.pubpascal.dev/packages/aefos)

@@ -8,6 +8,14 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [0.22.0-beta] - 2026-06-22
+
+### Added
+- **WebView2 diagnostic trace toggle** in **Tools → Options → Aefos → AI Flow**. If the
+  Chat panel ever shows a blank/black screen, turn this on to capture a diagnostic log
+  (`%TEMP%\aefos_comp.log`) to send with a bug report — no need to touch environment
+  variables. Leave it off for normal use.
+
 ## [0.21.0-beta] - 2026-06-21
 
 ### Added

@@ -21,10 +21,13 @@ consistent with the Brazilian General Data Protection Law (Lei nº 13.709/2018 �
 
 ## 1. Controller (Controlador)
 
-The controller of the personal data described here is the Aefos AI maintainer:
+The controller of the personal data described here is:
 
-- **Maintainer:** Aefos AI (TecSis Info)
-- **Contact / Encarregado (DPO):** tecsisinfo.com.br@gmail.com
+- **Legal name:** Isaque de Souza Pinheiro (Empresário Individual / ME)
+- **CNPJ:** 02.565.249/0001-70
+- **Address:** Av. Aurelio Alvarenga, 33-A, Guarana, Aracruz - ES, Brazil, CEP 29.195-421
+- **Product:** Aefos AI
+- **Data Protection Officer (Encarregado/DPO) — LGPD art. 41:** Isaque de Souza Pinheiro — tecsisinfo.com.br@gmail.com
 - **Official channel:** https://www.pubpascal.dev
 
 You may use the contact above to exercise any of the rights described in Section 8.

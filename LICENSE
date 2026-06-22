@@ -83,6 +83,8 @@ not expire so long as you comply with this Agreement.
 
 The Pro Edition is available through a paid subscription and may include additional features, tools, integrations, models, automation capabilities, support, or usage limits.
 
+**Right of withdrawal (Brazilian consumers).** Where you purchase a paid Edition online as a consumer ("consumidor") and the Brazilian Consumer Protection Code (Law No. 8.078/1990, "CDC") applies, you may withdraw from the purchase within **seven (7) days** of the contract date or receipt of the license, as provided in Article 49 of the CDC, and receive a refund of amounts paid. To exercise this right, contact us at the address in Section 20; the refund follows the procedure of the payment provider used at checkout. This right is in addition to, and does not limit, any other refund terms offered.
+
 ## 2.3 Enterprise Edition
 
 The Enterprise Edition is licensed under a separate commercial agreement and may include enterprise-specific functionality, support, deployment options, compliance features, and custom licensing terms.
@@ -288,25 +290,19 @@ If you provide Aefos with any ideas, suggestions, enhancement requests, bug repo
 
 ---
 
-# 17. U.S. GOVERNMENT END USERS
-
-The Software is "Commercial Computer Software" and "Commercial Computer Software Documentation" as those terms are used in 48 C.F.R. 12.212 and 48 C.F.R. 227.7202. If the Software is acquired by or on behalf of any unit or agency of the United States Government, it is provided only with the rights set forth in this Agreement, consistent with FAR 12.212 and DFARS 227.7202.
-
----
-
-# 18. GOVERNING LAW; JURISDICTION; WAIVERS
+# 17. GOVERNING LAW; JURISDICTION; WAIVERS
 
 This Agreement shall be governed by and construed in accordance with the laws of the Federative Republic of Brazil, without regard to conflict-of-law principles, including, where applicable, Law No. 9.609/1998 (Software Law), Law No. 9.610/1998 (Copyright Law), Law No. 12.965/2014 (Internet Civil Framework), and Law No. 13.709/2018 (LGPD). The United Nations Convention on Contracts for the International Sale of Goods does not apply to this Agreement.
 
 The parties elect the courts of the Judicial District (Comarca) of Aracruz, State of Espírito Santo, Brazil, as the exclusive venue for any dispute arising from or relating to this Agreement, and each party irrevocably submits to that jurisdiction and waives any objection of inconvenient forum — **except** where applicable mandatory law (including the Brazilian Consumer Protection Code, Law No. 8.078/1990, "CDC") requires a different venue (such as the consumer's domicile), in which case that mandatory venue prevails.
 
-To the maximum extent permitted by applicable law, any dispute shall be resolved on an individual basis only, and you waive any right to bring or participate in a class, collective, or representative action and any right to a trial by jury. This waiver does not apply where, and only to the extent that, applicable mandatory law (including the CDC and the Brazilian rules governing collective actions) does not permit it.
+To the maximum extent permitted by applicable law, any dispute shall be resolved on an individual basis only, and you waive any right to bring or participate in a class, collective, or representative action. This waiver does not apply where, and only to the extent that, applicable mandatory law (including the CDC and the Brazilian rules governing collective actions) does not permit it.
 
 This Agreement is drafted in English, which is the controlling language; any translation is provided for convenience only. Nothing in this Agreement limits any non-waivable right or remedy granted to you by applicable law, including the acts a lawful licensee may perform under Article 6 of Law No. 9.609/1998 regardless of any contractual restriction.
 
 ---
 
-# 19. GENERAL PROVISIONS
+# 18. GENERAL PROVISIONS
 
 **Entire Agreement.** This Agreement — together with the `PRIVACY.md` and `THIRD-PARTY-NOTICES.txt` files distributed with the Software and any applicable Pro/Enterprise order — is the entire agreement between you and Aefos regarding the Software and supersedes all prior or contemporaneous understandings on that subject.
 
@@ -320,15 +316,15 @@ This Agreement is drafted in English, which is the controlling language; any tra
 
 **No Agency.** Nothing in this Agreement creates any partnership, joint venture, agency, fiduciary, or employment relationship between the parties.
 
-**Notices.** Legal notices to Aefos must be sent to the contact in Section 21.
+**Notices.** Legal notices to Aefos must be sent to the contact in Section 20.
 
 **Headings.** Section headings are for convenience only and do not affect interpretation.
 
-**Survival.** Provisions that by their nature should survive termination — including Sections 5, 10, 11, 12, 13, 16, 18, and 19 — survive any expiration or termination of this Agreement.
+**Survival.** Provisions that by their nature should survive termination — including Sections 5, 10, 11, 12, 13, 16, 17, and 18 — survive any expiration or termination of this Agreement.
 
 ---
 
-# 20. CHANGES TO THIS AGREEMENT
+# 19. CHANGES TO THIS AGREEMENT
 
 Aefos may modify this Agreement from time to time.
 
@@ -336,13 +332,17 @@ Updated versions will be published through official distribution channels.
 
 Continued use of the Software after publication of an updated Agreement constitutes acceptance of the revised terms, to the extent permitted by applicable law.
 
+For **material changes that adversely affect a paying subscriber**, Aefos will give reasonable prior notice (e.g. by e-mail or in-product notice) before the change takes effect, and the subscriber may decline by terminating the paid subscription and receiving a pro-rata refund of the unused, prepaid period.
+
 ---
 
-# 21. CONTACT
+# 20. CONTACT
 
 For licensing, legal, partnership, or compliance inquiries:
 
-Aefos AI
+**Aefos AI** — a product of **Isaque de Souza Pinheiro** (Empresário Individual / ME)
+CNPJ: **02.565.249/0001-70**
+Address: **Av. Aurélio Alvarenga, 33-A, Guaraná, Aracruz – ES, Brazil, CEP 29.195-421**
 
 Email: [tecsisinfo.com.br@gmail.com](mailto:tecsisinfo.com.br@gmail.com)
 

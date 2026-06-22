@@ -22,10 +22,13 @@ complementa o Contrato de Licença de Usuário Final (EULA) do Aefos AI
 
 ## 1. Controlador
 
-O controlador dos dados pessoais aqui descritos é o mantenedor do Aefos AI:
+O controlador dos dados pessoais aqui descritos é:
 
-- **Mantenedor:** Aefos AI (TecSis Info)
-- **Contato / Encarregado (DPO):** tecsisinfo.com.br@gmail.com
+- **Razão social:** Isaque de Souza Pinheiro (Empresário Individual / ME)
+- **CNPJ:** 02.565.249/0001-70
+- **Endereço:** Av. Aurélio Alvarenga, 33-A, Guaraná, Aracruz – ES, Brasil, CEP 29.195-421
+- **Produto:** Aefos AI
+- **Encarregado (DPO) — art. 41 da LGPD:** Isaque de Souza Pinheiro — tecsisinfo.com.br@gmail.com
 - **Canal oficial:** https://www.pubpascal.dev
 
 Use o contato acima para exercer qualquer um dos direitos descritos na Seção 8.

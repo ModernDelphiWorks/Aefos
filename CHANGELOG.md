@@ -8,6 +8,20 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [0.23.0-beta] - 2026-06-22
+
+### Fixed
+- **Black Chat panel, attacked at the root.** The Microsoft WebView2 loader
+  (`WebView2Loader.dll`) is now **shipped next to the plugin** and loaded by full path,
+  so it's found even when it isn't beside the IDE executable (a cause of the black panel
+  on some Windows 10 machines).
+
+### Changed
+- **The installer now checks the WebView2 Runtime up front.** If it's missing, setup
+  **stops with a clear message and the download link** instead of installing into a panel
+  that can't render — and it tells you explicitly when the machine is **offline** (so you
+  know it couldn't download or verify it). Install the Runtime, then re-run setup.
+
 ## [0.22.0-beta] - 2026-06-22
 
 ### Added

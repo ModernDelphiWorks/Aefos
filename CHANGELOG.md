@@ -8,6 +8,15 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [0.26.0-beta] - 2026-06-24
+
+### Added
+- **Manage your Python tools from the IDE (Pro).** A new **Aefos PyTools** item in
+  the IDE **View** menu opens a manager to **create, edit and delete** the Python
+  tools the agent can use (in both Chat and Terminal) — no more hand-editing files.
+  Each tool stays a folder under `%APPDATA%\Aefos\pytools` (`tool.json` + `main.py`);
+  the manager writes them for you. New tools load on the next MCP session.
+
 ## [0.25.1-beta] - 2026-06-24
 
 ### Changed

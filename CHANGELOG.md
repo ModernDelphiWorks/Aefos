@@ -8,6 +8,42 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [0.25.1-beta] - 2026-06-24
+
+### Changed
+- **Issue reporting is now opt-in.** A new **Issue reporting** toggle in
+  **Tools → Options → Aefos → AI Flow** controls whether the agent's bug/suggestion
+  dialog (`ProposeAefosIssue`) can open. **Off by default** — turn it on to send
+  feedback; otherwise the agent can never pop the dialog.
+
+## [0.25.0-beta] - 2026-06-24
+
+### Added
+- **Built-in project templates.** The agent (and the chat **New Project** picker)
+  scaffolds a ready-to-build project from a template: **Console, VCL, FMX, Library,
+  Package, DUnitX**. Each renders the name you choose, ships a clean `.dproj`, and
+  gets a fresh project GUID so two projects from the same template never collide.
+  Installed to `%APPDATA%\Aefos\templates` — drop your own folder there to add one.
+- **DUnitX projects come ready to run.** A new DUnitX test project includes the
+  canonical runner (console + NUnit-XML loggers, RTTI discovery) **and** a sample
+  `[TestFixture]`, so it builds and runs a test out of the box.
+- **Report an Aefos issue from the agent.** When it hits a genuine defect the agent
+  can *propose* a bug/suggestion: an editable window opens (your text pre-filled,
+  IDE/Aefos/OS versions attached) and **Send** opens a pre-filled GitHub issue for
+  you to review and submit. The agent never files anything itself.
+
+## [0.24.1-beta] - 2026-06-24
+
+### Added
+- **Auto-approve tool permissions.** A new "Tool permissions" mode in
+  **Tools → Options → Aefos → AI Flow**: *Ask every time* (default), *Auto-approve
+  edits, ask before destructive*, or *Auto-approve everything*. Works for both Chat
+  and Terminal; auto-approvals are still recorded in the audit log.
+
+### Changed
+- **Cleaner AI Flow options page** — reorganized into clear sections (Tool
+  permissions, Agent edits, IDE behavior, Diagnostics).
+
 ## [0.23.0-beta] - 2026-06-22
 
 ### Fixed

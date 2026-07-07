@@ -8,6 +8,85 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [0.29.0-beta] - 2026-07-07
+
+> ⬇️ Free edition: <https://www.pubpascal.dev> · 💎 Subscription plans (Pro): <https://isaquepinheiro.com.br/>
+
+### Fixed
+- **Sending from the Welcome page now works.** With no project open, the chat used
+  to echo your message and silently do nothing (the report behind most 0.28.0
+  complaints). The agent now answers from the Welcome page and can even open or
+  create the project for you.
+- **A stuck "working..." never bricks the chat again.** If the completion signal is
+  ever lost, the composer detects the stale state and heals itself; your typed text
+  is preserved.
+- **Blank assistant bubbles auto-recover.** A corrupted chat page (the cause of
+  empty responses) is detected and reloaded automatically, replaying the conversation.
+- **Garbled characters fixed** (`â€"` instead of `—`) in the consent dialog title,
+  the audit log and the tool descriptions the agent reads.
+
+### Added
+- **Send while the agent works.** Type and press Enter mid-run: the message shows as
+  a bubble at once, a "⏳ N messages queued" line tracks what's waiting, and each
+  queued message dispatches automatically as its own turn when the current one
+  finishes — the agent keeps the full conversation context. **Stop cancels only the
+  current turn**; queued messages survive and run next. Starting a new session (or
+  switching Chat↔Agent) discards the leftover queue.
+- **`.pas` ↔ `.dfm` desync guard.** Bulk writes that would orphan a component (form
+  declares it, code doesn't) are refused with a machine-actionable reason, steering
+  the agent to the proper Design-mode tools.
+
+### Changed
+- **Faster first reaction on screenshot prompts.** The agent is instructed to start
+  building immediately (project first, then component by component) instead of
+  planning in silence.
+
+## [0.28.0-beta] - 2026-07-04
+
+### Added
+- **Screenshot the form (`CaptureForm`).** The agent can capture the live form
+  designer to *see* what it built.
+- **Design↔Code guidance.** The agent receives advisory next-prompts that conduct it
+  smoothly through the Design/Code flow.
+- **`SetComponentProperty` accepts named constants.** Set a `TColor`/`TCursor` by
+  name (e.g. `clSkyBlue`, `crHandPoint`), not just a raw value.
+
+### Changed
+- **Change-review gutter (the Cursor-style ✓/✗ diff).** Real unified-diff `+`/`-`
+  markers; per-unit review state (opening another file no longer disturbs a review
+  in progress); "Wait for my approval" is honoured (a save never silently
+  auto-accepts); `InsertCodeAtCursor` and `ReplaceEditorSelection` now route through
+  the same review gate; a pending change re-anchors when you edit the lines above it.
+- **Smarter Save-All guard.** Aefos refuses a Save-All while a `.dfm` event still has
+  no handler (no more "handler does not exist — remove the reference?" popup); the
+  guard also covers Save-Active-File.
+- **`AddComponent` requires a Parent** — components land where you intend, first time.
+
+### Fixed
+- Audit-remediation robustness pass: UTF-8 no longer truncated mid-character on large
+  frames; the whole edit buffer is read (256 KB cap removed);
+  `_RefreshModuleFromDisk` no longer clobbers an unsaved sibling buffer; the pipe
+  send timeout scales to the frame size; consent prompts are interpreter-aware and
+  tool descriptions are honest about what each tool does.
+
+## [0.27.0-beta] - 2026-06-29
+
+### Fixed
+- **IDE version reported correctly.** `GetIDEVersion` no longer hard-codes "13.0";
+  it reports the actual running IDE (Delphi 12 / BDS 23.0 → 12.0; Delphi 13 /
+  BDS 37.0 → 13.0).
+- **Terminal find-bar teardown** — fixed a use-after-free (the `pnlFind` window-proc
+  subclass was never restored before the panel was freed).
+
+### Changed
+- The MCP workspace facade (an 8,200-line god-object) was decomposed into **24
+  focused SOLID services** — a pure delegation shell (−86%), every step validated
+  and build-clean on D12 + D13.
+- New **`WithLiveSource`** harness seam: all six code-write tools flip the IDE to
+  Code and edit the live buffer through one battle-tested transaction.
+- The terminal dock form (4,400 lines) was decomposed into **5 focused helpers** (−26%).
+- Debug breadcrumbs no longer ship in release builds; dead code removed.
+
 ## [0.26.0-beta] - 2026-06-24
 
 ### Added

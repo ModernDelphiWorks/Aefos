@@ -9,6 +9,23 @@ Dates are in `YYYY-MM-DD`.
 ## [Unreleased]
 
 ## [0.29.0-beta] - 2026-07-07
+### Fixed (refresh 2026-07-08 — installer assets updated in place)
+- **MCP now connects on default-policy Windows.** The stdio↔pipe bridge is launched
+  with `-ExecutionPolicy Bypass`; a `Restricted` policy (the Windows client default)
+  used to kill it at startup, so every CLI reported "handshaking with MCP server
+  failed: connection closed".
+- **"Test MCP" is now truthful for Codex.** It performs a live MCP handshake through
+  the same per-run wiring the chat uses, instead of probing `codex mcp list` (which
+  can never see it) and always reporting "aefos not found in this project".
+- **The chat header honors your saved executor on the Welcome page.** The model list
+  showed the default executor's models and a picked model never took until the first
+  message; the header now resolves the executor exactly like sending does.
+- **Fixed an IDE crash from the Terminal "Test MCP" button** (`External exception
+  C0150014`, then "Unknown Hard Error" on IDE close). The MCP host is no longer
+  restarted on a no-op apply, and its shutdown can no longer deadlock against an
+  in-flight tool call.
+- **The Login button now shows "Logged in"** when the Codex CLI reports an
+  authenticated session.
 
 > ⬇️ Free edition: <https://www.pubpascal.dev> · 💎 Subscription plans (Pro): <https://isaquepinheiro.com.br/>
 

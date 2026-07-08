@@ -29,6 +29,11 @@ Dates are in `YYYY-MM-DD`.
 - **Codex model list refreshed to the current generation** (`gpt-5.5`, `gpt-5.4`,
   `gpt-5.4-mini`) — the backend retired the old `gpt-5-codex`/`gpt-5` slugs. An
   untouched old list migrates automatically; a customized list is never modified.
+- **"Test CLI" now discovers the models your account actually supports** — for
+  Codex it reads the CLI's own per-account catalog and fills the model list
+  ("Connected … - N model(s) on your account"), the same way the Ollama Test
+  fills the list from your local models. CLIs that publish no list keep the
+  curated suggestions plus the "+" button.
 
 > ⬇️ Free edition: <https://www.pubpascal.dev> · 💎 Subscription plans (Pro): <https://isaquepinheiro.com.br/>
 

@@ -8,6 +8,43 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [0.30.0-beta] - 2026-07-12
+The biggest release since the plugin launched: the agent can now **drive the Delphi
+debugger**, and it can run entirely on **local models** — no cloud, no key.
+
+### Added
+- **The agent debugs your code — 17 debug tools, live in the IDE.** It sets and clears
+  breakpoints (conditional ones too), runs and stops the project, walks the code with
+  step-over / step-into / step-out, reads the call stack and local variables, and
+  evaluates expressions in the current frame — the same loop you would do by hand,
+  driven from chat or the terminal. Ask it to *"find why this returns nil"* and it
+  actually breaks, inspects state and tells you, instead of guessing from the source.
+- **Local models (Ollama).** Pick **"Local models (Ollama)"** in the AI Flow options and
+  the chat runs against your own machine. **Test CLI** pings your Ollama and fills the
+  model list with the models you actually have installed. Free tier — no API key, and
+  nothing leaves your computer.
+
+### Fixed
+- **The Form Designer is no longer bypassable.** `SetDFMContent` could be used to author
+  UI as raw DFM text — controls that never sprout in the Designer, fields Delphi never
+  declares. The tool now refuses it and steers the agent to the proper Design-mode tools,
+  so a form the agent builds is a form the Designer really owns.
+- **The terminal no longer freezes on Ctrl+D.** The bundled `claude` profile ran the CLI
+  as the root of the terminal session; exiting it with Ctrl+D left the session alive but
+  dead inside, and the terminal hung. The profile is gone — open your AI CLI inside a
+  normal shell instead, where exiting it just returns you to the prompt. An existing
+  profile is removed for you.
+- **The chat no longer gets stuck on "working…" after switching provider**, and Stop is
+  guarded so it cannot strand the composer.
+- **Local models never spawn the wrong CLI** — a stale shared executor path could launch
+  a foreign CLI for an Ollama run.
+
+### Changed
+- The bundled agent CLI got a leaner tool catalog, better orientation and conversation
+  compaction, so long sessions stay coherent and cheaper.
+
+> ⬇️ Free edition: <https://www.pubpascal.dev> · 💎 Subscription plans (Pro): <https://isaquepinheiro.com.br/>
+
 ## [0.29.0-beta] - 2026-07-07
 ### Fixed (refresh 2026-07-08 — installer assets updated in place)
 - **MCP now connects on default-policy Windows.** The stdio↔pipe bridge is launched
@@ -302,7 +339,8 @@ Dates are in `YYYY-MM-DD`.
 - Published a machine-readable **SBOM** (CycloneDX 1.5) and a **security disclosure
   policy** (coordinated vulnerability disclosure).
 
-[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.19.1...HEAD
+[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.30.0...HEAD
+[0.30.0-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.29.0...v0.30.0
 [0.19.1-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.19.0...v0.19.1
 [0.19.0-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.18.0...v0.19.0
 [0.18.0-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.17.0...v0.18.0

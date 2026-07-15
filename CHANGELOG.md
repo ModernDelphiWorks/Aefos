@@ -8,6 +8,35 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-07-15
+**Aefos AI leaves beta** — the first stable release.
+
+### Added
+- **Our own WebView2 engine.** The Chat and the MCP Tool Inspector now render on an
+  in-house, clean-room WebView2 integration built directly on Microsoft's public COM
+  API — decoupled from any specific RTL edition, opening the path to older Delphi
+  releases (and, ahead, Lazarus).
+- **Installed addons show up everywhere.** `aefos install <addon>` now reaches both the
+  Chat and the raw terminal: the addon's MCP servers are merged into the project
+  configuration automatically, and a read-only **MCP Servers** panel lists what the
+  agent can reach.
+- **Reasoning Effort selector.** For CLIs that expose it, pick the reasoning effort in
+  the chat footer next to the model pill; remembered per executor.
+- **Download CLI button.** Options now opens the official download page for the
+  selected CLI — the plugin still bundles none and owns no credentials.
+
+### Fixed
+- Typed model labels are normalized to real model ids before reaching the CLI, and the
+  suggested model list was re-seeded to currently valid entries.
+- The Gemini / Ollama provider box in the AI Chat options no longer clips its
+  bottom link.
+- `aefos --version` now reports the real product version.
+
+### Changed
+- A broad internal code-quality overhaul across the entire codebase — no behavior
+  change, a cleaner foundation for what comes next.
+
+
 ## [0.30.0-beta] - 2026-07-12
 The biggest release since the plugin launched: the agent can now **drive the Delphi
 debugger**, and it can run entirely on **local models** — no cloud, no key.
@@ -339,7 +368,8 @@ debugger**, and it can run entirely on **local models** — no cloud, no key.
 - Published a machine-readable **SBOM** (CycloneDX 1.5) and a **security disclosure
   policy** (coordinated vulnerability disclosure).
 
-[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.30.0...HEAD
+[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.30.0...v1.0.0
 [0.30.0-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.29.0...v0.30.0
 [0.19.1-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.19.0...v0.19.1
 [0.19.0-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.18.0...v0.19.0

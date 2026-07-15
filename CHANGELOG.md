@@ -22,11 +22,14 @@ Dates are in `YYYY-MM-DD`.
   agent can reach.
 - **Reasoning Effort selector.** For CLIs that expose it, pick the reasoning effort in
   the chat footer next to the model pill; remembered per executor.
-- **Download CLI button.** Options now opens the official download page for the
+- **Download CLI link.** A subtle link under the Executor path field opens the official download page for the
   selected CLI — the plugin still bundles none and owns no credentials.
 
 ### Fixed
 - Typed model labels are normalized to real model ids before reaching the CLI, and the
+- Agent mode now works with CLIs that sandbox MCP tool calls: some CLIs auto-deny
+  MCP calls in non-interactive turns ("user cancelled MCP tool call"); the agent
+  dispatch now grants the CLI the access it needs — safety stays in the Aefos guards.
   suggested model list was re-seeded to currently valid entries.
 - The Gemini / Ollama provider box in the AI Chat options no longer clips its
   bottom link.

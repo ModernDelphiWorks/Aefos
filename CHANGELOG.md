@@ -8,6 +8,26 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-07-15
+
+**Aefos AI now works out of the box.** This release bundles a ready-to-use AI CLI right in the installer, so a fresh install is productive immediately — no separate CLI download, no PATH setup. **Delphi 12 Athens (BDS 23.0)** and **Delphi 13 (BDS 37.0)**; the installer detects your installed versions and lets you pick.
+
+**New — a ready-to-use AI CLI is bundled**
+- The installer ships **Codex** (and **Gemini**) beside the Aefos agent, installed to your user profile. After setup, open Tools → Options → Aefos → AI Chat and Codex is already selected and working — the executor path can stay empty; Aefos finds the bundled binary.
+- The binaries are refreshed to the current upstream version at each Aefos release (evergreen), not frozen — you always get a recent build, and updating your own CLI keeps working exactly as before.
+- Prefer your own install? A CLI you already have on PATH still takes precedence over the bundled one, so nothing changes for existing setups.
+
+**How the CLIs are provided**
+- **Codex** and **Gemini** are bundled (both Apache-2.0). Gemini has no official Windows binary, so Aefos compiles a standalone one from the published package.
+- **GitHub Copilot** can be **downloaded during setup** — an optional checkbox fetches its official release directly, with an integrated progress page (Aefos never repackages it; Copilot needs its own subscription).
+- **Claude Code** is user-supplied: Aefos detects it on PATH, and the one-click **Download CLI** action in Options opens the official page.
+
+**Under the hood**
+- New resolver step: a bundled CLI in your Aefos user folder resolves with zero configuration, after PATH so your own install always wins.
+- The AI Chat settings (executor, model, path) are confirmed IDE-wide per user profile — editable on the Welcome page with no project open.
+
+Carried forward from 1.0.0: the in-house clean-room WebView2 engine (Chat + MCP Tool Inspector), installed-addon MCP merge, the Reasoning Effort selector, the 17 live debugger tools, local models (Ollama), the live Form Designer tools, RULE #1 intent-guard, and the change-review gutter.
+
 ## [1.0.0] - 2026-07-15
 **Aefos AI leaves beta** — the first stable release.
 
@@ -371,7 +391,8 @@ debugger**, and it can run entirely on **local models** — no cloud, no key.
 - Published a machine-readable **SBOM** (CycloneDX 1.5) and a **security disclosure
   policy** (coordinated vulnerability disclosure).
 
-[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.30.0...v1.0.0
 [0.30.0-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.29.0...v0.30.0
 [0.19.1-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.19.0...v0.19.1

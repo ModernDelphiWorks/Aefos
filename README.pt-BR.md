@@ -53,6 +53,52 @@ depurador), opera o Form Designer e mais.
 |:---:|:---:|
 | ![Aefos Chat](assets/chat.png) | ![Aefos Terminal](assets/terminal.png) |
 
+## Buildar do fonte
+
+Tudo que o Aefos distribui está neste repositório, e builda sem nenhum caminho
+absoluto — os arquivos de pacote usam caminhos relativos ao repo.
+
+```powershell
+scripts\build-packages.ps1 -Version all   # 22.0 = D11, 23.0 = D12, 37.0 = D13
+installer\build-installer.ps1
+```
+
+Ou abra `packages/Delphi/AefosGroup.groupproj` na IDE e builde o grupo — ele já
+carrega a ordem de dependência. Só **Chat** e **Terminal** registram UI na IDE;
+os outros pacotes são dependências de runtime.
+
+Mexeu em `source/lazarus/`? Rode `scripts/build-lazarus.ps1` — **nenhum outro
+script compila essa árvore.**
+
+```
+Aefos/
+├─ source/          all product source code
+│  ├─ chat/         Chat BPL (Core, UI, Register)
+│  ├─ terminal/     Terminal BPL (Core, UI, ThirdParty/libvterm)
+│  ├─ providers/    one driver per AI CLI (Claude/Codex/Copilot/Gemini)
+│  ├─ harness/      Design/Code seam (WithLiveForm, EnsureCode/DesignView)
+│  ├─ webview/      composition-hosted WebView2 (TAefosWebView)
+│  ├─ completion/   inline completion (ghost text)
+│  ├─ data/         SQLite/FireDAC persistence
+│  ├─ lazarus/      the Lazarus/FPC edition
+│  ├─ compat/       shims that let units compile under both compilers
+│  └─ mcp/          MCP protocol + OTA tool facade + the tool suite
+├─ packages/         .dpk/.dproj (Delphi) and .lpk (Lazarus)
+├─ mcps/desktop/     the out-of-process desktop MCP server
+├─ cli/              the `aefos` command-line tool
+├─ installer/        Inno Setup installers
+├─ scripts/          build scripts
+└─ docs/             technical docs + the user manual
+```
+
+| Leia | Para |
+|---|---|
+| [`docs/architecture.md`](docs/architecture.md) | como as peças se encaixam, e por que o motor MCP é desacoplado do `ToolsAPI` |
+| [`docs/build-install.md`](docs/build-install.md) | pré-requisitos de build, ordem dos pacotes, instalar as BPLs numa IDE |
+| [`docs/intent-view.md`](docs/intent-view.md) | a regra Design/Código que toda ferramenta de mutação impõe — o que faz do Aefos uma ferramenta Delphi, e não um editor de texto |
+| [`docs/mcp-tools.md`](docs/mcp-tools.md) | cada ferramenta MCP que a IDE expõe ao agente |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | estilo da casa, e como abrir um PR que entra |
+
 ## Documentação
 
 📖 **[Manual do Usuário](https://moderndelphiworks.github.io/Aefos/)** (PT-BR / EN) — instalação, primeiros passos,

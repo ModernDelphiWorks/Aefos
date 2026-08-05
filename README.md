@@ -17,7 +17,7 @@ In-IDE AI **Chat** + **Terminal** for RAD Studio — Delphi 13, 12 Athens and 11
 Alexandria — powered by the AI CLI you already use (Claude Code, Codex, GitHub
 Copilot CLI, Gemini).
 
-[![Version](https://img.shields.io/badge/version-1.3.0-brightgreen)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.4.0-brightgreen)](CHANGELOG.md)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D6)](#requirements)
 [![License](https://img.shields.io/badge/license-GPL%20v3-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Security%20policy-success)](https://www.pubpascal.dev/packages/aefos)

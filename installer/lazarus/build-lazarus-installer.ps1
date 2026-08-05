@@ -147,7 +147,7 @@ if ($x64Ok -and (-not $x64Loader)) {
   if (Test-Path $fetched) { $x64Loader = $fetched }
 }
 if ($x64Ok -and ((-not $x64Loader) -or (-not (Test-Path $x64Loader)))) {
-  Write-Host "  x86_64 WebView2Loader.dll not available (-WebView2Loader64 / AEFOS_WEBVIEW2_LOADER_X64 / scripts\fetch-webview2-loader.ps1)." -ForegroundColor DarkYellow
+  Write-Host "  x86_64 WebView2Loader.dll not available -- the installer will refuse 64-bit Lazarus. See installer\lazarus\redist\x86_64\README.md." -ForegroundColor DarkYellow
   $x64Ok = $false
 }
 if ($x64Ok) {

@@ -82,7 +82,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Aefos.OTA.TerminalFont.res"/>
+        <DCCReference Include="Aefos.OTA.TerminalFont.RES"/>
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="vclie.dcp"/>

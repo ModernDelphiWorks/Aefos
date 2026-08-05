@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Dates are in `YYYY-MM-DD`.
 
-## [Unreleased]
+## [1.2.0] - 2026-08-05
+
+**Aefos AI is free software.** The source is published, the licence gate is gone,
+and every feature ships enabled. **Delphi 12 Athens (BDS 23.0)** and **Delphi 13
+(BDS 37.0)**; the installer detects what you have and lets you pick.
 
 ### Removed
 
@@ -43,10 +47,20 @@ Until this date the software was proprietary, governed by an EULA. That agreemen
 is kept in the repository as `EULA-historical.md` — the record of what the licence
 used to be, not a document that still governs the software.
 
-What did **not** change: the hosted services around the software (the licence-key
-backend, the Pro and Enterprise subscriptions, paid support) are services, not
-the software, and are not covered by the GPL. Releases continue to be published
-from this repository.
+Releases continue to be published from this repository.
+
+### Fixed
+
+Publication left references behind, and they are corrected here: the chat package
+listed two test units under a directory that is not published, so a DEBUG build
+could not resolve them; the Lazarus register still declared a License menu and
+described it in four comments; the third-party notices pointed at vendor
+directories for components that ship embedded in a `.pas`; and `CONTRIBUTING.md`
+still told visitors the source was private, on the page GitHub links from every
+new issue and pull request.
+
+The READMEs advertised Delphi 11 support, which had never been built. They now say
+12 and 13, which this release ships and was built from this tree.
 
 
 ## [1.1.0] - 2026-07-15
@@ -432,7 +446,8 @@ debugger**, and it can run entirely on **local models** — no cloud, no key.
 - Published a machine-readable **SBOM** (CycloneDX 1.5) and a **security disclosure
   policy** (coordinated vulnerability disclosure).
 
-[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.30.0...v1.0.0
 [0.30.0-beta]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.29.0...v0.30.0

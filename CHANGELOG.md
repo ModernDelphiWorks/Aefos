@@ -8,6 +8,28 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+### Licence
+
+**Aefos AI became free software on 2026-08-05.** The software is now licensed
+under the **GNU General Public License version 3**, with two additional
+permissions granted under GPLv3 section 7 (`ADDITIONAL-PERMISSIONS.md`):
+
+- the code Aefos generates for you is **yours**, under any licence you choose,
+  including a proprietary one — using Aefos places no obligation on what you
+  build with it;
+- linking with the Embarcadero RAD Studio libraries is expressly permitted,
+  without which a design-time package could not be distributed at all.
+
+Until this date the software was proprietary, governed by an EULA. That agreement
+is kept in the repository as `EULA-historical.md` — the record of what the licence
+used to be, not a document that still governs the software.
+
+What did **not** change: the hosted services around the software (the licence-key
+backend, the Pro and Enterprise subscriptions, paid support) are services, not
+the software, and are not covered by the GPL. Releases continue to be published
+from this repository.
+
+
 ## [1.1.0] - 2026-07-15
 
 **Aefos AI now works out of the box.** This release bundles a ready-to-use AI CLI right in the installer, so a fresh install is productive immediately — no separate CLI download, no PATH setup. **Delphi 12 Athens (BDS 23.0)** and **Delphi 13 (BDS 37.0)**; the installer detects your installed versions and lets you pick.

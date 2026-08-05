@@ -11,7 +11,7 @@ que você já usa (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 
 [![Versão](https://img.shields.io/badge/vers%C3%A3o-0.17.0--beta-orange)](CHANGELOG.md)
 [![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6)](#requisitos)
-[![Licença](https://img.shields.io/badge/licen%C3%A7a-EULA%20%E2%80%94%20Community%20gr%C3%A1tis-blue)](LICENSE)
+[![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL%20v3-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Pol%C3%ADtica%20de%20Seguran%C3%A7a-success)](https://www.pubpascal.dev/packages/aefos)
 
 [⬇️ Download](../../releases) · [📖 Manual do Usuário](https://moderndelphiworks.github.io/Aefos/) · [🐛 Reportar bug](../../issues/new/choose) · [🔒 Segurança](SECURITY.md)
@@ -20,9 +20,9 @@ que você já usa (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 
 </div>
 
-> **Esta é a casa pública do Aefos AI** — downloads, manual do usuário e abertura de
-> issues. O código-fonte do produto é privado; este repositório hospeda o que os
-> usuários precisam.
+> **Esta é a casa pública do Aefos AI** — o código-fonte, downloads, manual
+> do usuário e abertura de issues. O Aefos AI é **software livre sob a GNU GPL
+> v3** (desde 5 de agosto de 2026).
 
 ## O que é
 
@@ -100,7 +100,11 @@ Passos completos no [manual](https://moderndelphiworks.github.io/Aefos/).
 
 ## Privacidade e licença
 
-- 📄 [EULA](LICENSE) — proprietária; edição Community grátis (incl. uso empresarial interno).
+- 📄 [GNU GPL v3](LICENSE) — software livre, com duas permissões adicionais
+  da §7 ([ADDITIONAL-PERMISSIONS.md](ADDITIONAL-PERMISSIONS.md)): o código que o
+  Aefos gera é **seu**, sob qualquer licença, e a linkagem com as bibliotecas do
+  RAD Studio é expressamente permitida. A licença anterior fica como registro
+  em [EULA-historical.md](EULA-historical.md).
 - 🔐 [Política de Privacidade](PRIVACY.pt-BR.md) ([EN](PRIVACY.md)) — alinhada à LGPD.
 
 ---

@@ -43,7 +43,7 @@ interface
     each platform rejects the other with E2045. Separate folders so a build
     can never pick up the wrong one. }
   {$IFDEF WIN64}
-    {$L '..\ThirdParty\libvterm\obj\Win64x\libvterm_unity.o'}
+    {$L '..\ThirdParty\libvterm\obj\Win64\libvterm_unity.o'}
   {$ELSE}
     {$L '..\ThirdParty\libvterm\obj\libvterm_unity.obj'}
   {$ENDIF}
@@ -570,6 +570,17 @@ begin
 end;
 
 function __acrt_iob_func(AIndex: Cardinal): Pointer; cdecl;
+begin
+  Result := nil;
+end;
+
+{ The two 64-bit compilers name the same helper differently, and the difference is
+  a single underscore: bcc32c emits ___get_std_stream, bcc64 (classic Win64) emits
+  __get_std_stream, and bcc64x (Win64 Modern) calls __acrt_iob_func instead. All
+  three return the stream fprintf would write to, and fprintf is stubbed, so all
+  three return nil. Declaring all of them costs nothing -- the linker keeps only
+  the one its object asked for. }
+function __get_std_stream(AIndex: Integer): Pointer; cdecl;
 begin
   Result := nil;
 end;

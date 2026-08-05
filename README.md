@@ -3,7 +3,7 @@
   - Replace https://moderndelphiworks.github.io/Aefos/ with the GitHub Pages / custom-domain URL (e.g. https://aefos.pubpascal.dev)
   - Replace <REPO_URL> with https://github.com/ModernDelphiWorks/Aefos
   - Releases link assumes this repo hosts the installer as a Release asset.
-  This is the PUBLIC repo (downloads + manual + issues). The source code is private.
+  This is the PUBLIC repo: source code, downloads, the manual and the issue tracker.
 -->
 <div align="center">
 
@@ -18,7 +18,7 @@ already use (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 
 [![Version](https://img.shields.io/badge/version-0.23.0--beta-orange)](CHANGELOG.md)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D6)](#requirements)
-[![License](https://img.shields.io/badge/license-EULA%20%E2%80%94%20Community%20free-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL%20v3-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Security%20policy-success)](https://www.pubpascal.dev/packages/aefos)
 
 [⬇️ Download](../../releases) · [📖 User Manual](https://moderndelphiworks.github.io/Aefos/) · [🐛 Report a bug](../../issues/new/choose) · [🔒 Security](SECURITY.md)
@@ -27,9 +27,9 @@ already use (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 
 </div>
 
-> **This is the public home of Aefos AI** — downloads, the user manual, and the issue
-> tracker. The product source code is private; this repository hosts the things users
-> need.
+> **This is the public home of Aefos AI** — the source code, downloads, the user
+> manual, and the issue tracker. Aefos AI is **free software under the GNU GPL v3**
+> (since 5 August 2026).
 
 ## What it is
 
@@ -107,6 +107,17 @@ The Chat talks to the AI CLI you already use. Point Aefos at it once:
 3. Open **View → Aefos AI (Chat)** and start typing.
 
 ## License & activation
+
+**The software is free software under the [GNU GPL v3](LICENSE)**, with two
+additional permissions granted under GPLv3 section 7 (see
+[`ADDITIONAL-PERMISSIONS.md`](ADDITIONAL-PERMISSIONS.md)): the code Aefos writes
+for you is **yours**, under any licence you choose, and linking with the RAD Studio
+libraries a design-time package cannot exist without is expressly allowed. The
+licence that governed the software before 5 August 2026 is kept, for the record,
+in [`EULA-historical.md`](EULA-historical.md).
+
+A **license key** buys the hosted service around the software, not the software
+itself.
 
 **The Community edition is free — no license key required.** Install it and use the
 Chat (including **Agent mode**) right away. Community is free for **personal,

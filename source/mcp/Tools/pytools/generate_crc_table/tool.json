@@ -1,0 +1,14 @@
+{
+  "name": "GenerateCrcTable",
+  "description": "Computes a CRC lookup table (256 entries) for a given polynomial and generates the Delphi const array. A deterministic computation the agent should not do by hand. Default = CRC-32 (0xEDB88320). Returns {inject:at_cursor}.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "polynomial": { "type": "integer", "description": "reversed polynomial (default 3988292384 = 0xEDB88320)" },
+      "const_name": { "type": "string", "description": "const name (default CrcTable)" }
+    }
+  },
+  "entry": "main.py",
+  "python": "",
+  "timeoutMs": 10000
+}

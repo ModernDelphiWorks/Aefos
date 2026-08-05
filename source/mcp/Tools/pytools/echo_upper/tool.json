@@ -1,0 +1,14 @@
+{
+  "name": "EchoUpper",
+  "description": "Example tool: receives {\"text\": \"...\"} and returns the text in uppercase. Serves as a smoke test for the Python tools mechanism.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "text": { "type": "string", "description": "text to transform" }
+    },
+    "required": ["text"]
+  },
+  "entry": "main.py",
+  "python": "",
+  "timeoutMs": 10000
+}

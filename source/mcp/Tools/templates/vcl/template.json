@@ -1,0 +1,8 @@
+{
+  "name": "VCL Forms Application",
+  "category": "VCL",
+  "description": "A Windows VCL application with an empty main form.",
+  "vars": [
+    { "name": "Name", "label": "Project name", "description": "Pascal identifier, no extension.", "default": "MyVclApp" }
+  ]
+}

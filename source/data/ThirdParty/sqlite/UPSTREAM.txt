@@ -1,0 +1,27 @@
+SQLite amalgamation - vendored third-party source
+==================================================
+
+Product : SQLite (public domain - https://www.sqlite.org/copyright.html)
+Version : 3.46.1  (SQLITE_VERSION "3.46.1")
+Source  : official amalgamation ZIP from sqlite.org
+URL     : https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip
+ZIP sha256 : 77823cb110929c2bcb0f5d48e4833b5c59a8a6e40cdea3936b99e199dbbe5784
+
+Extracted files (sha256):
+  sqlite3.c    6c35bc5f7f85eac9c49928bacbb02bb694b547aabf69197e058cca245ad80e83
+  sqlite3.h    89b62c671c5964e137409ce034941b7b05a3af2c9875aba41f47f9483d0c2515
+  sqlite3ext.h (extension header, kept for completeness)
+
+WHY vendored here
+-----------------
+The Lazarus/FPC edition has no FireDAC. To operate SQLite WITHOUT a sqlite3.dll
+dependency - and read/write the SAME %APPDATA%\Aefos\aefos.db the Delphi/FireDAC
+edition uses - we compile this amalgamation with an i686 mingw gcc into a COFF
+i386 object (obj\sqlite3_fpc.o) and link it statically into the FPC binary,
+mirroring exactly how source\terminal\ThirdParty\libvterm is handled.
+
+BUILD (produces the gitignored obj\sqlite3_fpc.o):
+  powershell scripts\build-sqlite-fpc.ps1
+
+The object is a BUILD ARTIFACT and is NOT committed (see .gitignore). Only the
+amalgamation source above is vendored.

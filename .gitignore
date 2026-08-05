@@ -1,10 +1,149 @@
-# A global gitignore (~/.gitignore_global) may exclude `docs/` — re-include it here
-# so the user manual is tracked in this public repo.
+# ── Delphi build output ───────────────────────────────────────────────────
+*.dcu
+*.dcp
+*.bpl
+*.bpi
+*.o
+*.obj
+*.lib
+*.a
+*.exe
+*.dll
+*.local
+*.identcache
+*.projdata
+*.tvsconfig
+*.skincfg
+*.dsk
+*.stat
+*.drc
+*.map
+*.rsm
+*.~*
+__history/
+__recovery/
+__astcache/
+Win32/
+Win64/
+Win64x/
+Android/
+Android64/
+iOSDevice64/
+iOSSimARM64/
+OSX64/
+OSXARM64/
+Linux64/
+Lib/
+bin/
+.vs/
+
+# ── Lazarus / FPC build output (design package under packages/Lazarus) ─────────
+*.ppu
+*.compiled
+*.lps
+packages/Lazarus/lib/
+# lazbuild auto-generates <pkg>.pas beside the .lpk ("Do not edit!") - derived
+packages/Lazarus/Aefos.Lazarus.IDE.pas
+# lazbuild drops packagefiles.xml at the repo root while resolving package links
+packagefiles.xml
+
+# ── Test / coverage output (the CodeCoverage debug.log flooded the disk: ~6 GB) ─
+**/coverage-*/
+**/coverage/
+**/debug.log
+**/CodeCoverage*.log
+**/CodeCoverage_*.xml
+**/CodeCoverage_*.html
+*.test-out/
+
+# ── Stray build/test capture logs (redirected stdout/stderr scratch) ───────────
+**/build-out.txt*
+**/build-test-std*.txt
+**/test-out*.txt
+**/test-err*.txt
+**/Testcompile-*.txt
+**/S0-*.log
+**/S1-*.log
+**/build-output.log
+
+# ── Local-only reference / study material (not part of the product) ────────────
+**/.local-readonly/
+
+# ── Re-include product docs ────────────────────────────────────────────────────
+# The user's global gitignore (~/.gitignore_global) ignores `docs/` and `docs-src/`.
+# That is a personal, machine-wide rule; for THIS repo the docs ARE the product.
+# A repo-local negation overrides the global pattern.
+!docs/
+!docs/**
+
+# ── Installer build artifacts (compiled by build-installer.ps1) ────────────────
+installer/Output/
+installer/lazarus/Output/
+installer/bpl/
+# Bundled AI CLIs staged into the installer (codex/gemini/... exes + licenses)
+installer/redist/cli/
+# WebView2 redist: the standalone installers (*.exe, already ignored) + winget's
+# manifest sidecars. Keep only the download script (download-webview2.ps1).
+installer/redist/*.yaml
+
+# ── Misc ──────────────────────────────────────────────────────────────────
+Thumbs.db
+.DS_Store
+*.stackdump
+*.log
+!**/Source/**/*.log
+
+# Agent/tool working dirs that leak into Source/* (runtime data, not product)
+**/.claude/
+**/.codex/
+**/.aefos/
+**/.test-out/
+
+# Per-machine MCP config: the plugin (Aefos.MCP.Provision) self-provisions
+# .mcp.json per project with a machine-specific absolute bridge path, so it must
+# not be committed. Keep the committed terminal MCP test fixture, though.
+.mcp.json
+.mcp-dev.json
+!meta/terminal/Test/MCP/.mcp.json
+
+# Supabase CLI local state
+supabase/.temp/
+.branches/
+.temp/
+
+# Manual — generated HTML (build artifact)
+docs/manual/_html/
+
+# Public repo staging (its own git repo; synced from this private source)
+/publish/
+
+# Misc build/run junk (crash dumps, ad-hoc coverage + scan logs, dev dist)
+**/*.stackdump
+**/coverage-run*.log
+**/sonar-scan.log
+meta/chat/dist/
+
+# CLI build outputs (Delphi dcu + FPC ppu/o for the addon manager / agent)
+cli/.build-aefos/
+cli/.build-fpc/
+cli/.build-fpc-agent/
+
+
+# Throwaway spike packages. spikes/inline-ghost was the design-time BPL that
+# proved ghost text could be painted without touching the buffer; it is NOT part
+# of the product and must never reach a package or the public repo.
+spikes/
+
+# ---------------------------------------------------------------------------
+# Public repo specifics (kept from the published tree)
+# ---------------------------------------------------------------------------
+# A global gitignore (~/.gitignore_global) may exclude `docs/` -- re-include it
+# here so the user manual stays tracked.
 !/docs/
 !/docs/manual/
 !/docs/manual/en/
 
-# Manual — generated HTML (build artifact; CI rebuilds for Pages)
+# Manual -- generated HTML (build artifact; CI rebuilds it for Pages)
 docs/manual/_html/
 docs/manual/_html-en/
 

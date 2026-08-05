@@ -1,0 +1,19 @@
+{
+  "name": "ExcelToResourceStrings",
+  "description": "Reads an .xlsx spreadsheet (binary/zip format) and generates a Delphi unit with resourcestrings (key from column A, value from column B, by default). The agent cannot read xlsx; Python reads it with the stdlib (zipfile+xml). Returns {inject:new_unit}.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "xlsx_path":  { "type": "string", "description": "path to the .xlsx" },
+      "unit_name":  { "type": "string", "description": "unit name (default App.Localization)" },
+      "sheet":      { "type": "integer", "description": "1-based sheet index (default 1)" },
+      "key_col":    { "type": "integer", "description": "0-based key column (default 0)" },
+      "value_col":  { "type": "integer", "description": "0-based value column (default 1)" },
+      "header":     { "type": "boolean", "description": "skip the first row (default true)" }
+    },
+    "required": ["xlsx_path"]
+  },
+  "entry": "main.py",
+  "python": "",
+  "timeoutMs": 20000
+}

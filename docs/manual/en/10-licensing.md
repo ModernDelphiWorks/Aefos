@@ -53,7 +53,7 @@ The license menu item itself shows the current **status** (e.g. *License: active
 ## Free business use
 
 The **Community** edition can be used by companies of any size, internally, **with no
-per-seat fee, no user limit, and no penalty**. Details are in the [EULA](../../LICENSE)
+per-seat fee, no user limit, and no penalty**. Details are in the [GNU GPL v3](../../../LICENSE)
 (see also [Privacy & license](12-privacy-and-license.md)).
 
 ➡️ Next: [Troubleshooting](11-troubleshooting.md)

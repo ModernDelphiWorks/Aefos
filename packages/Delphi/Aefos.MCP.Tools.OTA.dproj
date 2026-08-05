@@ -1,0 +1,227 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{425C9D0E-86EA-4EFB-8DFD-282728A18360}</ProjectGuid>
+        <MainSource>Aefos.MCP.Tools.OTA.dpk</MainSource>
+        <ProjectVersion>20.4</ProjectVersion>
+        <FrameworkType>VCL</FrameworkType>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <TargetedPlatforms>3806339</TargetedPlatforms>
+        <AppType>Package</AppType>
+        <ProjectName Condition="'$(ProjectName)'==''">Aefos.MCP.Tools.OTA</ProjectName>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Cfg_1)'=='true') or '$(Cfg_1_iOSDevice64)'!=''">
+        <Cfg_1_iOSDevice64>true</Cfg_1_iOSDevice64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSX64' and '$(Cfg_1)'=='true') or '$(Cfg_1_OSX64)'!=''">
+        <Cfg_1_OSX64>true</Cfg_1_OSX64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSXARM64' and '$(Cfg_1)'=='true') or '$(Cfg_1_OSXARM64)'!=''">
+        <Cfg_1_OSXARM64>true</Cfg_1_OSXARM64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Cfg_2)'=='true') or '$(Cfg_2_iOSDevice64)'!=''">
+        <Cfg_2_iOSDevice64>true</Cfg_2_iOSDevice64>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSX64' and '$(Cfg_2)'=='true') or '$(Cfg_2_OSX64)'!=''">
+        <Cfg_2_OSX64>true</Cfg_2_OSX64>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='OSXARM64' and '$(Cfg_2)'=='true') or '$(Cfg_2_OSXARM64)'!=''">
+        <Cfg_2_OSXARM64>true</Cfg_2_OSXARM64>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_DcuOutput>Lib\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>Bin\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_E>false</DCC_E>
+        <DCC_N>false</DCC_N>
+        <DCC_S>false</DCC_S>
+        <DCC_F>false</DCC_F>
+        <DCC_K>false</DCC_K>
+        <GenDll>true</GenDll>
+        <GenPackage>true</GenPackage>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <SanitizedProjectName>Aefos_MCP_Tools_OTA</SanitizedProjectName>
+        <DCC_UnitSearchPath>..\..\source\mcp\OTA;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_Description>Aefos shared OTA MCP facade (Tools.OTA)</DCC_Description>
+        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.1.0</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_UsePackage>vcl;rtl;vclimg;vclwinx;designide;Aefos.MCP.Core;Aefos.Tools;Aefos.License;Aefos.Harness;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_iOSDevice64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_OSX64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_OSXARM64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <VerInfo_Locale>1033</VerInfo_Locale>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_iOSDevice64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_OSX64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_OSXARM64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="vclwinx.dcp"/>
+        <DCCReference Include="vclimg.dcp"/>
+        <DCCReference Include="designide.dcp"/>
+        <DCCReference Include="Aefos.MCP.Core.dcp"/>
+        <DCCReference Include="Aefos.Tools.dcp"/>
+        <DCCReference Include="Aefos.License.dcp"/>
+        <DCCReference Include="Aefos.Harness.dcp"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.MessageTextPolicy.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ContentWritePolicy.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ConfigWritePolicy.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.UnitCreatePolicy.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.StructuralWritePolicy.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.FormUsesWritePolicy.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.BuildRunPolicy.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.DiffViewService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.Tools.VCS.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.DProjParser.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.RecentFilesPolicy.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ConsentPolicy.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.OTA.UI.MCPConsentDialog.pas">
+            <Form>TMCPConsentDialog</Form>
+        </DCCReference>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.OTA.Options.AIFlow.pas">
+            <Form>AefosAIFlowOptionsFrame</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.FacadeShared.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ReviewGate.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.IDEService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ProjectGroupService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.RunService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.PackagesService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ResourcesService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.BuildConfigService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ProjectWriteService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ProjectReadService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.LibraryPathService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.EditorReadService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.UnitReadService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.BuildService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ConsentService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.EditorWriteService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.CodeInsightWriteService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.FormDesignerService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.UsesWriteService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.StructuralWriteService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ProjectLifecycleService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.CodeIntelReadService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ExternalToolService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.DprService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.IDEReadService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.WorkspaceOpsService.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.WorkspaceFacade.pas"/>
+        <DCCReference Include="..\..\source\chat\UI\Aefos.OTA.UI.ThemeHelper.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.OTA.IDE.GutterReview.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.OTA.MCP.IssueReport.pas"/>
+        <DCCReference Include="..\..\source\mcp\OTA\Aefos.OTA.MCP.PyToolsManager.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Package</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">Aefos.MCP.Tools.OTA.dpk</Source>
+                </Source>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="iOSDevice64">True</Platform>
+                <Platform value="iOSSimARM64">True</Platform>
+                <Platform value="Linux64">True</Platform>
+                <Platform value="OSX64">True</Platform>
+                <Platform value="OSXARM64">True</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">True</Platform>
+                <Platform value="Win64x">True</Platform>
+                <Platform value="WinARM64EC">True</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Target Name="AefosStageBplForInstaller" AfterTargets="Build" Condition="'$(Config)'=='Release' and '$(Platform)'=='Win32'">
+        <PropertyGroup>
+            <AefosBpl>$(BDSCOMMONDIR)\Bpl\$(MSBuildProjectName).bpl</AefosBpl>
+            <AefosStage>$(MSBuildProjectDirectory)\..\..\installer\bpl</AefosStage>
+        </PropertyGroup>
+        <MakeDir Directories="$(AefosStage)" Condition="!Exists('$(AefosStage)')"/>
+        <Copy SourceFiles="$(AefosBpl)" DestinationFolder="$(AefosStage)" SkipUnchangedFiles="false" Condition="Exists('$(AefosBpl)')"/>
+        <Message Importance="high" Condition="Exists('$(AefosBpl)')" Text="[Aefos] staged $(MSBuildProjectName).bpl -&gt; installer\bpl"/>
+    </Target>
+</Project>

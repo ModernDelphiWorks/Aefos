@@ -1,0 +1,3 @@
+# Compiled libvterm objects are a build product of build-objs.bat.
+# They are regenerated from the vendored C source and must not be committed.
+obj/

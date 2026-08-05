@@ -1,0 +1,341 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="Aefos.Lazarus.IDE"/>
+    <Type Value="DesignTime"/>
+    <Author Value="ModernDelphiWorks"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="..\..\source\lazarus\ide;..\..\source\lazarus\webview;..\..\source\lazarus\terminal;..\..\source\lazarus\data;..\..\source\lazarus\license;..\..\source\webview;..\..\source\mcp\Core;..\..\source\compat;..\..\source\providers;..\..\source\chat\Core;..\..\source\chat\UI;..\..\source\terminal\Core;..\..\source\terminal\UI;..\..\source\license;..\..\cli"/>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Parsing>
+        <SyntaxMode Value="Delphi"/>
+      </Parsing>
+    </CompilerOptions>
+    <Description Value="Aefos AI - Lazarus edition IDE integration (design package skeleton). Registers the top-level Aefos AI menu."/>
+    <License Value="GPL-3.0-or-later WITH additional permissions - see LICENSE and ADDITIONAL-PERMISSIONS.md"/>
+    <Version Minor="7"/>
+    <Files Count="72">
+
+      <Item1>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.Register.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="Aefos.Lazarus.Register"/>
+      </Item1>
+      <Item2>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.WorkspaceFacade.pas"/>
+        <UnitName Value="Aefos.Lazarus.WorkspaceFacade"/>
+      </Item2>
+      <Item3>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.Options.pas"/>
+        <UnitName Value="Aefos.Lazarus.Options"/>
+      </Item3>
+      <Item4>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.EditSurgery.pas"/>
+        <UnitName Value="Aefos.Lazarus.EditSurgery"/>
+      </Item4>
+      <Item5>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.McpTools.pas"/>
+        <UnitName Value="Aefos.Lazarus.McpTools"/>
+      </Item5>
+      <Item6>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.McpHost.pas"/>
+        <UnitName Value="Aefos.Lazarus.McpHost"/>
+      </Item6>
+      <Item7>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.LfmParser.pas"/>
+        <UnitName Value="Aefos.Lazarus.LfmParser"/>
+      </Item7>
+      <Item8>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.FormDesigner.pas"/>
+        <UnitName Value="Aefos.Lazarus.FormDesigner"/>
+      </Item8>
+      <Item9>
+        <Filename Value="..\..\source\webview\Aefos.WebView.Types.pas"/>
+        <UnitName Value="Aefos.WebView.Types"/>
+      </Item9>
+      <Item10>
+        <Filename Value="..\..\source\webview\Aefos.Win.WebView2.pas"/>
+        <UnitName Value="Aefos.Win.WebView2"/>
+      </Item10>
+      <Item11>
+        <Filename Value="..\..\source\lazarus\webview\Aefos.Lazarus.WebViewHost.pas"/>
+        <UnitName Value="Aefos.Lazarus.WebViewHost"/>
+      </Item11>
+      <Item12>
+        <Filename Value="..\..\source\lazarus\webview\Aefos.Lazarus.ChatWindow.pas"/>
+        <UnitName Value="Aefos.Lazarus.ChatWindow"/>
+      </Item12>
+      <Item13>
+        <Filename Value="..\..\source\chat\UI\Aefos.OTA.Chat.UI.OutputPanel.Assets.pas"/>
+        <UnitName Value="Aefos.OTA.Chat.UI.OutputPanel.Assets"/>
+      </Item13>
+      <Item14>
+        <Filename Value="..\..\source\lazarus\webview\Aefos.Lazarus.ChatController.pas"/>
+        <UnitName Value="Aefos.Lazarus.ChatController"/>
+      </Item14>
+      <Item15>
+        <Filename Value="..\..\source\chat\Core\Aefos.Executor.Models.pas"/>
+        <UnitName Value="Aefos.Executor.Models"/>
+      </Item15>
+      <Item16>
+        <Filename Value="..\..\source\providers\Aefos.Provider.Base.pas"/>
+        <UnitName Value="Aefos.Provider.Base"/>
+      </Item16>
+      <Item17>
+        <Filename Value="..\..\source\providers\Aefos.Provider.Claude.pas"/>
+        <UnitName Value="Aefos.Provider.Claude"/>
+      </Item17>
+      <Item18>
+        <Filename Value="..\..\source\providers\Aefos.Provider.Codex.pas"/>
+        <UnitName Value="Aefos.Provider.Codex"/>
+      </Item18>
+      <Item19>
+        <Filename Value="..\..\source\providers\Aefos.Provider.Copilot.pas"/>
+        <UnitName Value="Aefos.Provider.Copilot"/>
+      </Item19>
+      <Item20>
+        <Filename Value="..\..\source\providers\Aefos.Provider.Gemini.pas"/>
+        <UnitName Value="Aefos.Provider.Gemini"/>
+      </Item20>
+      <Item21>
+        <Filename Value="..\..\source\providers\Aefos.Provider.Registry.pas"/>
+        <UnitName Value="Aefos.Provider.Registry"/>
+      </Item21>
+      <Item22>
+        <Filename Value="..\..\source\chat\Core\Aefos.OTA.Chat.Core.CLIDispatcher.pas"/>
+        <UnitName Value="Aefos.OTA.Chat.Core.CLIDispatcher"/>
+      </Item22>
+      <Item23>
+        <Filename Value="..\..\source\chat\Core\Aefos.OTA.Chat.Core.Dispatcher.ProcessRunner.pas"/>
+        <UnitName Value="Aefos.OTA.Chat.Core.Dispatcher.ProcessRunner"/>
+      </Item23>
+      <Item24>
+        <Filename Value="..\..\source\chat\Core\Aefos.OTA.Chat.Core.CLIBinaryResolver.pas"/>
+        <UnitName Value="Aefos.OTA.Chat.Core.CLIBinaryResolver"/>
+      </Item24>
+      <Item25>
+        <Filename Value="..\..\source\chat\UI\Aefos.OTA.Chat.UI.Options.Binding.pas"/>
+        <UnitName Value="Aefos.OTA.Chat.UI.Options.Binding"/>
+      </Item25>
+      <Item26>
+        <Filename Value="..\..\source\lazarus\webview\Aefos.Lazarus.ChatAgent.pas"/>
+        <UnitName Value="Aefos.Lazarus.ChatAgent"/>
+      </Item26>
+      <Item27>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.McpAddonMerge.pas"/>
+        <UnitName Value="Aefos.Lazarus.McpAddonMerge"/>
+      </Item27>
+      <Item28>
+        <Filename Value="..\..\source\lazarus\webview\Aefos.Lazarus.SessionStore.pas"/>
+        <UnitName Value="Aefos.Lazarus.SessionStore"/>
+      </Item28>
+      <Item29>
+        <Filename Value="..\..\source\lazarus\webview\Aefos.Lazarus.MemoryStore.pas"/>
+        <UnitName Value="Aefos.Lazarus.MemoryStore"/>
+      </Item29>
+      <Item30>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.PyToolsStore.pas"/>
+        <UnitName Value="Aefos.Lazarus.PyToolsStore"/>
+      </Item30>
+      <Item31>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.PyToolsWindow.pas"/>
+        <UnitName Value="Aefos.Lazarus.PyToolsWindow"/>
+      </Item31>
+      <Item32>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.Options.Flow.pas"/>
+        <UnitName Value="Aefos.Lazarus.Options.Flow"/>
+      </Item32>
+      <Item33>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.Options.Terminal.pas"/>
+        <UnitName Value="Aefos.Lazarus.Options.Terminal"/>
+      </Item33>
+      <Item34>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.OptionsGroup.pas"/>
+        <UnitName Value="Aefos.Lazarus.OptionsGroup"/>
+      </Item34>
+      <Item35>
+        <Filename Value="..\..\source\lazarus\data\Aefos.Lazarus.SQLite.pas"/>
+        <UnitName Value="Aefos.Lazarus.SQLite"/>
+      </Item35>
+      <Item36>
+        <Filename Value="..\..\source\lazarus\webview\Aefos.Lazarus.SessionStore.SQLite.pas"/>
+        <UnitName Value="Aefos.Lazarus.SessionStore.SQLite"/>
+      </Item36>
+      <Item37>
+        <Filename Value="..\..\source\lazarus\webview\Aefos.Lazarus.CommandRegistry.pas"/>
+        <UnitName Value="Aefos.Lazarus.CommandRegistry"/>
+      </Item37>
+      <Item38>
+        <Filename Value="..\..\source\lazarus\webview\Aefos.Lazarus.WebViewDComp.pas"/>
+        <UnitName Value="Aefos.Lazarus.WebViewDComp"/>
+      </Item38>
+      <Item39>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.ConsoleProjectDescriptor.pas"/>
+        <UnitName Value="Aefos.Lazarus.ConsoleProjectDescriptor"/>
+      </Item39>
+      <Item40>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.AboutForm.pas"/>
+        <UnitName Value="Aefos.Lazarus.AboutForm"/>
+      </Item40>
+      <Item41>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.ConsentDialog.pas"/>
+        <UnitName Value="Aefos.Lazarus.ConsentDialog"/>
+      </Item41>
+      <Item42>
+        <Filename Value="..\..\source\license\Aefos.License.Client.pas"/>
+        <UnitName Value="Aefos.License.Client"/>
+      </Item42>
+      <Item43>
+        <Filename Value="..\..\source\license\Aefos.License.Gate.pas"/>
+        <UnitName Value="Aefos.License.Gate"/>
+      </Item43>
+      <Item44>
+        <Filename Value="..\..\source\lazarus\license\Aefos.Lazarus.License.UI.pas"/>
+        <UnitName Value="Aefos.Lazarus.License.UI"/>
+      </Item44>
+      <Item45>
+        <Filename Value="..\..\source\chat\Core\Aefos.Chat.Core.CliHarness.pas"/>
+        <UnitName Value="Aefos.Chat.Core.CliHarness"/>
+      </Item45>
+      <Item46>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.CellColor.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.CellColor"/>
+      </Item46>
+      <Item47>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Hyperlink.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.Hyperlink"/>
+      </Item47>
+      <Item48>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Reflow.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.Reflow"/>
+      </Item48>
+      <Item49>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.SixelDecode.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.SixelDecode"/>
+      </Item49>
+      <Item50>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.LibVTerm.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.LibVTerm"/>
+      </Item50>
+      <Item51>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.VTermBuffer.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.VTermBuffer"/>
+      </Item51>
+      <Item52>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.ConPTY.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.ConPTY"/>
+      </Item52>
+      <Item53>
+        <Filename Value="..\..\source\lazarus\terminal\Aefos.Lazarus.TerminalController.pas"/>
+        <UnitName Value="Aefos.Lazarus.TerminalController"/>
+      </Item53>
+      <Item54>
+        <Filename Value="..\..\source\lazarus\terminal\Aefos.Lazarus.TerminalPainter.pas"/>
+        <UnitName Value="Aefos.Lazarus.TerminalPainter"/>
+      </Item54>
+      <Item55>
+        <Filename Value="..\..\source\lazarus\terminal\Aefos.Lazarus.TerminalControl.pas"/>
+        <UnitName Value="Aefos.Lazarus.TerminalControl"/>
+      </Item55>
+      <Item56>
+        <Filename Value="..\..\source\lazarus\terminal\Aefos.Lazarus.TerminalWindow.pas"/>
+        <UnitName Value="Aefos.Lazarus.TerminalWindow"/>
+      </Item56>
+      <Item57>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.GutterReview.pas"/>
+        <UnitName Value="Aefos.Lazarus.GutterReview"/>
+      </Item57>
+      <Item58>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Actions.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.Actions"/>
+      </Item58>
+      <Item59>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.ActionPlaceholders.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.ActionPlaceholders"/>
+      </Item59>
+      <Item60>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.ActionRunner.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.ActionRunner"/>
+      </Item60>
+      <Item61>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.ActionStore.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.ActionStore"/>
+      </Item61>
+      <Item62>
+        <Filename Value="..\..\source\lazarus\terminal\Aefos.Lazarus.ActionCenterWindow.pas"/>
+        <UnitName Value="Aefos.Lazarus.ActionCenterWindow"/>
+      </Item62>
+      <Item63>
+        <Filename Value="..\..\source\lazarus\terminal\Aefos.Lazarus.ComposerAI.pas"/>
+        <UnitName Value="Aefos.Lazarus.ComposerAI"/>
+      </Item63>
+      <Item64>
+        <Filename Value="..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ComposerHtml.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.UI.ComposerHtml"/>
+      </Item64>
+      <Item65>
+        <Filename Value="..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.SlashCommands.pas"/>
+        <UnitName Value="Aefos.OTA.Terminal.Core.SlashCommands"/>
+      </Item65>
+      <Item66>
+        <Filename Value="..\..\source\lazarus\terminal\Aefos.Lazarus.TerminalComposerPane.pas"/>
+        <UnitName Value="Aefos.Lazarus.TerminalComposerPane"/>
+      </Item66>
+      <Item67>
+        <Filename Value="..\..\source\lazarus\terminal\Aefos.Lazarus.TerminalComposerPicker.pas"/>
+        <UnitName Value="Aefos.Lazarus.TerminalComposerPicker"/>
+      </Item67>
+      <Item68>
+        <Filename Value="..\..\source\lazarus\terminal\Aefos.Lazarus.TerminalMemoryDialog.pas"/>
+        <UnitName Value="Aefos.Lazarus.TerminalMemoryDialog"/>
+      </Item68>
+      <Item69>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.DebugService.pas"/>
+        <UnitName Value="Aefos.Lazarus.DebugService"/>
+      </Item69>
+      <Item70>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.IssueReport.pas"/>
+        <UnitName Value="Aefos.Lazarus.IssueReport"/>
+      </Item70>
+      <Item71>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.IdeSilence.pas"/>
+        <UnitName Value="Aefos.Lazarus.IdeSilence"/>
+      </Item71>
+      <Item72>
+        <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.AppIdentity.pas"/>
+        <UnitName Value="Aefos.Lazarus.AppIdentity"/>
+      </Item72>
+    </Files>
+    <RequiredPkgs Count="6">
+      <Item1>
+        <PackageName Value="SynEdit"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="IDEIntf"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="BuildIntf"/>
+      </Item3>
+      <Item4>
+        <PackageName Value="LCL"/>
+      </Item4>
+      <Item6>
+        <PackageName Value="IdeDebugger"/>
+      </Item6>
+      <Item5>
+        <PackageName Value="LazUtils"/>
+      </Item5>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

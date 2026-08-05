@@ -1,0 +1,8 @@
+{
+  "name": "Package (runtime BPL)",
+  "category": "Package",
+  "description": "A minimal Delphi runtime package (requires rtl) with one sample unit.",
+  "vars": [
+    { "name": "Name", "label": "Project name", "description": "Pascal identifier, no extension.", "default": "MyPackage" }
+  ]
+}

@@ -158,7 +158,7 @@ not.
 
 ## Privacy & license
 
-- 📄 [EULA](LICENSE) — proprietary; Community edition free (incl. internal business use).
+- 📜 [License](LICENSE) — GNU GPL v3, with [additional permissions](ADDITIONAL-PERMISSIONS.md).
 - 🔐 [Privacy Policy](PRIVACY.md) ([PT-BR](PRIVACY.pt-BR.md)) — LGPD-aligned.
 
 ---

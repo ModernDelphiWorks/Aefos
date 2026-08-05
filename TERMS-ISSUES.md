@@ -2,8 +2,8 @@
 
 These Submission Terms apply to everything you post in this repository — issues,
 comments, discussions, and pull requests (collectively, "Submissions"). They are
-separate from, and in addition to, the [Aefos AI EULA](LICENSE). **By posting a
-Submission, you accept these terms.**
+separate from, and in addition to, the [licence](LICENSE) the software is distributed
+under. **By posting a Submission, you accept these terms.**
 
 This repository is **public**. Anything you post is visible to everyone, is indexed by
 search engines, and may be cached or archived **permanently**, even if later edited or
@@ -35,8 +35,7 @@ By posting a Submission, you represent and warrant that:
 For any non-code Feedback (ideas, suggestions, bug reports, feature requests), you
 grant Aefos a worldwide, perpetual, irrevocable, royalty-free, transferable, and
 sublicensable license to use, reproduce, modify, and incorporate it into the Software
-and documentation, consistent with Section 16 (Feedback) of the [EULA](LICENSE),
-without obligation or compensation to you.
+and documentation, without obligation or compensation to you.
 
 For any code you contribute via pull request to this **public** repository (for
 example, documentation fixes), you license that contribution under the same terms as
@@ -51,8 +50,7 @@ any obligation to act on any request.
 ## 5. Indemnification
 
 To the maximum extent permitted by applicable law, you agree to hold Aefos harmless
-from claims arising out of your Submissions or your breach of these terms, consistent
-with Section 13 (Indemnification) of the [EULA](LICENSE).
+from claims arising out of your Submissions or your breach of these terms.
 
 ## 6. Security issues
 

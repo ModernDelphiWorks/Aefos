@@ -2,11 +2,11 @@
  AEFOS AI — THIRD-PARTY NOTICES
 ===============================================================================
 
-The Aefos AI software ("Software") is proprietary and distributed in binary
-form. It includes, embeds, statically links, or otherwise incorporates the
-third-party components listed below. Each such component remains subject to its
-own license, reproduced in full in this file. Nothing in the Aefos AI End User
-License Agreement (EULA) limits the rights granted to you under these
+The Aefos AI software ("Software") is free software under the GNU General
+Public License version 3. It includes, embeds, statically links, or otherwise
+incorporates the third-party components listed below. Each such component
+remains subject to its own license, reproduced in full in this file. Nothing
+in Aefos AI's own licence limits the rights granted to you under these
 third-party licenses.
 
 Components NOT bundled (external dependencies the Software detects or invokes but
@@ -272,7 +272,7 @@ redistributed by Aefos AI. They remain governed solely by their own terms.
  * User-supplied AI command-line tools (e.g. Claude Code, Codex, GitHub Copilot
    CLI, Gemini) — bring-your-own. Not bundled; not credentialed. Your use of any
    such tool, and any content you send to it, is governed by that tool/provider's
-   own terms and privacy policy. See the Aefos AI EULA, Section 6.
+   own terms and privacy policy.
 
 -------------------------------------------------------------------------------
  To report an omission or correction in these notices, contact

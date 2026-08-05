@@ -35,13 +35,6 @@ Sintomas comuns e como resolver. Se nada aqui ajudar, veja
 |---------|----------------|---------|
 | Glifos do prompt viram "quadradinhos" (tofu) | Fonte sem glifos Nerd/powerline | Selecione uma fonte compatível (ex.: uma *Nerd Font*) nas opções do Terminal |
 | **Ctrl+P** e **Ctrl+R** parecem conflitar | São coisas diferentes | **Ctrl+P** = paleta do Aefos; **Ctrl+R** = busca reversa nativa do shell |
-| Terminal indisponível | Recurso da edição **Pro** | Veja [Licenciamento](10-licenciamento.md) |
 
-## Licença
-
-| Sintoma | Causa provável | Solução |
-|---------|----------------|---------|
-| Recurso Pro bloqueado | Sem licença Pro ativa (ou trial expirado) | Em **View → Aefos AI (Chat)**, abra o item de licença (ex.: *License: active*) e ative a chave |
-| Ativação falha | Sem rede no momento da ativação | A validação precisa de rede; depois funciona offline na janela de tolerância |
 
 ➡️ Próximo: [Privacidade e licença](12-privacidade-e-licenca.md)

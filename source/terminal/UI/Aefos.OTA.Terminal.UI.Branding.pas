@@ -38,8 +38,7 @@ uses
   System.Types,
   Vcl.Graphics,
   Vcl.Imaging.pngimage,
-  ToolsAPI,
-  Aefos.License.Gate;
+  ToolsAPI;
 
 {$R 'Aefos.OTA.Terminal.UI.Branding.res'}
 
@@ -144,11 +143,7 @@ end;
 // Pro...), read from the cache at load. Guarded — never break registration.
 function _SplashStatus: string;
 begin
-  try
-    Result := Aefos.License.Gate.TLicenseGate.SplashLabel;
-  except
-    Result := '';
-  end;
+  Result := '';
   if Result = '' then
     Result := 'Licensed';
 end;

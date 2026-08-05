@@ -469,7 +469,6 @@ uses
   // UTF-16 and crosses into this UTF-8 unit through UTF16ToUTF8 (LazUTF8, already
   // in the interface uses) -- the same boundary Aefos.Lazarus.Register.pas:316
   // uses for StatusText.
-  Aefos.License.Gate,
   Aefos.Provider.Kinds;
 
 const
@@ -2251,25 +2250,14 @@ begin
   // caption). TrialBadge already returns '' when the user is NOT on trial, and
   // the shell hides the element on '', so the non-trial path needs no branch here.
   LText := '';
-  try
-    LText := UTF16ToUTF8(TLicenseGate.TrialBadge);
-  except
-    LText := '';
-  end;
   _Run('window.dsSetTrial && window.dsSetTrial(' + _JsEncode(LText) + ');');
 end;
 
 procedure TAefosLazChatController._HandleLicense;
 begin
-  // ShowManager is modal and main-thread; a header click already is. Guarded for
-  // the same reason as above: a failed activation screen must not take the chat
-  // with it.
-  try
-    TLicenseGate.ShowManager;
-  except
-  end;
-  // Re-push unconditionally: if he activated, the badge has to vanish NOW. If he
-  // cancelled, this rewrites the same text and nothing moves.
+  // Nothing to activate any more: the product is free software with no tiers.
+  // The entry point survives only because the shell may still post the message;
+  // it now just re-pushes the (empty) badge.
   _PushTrialBadge;
 end;
 
@@ -2312,32 +2300,9 @@ begin
 end;
 
 procedure TAefosLazChatController._OpenCommandEditorNew;
-var
-  // UnicodeString, not string: the gate is {$mode delphiunicode}, so its `out`
-  // parameter is UTF-16 and an UTF-8 local would not bind to it at all.
-  LUpsell: UnicodeString;
 begin
   // Open the shared shell's command editor on a blank "new" form. Mirrors
   // ChatPanel._OpenCommandEditorNew (LObj.AddPair('isNew', True)) INCLUDING its
-  // Pro gate (ChatPanel.pas:1217).
-  //
-  // The comment that used to sit here said the Delphi gate was "OTA-bound" and
-  // therefore unavailable to this edition. That was never true: TLicenseGate is
-  // the SHARED cross-compiler gate, it is already in this package's .lpk, and it
-  // already carries its own {$IFDEF FPC} branches. Nothing was blocking the call
-  // but the belief that something was.
-  //
-  // The command AUTO-create dialog is the Pro convenience; typing a command by
-  // hand stays free. Soft during beta (GATE_HARD_MODE off): the dialog opens and
-  // the upsell shows ONCE per capability. At GA the same line blocks instead.
-  if not TLicenseGate.Enforce(AEFOS_CAP_COMMAND, LUpsell) then
-  begin
-    _JsAppend(sLineBreak + '--- ' +
-      UTF16ToUTF8(TLicenseGate.UpsellText(AEFOS_CAP_COMMAND)) + ' ---' + sLineBreak);
-    Exit;
-  end;
-  if LUpsell <> '' then  // soft (beta): discreet INLINE notice, never a modal
-    _JsAppend(sLineBreak + UTF16ToUTF8(LUpsell) + sLineBreak);
   _Run('window.dsShowCommandEditor && window.dsShowCommandEditor({"isNew":true});');
 end;
 

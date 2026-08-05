@@ -245,7 +245,6 @@ uses
   // The shared cross-compiler license gate: the "(Pro)" tag on gated providers
   // and the Pro gate on MCP auto-setup, mirroring the RAD Studio options frame.
   // {$mode delphiunicode}, so everything it returns crosses through UTF16ToUTF8.
-  Aefos.License.Gate,
   Aefos.Lazarus.McpHost,
   Aefos.Lazarus.OptionsGroup,             // TAefosIDEOptions (shared group node)
   Aefos.Lazarus.Options.Flow,             // sibling editor pages (same group)
@@ -896,9 +895,6 @@ begin
   for LKind := Low(TExecutorKind) to High(TExecutorKind) do
   begin
     LItemText := UTF16ToUTF8(TExecutorKinds.ExecutorKindDisplayName(LKind));
-    if not TLicenseGate.AllowsProvider(
-             TExecutorKinds.ExecutorKindToString(LKind)) then
-      LItemText := LItemText + '   (Pro)';
     FExecutorCombo.Items.Add(LItemText);
   end;
   FExecutorCombo.OnChange := Self._ExecutorChange;
@@ -1354,17 +1350,6 @@ var
   // UTF-16 and a plain (UTF-8) local would not bind.
   LUpsell: UnicodeString;
 begin
-  // Pro gate, mirroring Aefos.OTA.Chat.UI.Options.ChatFrame.pas:511. The MCP
-  // AUTO-setup is the Pro convenience; hand-writing the config stays free. Soft
-  // during beta (GATE_HARD_MODE off): it runs and upsells once. At GA the same
-  // line refuses and says so in the status label the user is already looking at.
-  if not TLicenseGate.Enforce(AEFOS_CAP_MCP, LUpsell) then
-  begin
-    FMcpStatus.Caption := 'MCP auto-setup is a Pro feature.';
-    Exit;
-  end;
-  if LUpsell <> '' then
-    ShowMessage(UTF16ToUTF8(LUpsell));
   // The Lazarus MCP host is IN-PROCESS (statically linked into lazarus.exe), so
   // "reachability" is simply: start it (idempotent, never raises out) and confirm
   // it is listening on its named pipe. This is the honest analog of the Delphi

@@ -322,11 +322,6 @@ Source: "..\..\source\terminal\Core\*"; DestDir: "{app}\source\terminal\Core"; F
 ; terminal\Core line: only the unit the .lpk lists is compiled, the VCL siblings
 ; ride along unused, and the installed search path then matches the dev one.
 Source: "..\..\source\terminal\UI\*"; DestDir: "{app}\source\terminal\UI"; Flags: recursesubdirs createallsubdirs ignoreversion; Excludes: "*.dcu,*.ppu,*.o,*.a,*.dcp,*.bpl,*.compiled,*.identcache,__history\*,backup\*,lib\*"
-; License engine (cross-compiler): Aefos.License.Client/Gate compiled by the
-; Lazarus package (source\license added to the .lpk OtherUnitFiles). The LCL UI
-; twin lives under source\lazarus\* (already shipped above). Aefos.License.Token
-; is Delphi-only and harmlessly rides along; the FPC build never references it.
-Source: "..\..\source\license\*";   DestDir: "{app}\source\license";   Flags: recursesubdirs createallsubdirs ignoreversion; Excludes: "*.dcu,*.ppu,*.o,*.a,*.dcp,*.bpl,*.compiled,*.identcache,__history\*,backup\*,lib\*"
 ; Excludes: the cli\ tree is a SOURCE tree, but a developer machine also holds the
 ; compiler's intermediates there (.build-aefos\*.dcu from dcc32, .build-fpc\*.a/.o
 ; from FPC) plus stray capture files. Without this the packed content would vary by

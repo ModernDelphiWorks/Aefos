@@ -33,7 +33,6 @@ type
     procedure MenuClick(Sender: TObject);
     procedure _ActionCenterMenuClick(Sender: TObject);
     procedure _AboutMenuClick(Sender: TObject);
-    procedure _LicenseMenuClick(Sender: TObject);
     procedure _OpenOrRecreatePanel(APanel: TAefosTerminalPanelKind);
     procedure CreateMenu;
     procedure RemoveMenu;
@@ -81,8 +80,7 @@ uses
   Aefos.OTA.Options.AIFlow,
   Aefos.OTA.IDE.GutterReview,
   Aefos.OTA.Terminal.UI.Branding,
-  Aefos.OTA.Terminal.UI.AboutForm,
-  Aefos.License.Gate
+  Aefos.OTA.Terminal.UI.AboutForm
 {$IFDEF AEFOS_OTA_TERMINAL_SELFTEST}
   , Aefos.OTA.Terminal.UI.SelfTestChannel
 {$ENDIF}
@@ -270,7 +268,6 @@ var
   LParent: TMenuItem;
   LOpenItem: TMenuItem;
   LSepItem: TMenuItem;
-  LLicenseItem: TMenuItem;
   LAboutItem: TMenuItem;
 begin
   LParent := _FindMenuHost;
@@ -299,16 +296,6 @@ begin
   LSepItem := TMenuItem.Create(FMenuItem);
   LSepItem.Caption := '-';
   FMenuItem.Add(LSepItem);
-
-  LLicenseItem := TMenuItem.Create(FMenuItem);
-  // License state in the menu, computed at LOAD (visible from IDE startup).
-  try
-    LLicenseItem.Caption := Aefos.License.Gate.TLicenseGate.StatusText;
-  except
-    LLicenseItem.Caption := 'License' + #$2026;
-  end;
-  LLicenseItem.OnClick := _LicenseMenuClick;
-  FMenuItem.Add(LLicenseItem);
 
   LAboutItem := TMenuItem.Create(FMenuItem);
   LAboutItem.Caption := 'About Aefos' + #$2026;
@@ -452,18 +439,6 @@ begin
   ShowTerminalAboutDialog;
 end;
 
-procedure TAefosTerminalWizard._LicenseMenuClick(Sender: TObject);
-begin
-  // Opens the Aefos.License BPL's activation screen (shared with Chat).
-  Aefos.License.Gate.TLicenseGate.ShowManager;
-  // Refresh the menu caption so a just-activated state shows without a restart.
-  if Sender is TMenuItem then
-    try
-      TMenuItem(Sender).Caption := Aefos.License.Gate.TLicenseGate.StatusText;
-    except
-    end;
-end;
-
 procedure TAefosTerminalWizard._AppShortCut(var AMsg: TWMKey; var AHandled: Boolean);
 begin
   // Application.OnShortCut runs before any form's IsShortCut, so this fires
@@ -542,12 +517,6 @@ begin
     Exit;
   LConfig := (FMCPBinding as TMCPConfigBinding).Current;
   if not LConfig.Enabled then
-    Exit;
-  // MCP is the Pro paywall: the free tier gets the Terminal but WITHOUT the MCP
-  // server (the AI cannot drive the IDE). Beta is SOFT (GATE_HARD_MODE off) so the
-  // server still starts for everyone to test; at GA the free tier gets no MCP.
-  if Aefos.License.Gate.TLicenseGate.GateHard
-     and not Aefos.License.Gate.TLicenseGate.Allows(AEFOS_CAP_MCP) then
     Exit;
   if not Assigned(FMCPHost) then
     FMCPHost := TTerminalMCPHost.Create(LConfig,

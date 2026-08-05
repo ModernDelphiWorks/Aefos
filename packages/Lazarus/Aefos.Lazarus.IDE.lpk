@@ -186,18 +186,6 @@
         <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.ConsentDialog.pas"/>
         <UnitName Value="Aefos.Lazarus.ConsentDialog"/>
       </Item41>
-      <Item42>
-        <Filename Value="..\..\source\license\Aefos.License.Client.pas"/>
-        <UnitName Value="Aefos.License.Client"/>
-      </Item42>
-      <Item43>
-        <Filename Value="..\..\source\license\Aefos.License.Gate.pas"/>
-        <UnitName Value="Aefos.License.Gate"/>
-      </Item43>
-      <Item44>
-        <Filename Value="..\..\source\lazarus\license\Aefos.Lazarus.License.UI.pas"/>
-        <UnitName Value="Aefos.Lazarus.License.UI"/>
-      </Item44>
       <Item45>
         <Filename Value="..\..\source\chat\Core\Aefos.Chat.Core.CliHarness.pas"/>
         <UnitName Value="Aefos.Chat.Core.CliHarness"/>

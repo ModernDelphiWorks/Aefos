@@ -1,61 +1,27 @@
-# 10. Licenciamento e edições
+# 10. Licença
 
-O Aefos AI é distribuído em três edições. A **Community é gratuita** — inclusive para
-uso **comercial/empresarial interno**, sem penalidade.
+**O Aefos AI é software livre sob a [GNU GPL v3](../../LICENSE)** — todo ele.
+Não há edições, chave de licença, ativação nem período de teste: todo recurso
+está no build que você baixa, incluindo o Terminal, o servidor MCP e as
+ferramentas do agente, para uso pessoal, educacional e comercial igualmente.
 
-## Edições
+## As duas permissões adicionais
 
-| Edição | Preço | Inclui |
-|--------|-------|--------|
-| **Community** | Grátis | O **Chat**, incluindo o **modo Agent**, com a sua própria conta de CLI |
-| **Pro** | Assinatura | Recursos de produtividade e poder de execução (abaixo) |
-| **Enterprise** | Contrato | Uso corporativo amplo, suporte, governança |
+Concedidas pela seção 7 da GPL (veja
+[ADDITIONAL-PERMISSIONS.md](../../ADDITIONAL-PERMISSIONS.md)):
 
-### O que cada tier libera
+- **O código que o Aefos escreve para você é seu.** Ele não é coberto pela GPL
+  nem é obra derivada do Aefos. Construa produtos comerciais e fechados com ele e
+  licencie como quiser — usar uma ferramenta não contamina o que você faz com ela.
+- **A linkagem com as bibliotecas do RAD Studio é permitida.** Um pacote
+  design-time não pode existir sem o `designide`, que não é compatível com a GPL;
+  sem essa permissão nenhum build funcional poderia ser distribuído.
 
-A filosofia é: **a conveniência/auto-criação é paga; o núcleo manual é gratuito**. Um
-usuário Community continua podendo fazer tudo **à mão** (escrever o `.mcp.json`,
-digitar comandos manualmente); o Pro compra os assistentes e o poder de execução
-dentro da IDE.
+## O que você pode fazer com o próprio Aefos
 
-| Recurso | Tier |
-|---------|------|
-| Chat (painel + conversa) | **Community** |
-| Modo Agent (padrão do chat) | **Community** |
-| Terminal | **Pro** |
-| Auto-setup/provisionamento de MCP (diálogo) | **Pro** |
-| Assistente de criação de comando | **Pro** |
-| Contexto avançado de projeto | **Pro** |
-| Histórico de sessões + templates | **Pro** |
-| Recarga silenciosa (fluxo de IA suave) | **Pro** |
+Usar, estudar, modificar e repassar — sob a GPL, que pede que quem receber sua
+versão modificada tenha a mesma liberdade, e o código junto. A licença que
+governava o Aefos antes de 5 de agosto de 2026, quando ele era proprietário, fica
+como registro em [EULA-historical.md](../../EULA-historical.md).
 
-> Durante o **beta**, a aplicação das regras é **suave** (o recurso funciona e há um
-> aviso de upsell). As regras passam a ser estritas no lançamento (GA).
-
-## Como o licenciamento funciona
-
-- **Node-locked single-seat**: uma licença vale para **uma cópia** do Delphi por
-  máquina/usuário. O servidor garante, de forma atômica, que **uma chave = uma IDE
-  ativa** (para 1 assento).
-- **Transferência (self-transfer)**: ao **desativar** numa máquina, o assento é
-  liberado e você pode ativar em outra Delphi.
-- **Offline-safe**: depois de validada, a licença funciona **offline** dentro de uma
-  janela de tolerância; sem chave, há um **trial** embutido.
-
-## Como ativar
-
-1. Em **View → Aefos AI (Chat)**, clique no item de licença (ele mostra o status
-   atual, por exemplo **License: active**).
-2. Informe a sua **chave de licença**.
-3. Pronto — a ativação vincula esta cópia do Delphi ao seu assento.
-
-O próprio item de licença no menu mostra o **status** atual (ex.: *License: active*).
-
-## Uso empresarial gratuito
-
-A edição **Community** pode ser usada por empresas de qualquer porte, internamente,
-**sem cobrança por assento, sem limite de usuários e sem penalidade**. Os detalhes
-estão na [GNU GPL v3](../../LICENSE) (veja também
-[Privacidade e licença](12-privacidade-e-licenca.md)).
-
-➡️ Próximo: [Solução de problemas](11-solucao-de-problemas.md)
+→ Próximo: [Solução de problemas](11-solucao-de-problemas.md)

@@ -106,62 +106,29 @@ The Chat talks to the AI CLI you already use. Point Aefos at it once:
    **path** and **model**, and **log in** to that CLI if it asks.
 3. Open **View → Aefos AI (Chat)** and start typing.
 
-## License & activation
+## License
 
-**The software is free software under the [GNU GPL v3](LICENSE)**, with two
-additional permissions granted under GPLv3 section 7 (see
+**Aefos AI is free software under the [GNU GPL v3](LICENSE)** — all of it. There
+is no key, no activation, no trial and no edition: every feature is in the build
+you download, including the Terminal, the MCP server and the agent tools.
+
+Two additional permissions are granted under GPLv3 section 7 (see
 [`ADDITIONAL-PERMISSIONS.md`](ADDITIONAL-PERMISSIONS.md)): the code Aefos writes
-for you is **yours**, under any licence you choose, and linking with the RAD Studio
-libraries a design-time package cannot exist without is expressly allowed. The
-licence that governed the software before 5 August 2026 is kept, for the record,
-in [`EULA-historical.md`](EULA-historical.md).
+for you is **yours**, under any licence you choose — using Aefos places no
+obligation on what you build — and linking with the RAD Studio libraries a
+design-time package cannot exist without is expressly allowed.
 
-A **license key** buys the hosted service around the software, not the software
-itself.
-
-**The Community edition is free — no license key required.** Install it and use the
-Chat (including **Agent mode**) right away. Community is free for **personal,
-educational, and internal business use** — no per-seat fee, no user limit, no penalty.
-
-**Pro / Enterprise** unlock the Terminal, MCP auto-setup, wizards, session history, and
-advanced context. To activate a key:
-
-1. Open **View → Aefos AI (Chat)** and click the **license item** at the top — it shows
-   your current status (e.g. *License: Trial* or *License: active*).
-2. Paste your **license key**.
-3. Done — this binds **this copy of Delphi** to your seat. The status updates to
-   *active*.
-
-**How the license works:**
-- **One key = one active Delphi** per machine/user (single-seat, node-locked).
-- **Offline-safe:** after the first online validation it keeps working **offline**
-  within a grace window.
-- **No key?** A built-in **trial** lets you evaluate the Pro features.
+The licence that governed the software before 5 August 2026, when it was
+proprietary, is kept for the record in [`EULA-historical.md`](EULA-historical.md).
 
 ## Updating, reinstalling & moving to another machine
 
-This is the part people ask about most — read it before you uninstall.
-
-| Situation | What to do | What happens to your license |
-|-----------|------------|------------------------------|
-| **Update to a new version** (same machine) | Close RAD Studio, run the new `Aefos-Setup-*.exe` **over** the old one | ✅ **Preserved** — you do **not** re-enter the key or deactivate |
-| **Reinstall** (same machine) | Same as above — just run the installer again | ✅ **Preserved** (the activation is tied to this machine) |
-| **Move to another machine** | **First deactivate** on the old one: **View → Aefos AI (Chat) → license item → Deactivate**. Then install on the new machine and activate the key there. | 🔁 The seat is **freed and re-used** on the new machine (self-transfer) |
-| **Uninstall for good** | Use Windows **Settings → Apps** (or the uninstaller). If you plan to use the key elsewhere, **deactivate first** (above) | ⚠️ Uninstalling alone does **not** free the seat — **deactivate** to release it |
-
-> ⚠️ **Key point:** a simple uninstall/reinstall on the **same** machine keeps your
-> license. Only **moving to a different machine** needs a **Deactivate** first, so the
-> single seat is free to activate elsewhere. (Community/Free needs none of this.)
+Close RAD Studio and run the new `Aefos-Setup-*.exe` over the old one. That is the
+whole procedure — for an update, a reinstall, or a move to a different machine.
+Nothing is bound to a machine any more, so there is nothing to deactivate or
+transfer.
 
 Full walkthrough in the [User Manual](https://moderndelphiworks.github.io/Aefos/).
-
-## Editions
-
-| Edition | Price | For whom |
-|---------|-------|----------|
-| **Community** | **Free** | Personal, educational **and internal business** use — no per-seat fee, no penalty |
-| **Pro** | Subscription | Terminal, MCP auto-setup, wizards, history, advanced context |
-| **Enterprise** | Contract | Broad corporate use, support, governance |
 
 ## Reporting bugs & requests
 

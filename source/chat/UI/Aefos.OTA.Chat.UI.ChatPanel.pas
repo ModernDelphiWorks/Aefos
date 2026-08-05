@@ -550,8 +550,7 @@ uses
   Aefos.OTA.Chat.Core.ChatCommand,
   Aefos.OTA.Chat.Core.CommandAutoReplicate,
   Aefos.OTA.Chat.Core.SessionStore,
-  Aefos.Provider.Registry,
-  Aefos.License.Gate;
+  Aefos.Provider.Registry;
 
 // Debug-only teardown/diagnostic breadcrumb. Unconditional OutputDebugString
 // shipped in release builds was audit noise (a shipped IDE plugin); gate it so
@@ -661,12 +660,6 @@ begin
   inherited Create(AOwner);
   Name := 'AefosChatPanel';
   Caption := 'Aefos Chat';
-  // Show the license type in the window title/tab (Trial / Free / Pro...).
-  try
-    if TLicenseGate.ShortLabel <> '' then
-      Caption := 'Aefos Chat ' + #$2014 + ' ' + TLicenseGate.ShortLabel;
-  except
-  end;
   // Default to Agent mode — matches the header toggle's default-active "Agent".
   FAgentMode := True;
   FQueuedMessages := TStringList.Create;
@@ -1266,18 +1259,6 @@ begin
       sLineBreak, stStderr);
     Exit;
   end;
-  // Pro gate: the command AUTO-create dialog is the Pro convenience. SOFT beta
-  // opens anyway + upsells once; HARD GA blocks inline (Community can still add
-  // commands manually / externally).
-  if not TLicenseGate.Enforce(AEFOS_CAP_COMMAND, LUpsell) then
-  begin
-    AppendChunk(sLineBreak + '--- ' +
-      TLicenseGate.UpsellText(AEFOS_CAP_COMMAND) + ' ---' +
-      sLineBreak, stStderr);
-    Exit;
-  end;
-  if LUpsell <> '' then  // soft (beta): discreet INLINE notice, not a modal
-    AppendChunk(sLineBreak + LUpsell + sLineBreak, stStderr);
   // Make sure the WebView2 page is live so the modal call lands.
   if _UseBrowser then
     _EnsureOutputVisible;
@@ -2244,22 +2225,6 @@ begin
   begin
     if Assigned(FOnOpenSettings) then
       FOnOpenSettings();
-    Exit;
-  end;
-  // Trial badge: the page requests the reminder text on load/focus ('' = hide).
-  if AMessage = 'hdr:trial' then
-  begin
-    if Assigned(FController) then
-      FController.SetTrialBadge(TLicenseGate.TrialBadge);
-    Exit;
-  end;
-  // Trial badge / upgrade CTA click: open the License manager, then re-push the
-  // badge (the tier may have changed -> activated hides it).
-  if AMessage = 'hdr:license' then
-  begin
-    TLicenseGate.ShowManager;
-    if Assigned(FController) then
-      FController.SetTrialBadge(TLicenseGate.TrialBadge);
     Exit;
   end;
   // sessions (clock): open the HTML sessions panel (records the live session,

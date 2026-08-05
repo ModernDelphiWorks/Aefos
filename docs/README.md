@@ -23,7 +23,6 @@ Documentation for the **Aefos AI** ecosystem monorepo. These docs describe the
 | [components/chat.md](components/chat.md) | The Chat plugin — panel, skills, CLI dispatch, composition WebView2 rendering. |
 | [components/terminal.md](components/terminal.md) | The Terminal plugin — docked VTerm with OTA reach. |
 | [components/webview.md](components/webview.md) | The composition-hosted WebView2 control (`TAefosWebView`) and why it replaced `TEdgeBrowser`. |
-| [licensing.md](licensing.md) | Node-locked single-seat licensing — the `Aefos.License` BPL and the client-side contract with the hosted seat server. |
 | [manual/README.md](manual/README.md) | **User Manual** — end-user guide: install, Chat, Terminal, providers, configuration, licensing, troubleshooting. |
 | [adr/README.md](adr/README.md) | Where architecture decisions live and how they're indexed. |
 

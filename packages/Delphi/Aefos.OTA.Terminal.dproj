@@ -59,7 +59,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.1.0</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_UsePackage>vcl;vclie;rtl;vclimg;vclwinx;Aefos.MCP.Core;Aefos.MCP.Tools.OTA;Aefos.License;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;vclie;rtl;vclimg;vclwinx;Aefos.MCP.Core;Aefos.MCP.Tools.OTA;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
@@ -67,7 +67,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.1.0</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_UsePackage>vcl;vclie;rtl;vclimg;vclwinx;Aefos.MCP.Core;Aefos.MCP.Tools.OTA;Aefos.License;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;vclie;rtl;vclimg;vclwinx;Aefos.MCP.Core;Aefos.MCP.Tools.OTA;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64x)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
@@ -76,7 +76,7 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <BCC_EnableBatchCompilation>true</BCC_EnableBatchCompilation>
-        <DCC_UsePackage>vcl;vclie;rtl;vclimg;vclwinx;Aefos.MCP.Core;Aefos.MCP.Tools.OTA;Aefos.License;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;vclie;rtl;vclimg;vclwinx;Aefos.MCP.Core;Aefos.MCP.Tools.OTA;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -91,7 +91,6 @@
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="Aefos.MCP.Core.dcp"/>
         <DCCReference Include="Aefos.MCP.Tools.OTA.dcp"/>
-        <DCCReference Include="Aefos.License.dcp"/>
         <DCCReference Include="Aefos.WebView.dcp"/>
         <DCCReference Include="..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.Wizard.pas"/>
         <DCCReference Include="..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ActivityPulse.pas"/>

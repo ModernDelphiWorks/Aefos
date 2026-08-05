@@ -36,7 +36,6 @@ requires
   designide,
   Aefos.MCP.Core,
   Aefos.Tools,
-  Aefos.License,
   Aefos.Harness;
 
 contains

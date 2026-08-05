@@ -50,7 +50,6 @@ uses
   Aefos.MCP.IntentGuard,
   Aefos.MCP.Types,
   Aefos.Compat.Json,
-  Aefos.License.Gate,
   Aefos.Lazarus.WorkspaceFacade,
   Aefos.Lazarus.GutterReview,
   Aefos.Lazarus.FormDesigner,
@@ -117,7 +116,6 @@ type
       gate's LCL UI): fingerprint, status, key field, Activate/Deactivate/
       Register/Close. Mirrors the Delphi Chat host's "License..." item; refreshes
       its own caption to the live status after the dialog closes. }
-    class procedure HandleLicense(ASender: TObject);
     { Change-review gutter (Model B) resolvers. "Approve All Changes" keeps every
       applied agent edit and drops the markers; "Reject All Changes" restores each
       unit's pre-edit text and drops the markers. Both are safe no-ops when nothing
@@ -258,43 +256,6 @@ var
   Studio edition's RegisterPyToolsMenu. Was a bare Allows on both sides, which
   hid the item for a free tier in every build while every other Pro surface
   honoured GATE_HARD_MODE and stayed visible through the soft beta. }
-function _PyToolsHidden: Boolean;
-begin
-  Result := False;
-  try
-    Result := TLicenseGate.HiddenByTier('pytools');
-  except
-    Result := False;
-  end;
-end;
-
-{ Whether to tag the visible item '(Pro)'. Separate question from hiding it: in
-  soft beta the item is THERE and usable, and the tag is what tells the user why
-  it will not always be. }
-function _PyToolsTagged: Boolean;
-begin
-  Result := False;
-  try
-    Result := not TLicenseGate.Allows('pytools');
-  except
-    Result := False;
-  end;
-end;
-
-{ True when this build must NOT start the MCP server for this license state.
-  GateHard AND NOT Allows, mirroring Aefos.OTA.Terminal.UI.Wizard.pas:549-551:
-  during beta (GATE_HARD_MODE off) this is always False, so the server starts for
-  everyone and only GA actually withholds it. }
-function _McpWithheldByLicense: Boolean;
-begin
-  Result := False;
-  try
-    Result := TLicenseGate.GateHard and (not TLicenseGate.Allows(AEFOS_CAP_MCP));
-  except
-    Result := False;
-  end;
-end;
-
 { Flips the toggle caption to match the current server state. Never creates the
   host singleton just to read state (AefosLazMcpHostExists gate), so calling it
   before any start leaves the host uncreated. }
@@ -327,14 +288,6 @@ begin
       (Terminal.UI.Wizard.pas:549). It answers an explicit click, so unlike the
       silent autostart it SAYS why nothing happened -- refusing without a reason
       is the failure mode that made the pipe-busy bug look like a broken feature. }
-    if _McpWithheldByLicense then
-    begin
-      DebugLn(cLogTag + 'MCP toggle: withheld (Pro feature)');
-      MessageDlg(cProductName,
-        UTF16ToUTF8(TLicenseGate.UpsellText(AEFOS_CAP_MCP)), mtInformation, [mbOK], 0);
-      _UpdateMcpToggleCaption;
-      Exit;
-    end;
     AefosLazMcpHost.Start;
     { The user just ASKED for the server. Silence on failure is what made the
       usual cause -- a second IDE already holding the fixed pipe name -- look like
@@ -377,31 +330,6 @@ end;
   submenu) to the current gate status. StatusText is UnicodeString (the gate
   core); convert to the LCL UTF-8 AnsiString caption at the boundary. Guarded so a
   gate-read failure leaves the static fallback caption instead of raising. }
-procedure _RefreshLicenseCaptions;
-var
-  LCaption: string;
-begin
-  try
-    LCaption := UTF16ToUTF8(TLicenseGate.StatusText);
-  except
-    Exit;
-  end;
-  if GLicenseItem <> nil then
-    GLicenseItem.Caption := LCaption;
-  if GTerminalLicenseItem <> nil then
-    GTerminalLicenseItem.Caption := LCaption;
-end;
-
-class procedure TAefosLazMenu.HandleLicense(ASender: TObject);
-begin
-  // Opens the shared gate's activation screen (LCL UI on this edition). Then
-  // refreshes both License item captions to the live status so a just-activated /
-  // registered state shows without restarting the IDE - the same behaviour as
-  // the Delphi Chat host's LicenseClick.
-  TLicenseGate.ShowManager;
-  _RefreshLicenseCaptions;
-end;
-
 {$IFDEF AEFOS_DIAG_MENU}
 class procedure TAefosLazMenu.HandleFacadeSmoke(ASender: TObject);
 var
@@ -709,7 +637,6 @@ begin
   LToggleMcp := TAefosLazMenu.HandleToggleMcp;
   LApproveAll := TAefosLazMenu.HandleApproveAll;
   LRejectAll := TAefosLazMenu.HandleRejectAll;
-  LLicense := TAefosLazMenu.HandleLicense;
 
   { Register the About action as a rebindable IDE command with a default
     shortcut (Ctrl+Shift+Alt+A), in the standard 'Custom' category so it appears
@@ -777,16 +704,6 @@ begin
   else
     RegisterIDEMenuCommand(LSecInfo, cMenuAboutName, cAboutCaption, LAbout);
   RegisterIDEMenuCommand(LSecInfo, cMenuWebName, cWebCaption, LWeb);
-  { Live license status item: caption is the current StatusText (falls back to a
-    static caption only if the gate read raises). Clicking opens the activation
-    screen and refreshes this caption. }
-  GLicenseItem := RegisterIDEMenuCommand(LSecInfo, cMenuLicenseName,
-    cLicenseCaption, LLicense);
-  if GLicenseItem <> nil then
-    try
-      GLicenseItem.Caption := UTF16ToUTF8(TLicenseGate.StatusText);
-    except
-    end;
   { The three MCP smoke items were phase-verification proofs (F/H/J) shown live
     while the port was built. They are DIAGNOSTIC, not product, so they no longer
     ship in the user-facing menu -- gated behind AEFOS_DIAG_MENU (off by default;
@@ -829,13 +746,7 @@ begin
     during the soft beta the item is present and tagged '(Pro)' on both sides.
     Guarded because a license read must never abort menu registration
     (CLAUDE.md rule #4). }
-  if not _PyToolsHidden then
-    if _PyToolsTagged then
-      RegisterIDEMenuCommand(mnuView, cMenuPyToolsName,
-        cPyToolsCaption + cPyToolsProTag, LPyTools)
-    else
-      RegisterIDEMenuCommand(mnuView, cMenuPyToolsName, cPyToolsCaption,
-        LPyTools);
+  RegisterIDEMenuCommand(mnuView, cMenuPyToolsName, cPyToolsCaption, LPyTools);
 
   { Sibling group under View -- "Aefos AI (Terminal)", mirroring the chat submenu
     shape and the Delphi edition's terminal group:
@@ -865,12 +776,8 @@ begin
     are refreshed together by _RefreshLicenseCaptions. About reuses the same handler
     (no shortcut here -- the Chat/About item already owns the rebindable command). }
   LSecTerminalInfo := RegisterIDEMenuSection(LTerminalRoot, cSecTerminalInfoName);
-  GTerminalLicenseItem := RegisterIDEMenuCommand(LSecTerminalInfo,
-    cMenuTerminalLicenseName, cLicenseCaption, LLicense);
   RegisterIDEMenuCommand(LSecTerminalInfo, cMenuTerminalAboutName, cAboutCaption,
     LAbout);
-  { Set both License captions to the live status now that both items exist. }
-  _RefreshLicenseCaptions;
 
   { Register the terminal as a native DOCKABLE IDE panel (at LOAD, like the menu) so
     AnchorDocking can dock it as a bottom tool panel. Guarded so a failure only logs
@@ -912,10 +819,7 @@ begin
     DebugLn(cLogTag + 'Register: ' + cAutostartEnvVar
       + '=1 -> starting hosted MCP server');
     try
-      if _McpWithheldByLicense then
-        DebugLn(cLogTag + 'Register: MCP autostart withheld (Pro feature)')
-      else
-        AefosLazMcpHost.Start;
+      AefosLazMcpHost.Start;
     except
       on E: Exception do
         DebugLn(cLogTag + 'Register: MCP autostart RAISED '

@@ -6,7 +6,8 @@ Quick links to the legal documents. They apply to all editions.
 
 | Document | What it is |
 |----------|------------|
-| [EULA (LICENSE)](../../../LICENSE) | End-user license agreement. Community free (including internal business use); Pro/Enterprise optional |
+| [GNU GPL v3 (LICENSE)](../../../LICENSE) | The licence of the software itself |
+| [Additional permissions](../../../ADDITIONAL-PERMISSIONS.md) | GPLv3 §7: your generated code is yours; the RAD Studio linking grant |
 | [Privacy Policy (EN)](../../../PRIVACY.md) | How Aefos processes personal data (LGPD-aligned) |
 | [Política de Privacidade (PT-BR)](../../../PRIVACY.pt-BR.md) | Portuguese version of the privacy policy |
 | [Third-party notices](../../../THIRD-PARTY-NOTICES.txt) | Licenses of the open-source components used (libvterm, marked, highlight.js, the Cascadia/CaskaydiaCove font, SQLite) |
@@ -16,9 +17,9 @@ Quick links to the legal documents. They apply to all editions.
 - Aefos **does not run** an AI model and **does not collect** your prompts or code —
   that content goes **straight** to the AI CLI **you** chose, under that provider's
   policy.
-- The only personal data Aefos processes is what is needed to **activate/validate** a
-  paid license (e.g. email, machine identifier, IP) and, optionally, limited
-  **technical diagnostics**.
+- Aefos has **no licence key and no activation**, so it sends **nothing** to any
+  backend of ours. The only data it may process is limited **technical**
+  **diagnostics**.
 - Chat sessions, history, and the audit log stay **locally** on your machine
   (`%APPDATA%\Aefos`) — you control them and can delete them.
 
@@ -27,12 +28,12 @@ contact in the [Privacy Policy](../../../PRIVACY.md).
 
 ## License essentials
 
-- **Community is free** for personal, educational, and **internal business** use, with
-  no per-seat fee and no penalty.
+- **Everything is free software** — personal, educational and commercial use
+  alike, with no key, no tier and no per-seat fee.
 - You **own** everything you create with Aefos.
 - The software is provided **"AS IS"**, without warranty — **you** are responsible for
-  reviewing the changes the AI makes and for keeping backups (see the EULA's
-  Disclaimer, Liability, and Indemnification sections).
+  reviewing the changes the AI makes and for keeping backups (GPL v3, sections 15
+  to 17).
 
 ---
 

@@ -70,7 +70,6 @@ in dependency / `CallTarget` order:
 |---|---------|--------|:---:|------|
 | 1 | `Aefos.WebView` | `source/webview` | no | Composition-hosted WebView2 control (`TAefosWebView`), DirectComposition + D3D11. Runtime. |
 | 2 | `dclAefosWebView` | `source/webview` (Reg) | no | Design-time companion — registers `TAefosWebView` on the **Aefos** palette. `{$DESIGNONLY}`. |
-| 3 | `Aefos.License` | `source/license` | no | Node-locked single-seat licensing (Client / Gate / Token / UI), Supabase backend. |
 | 4 | `Aefos.Harness` | `source/harness` | **yes** (designide) | The Design/Code-duality seam: `WithLiveForm`, `EnsureDesignView`, `EnsureCodeView` (intent → view). Passive — registers nothing. |
 | 5 | `Aefos.Providers` | `source/providers` | **no** (rtl-only leaf) | One driver per AI CLI (Claude / Codex / Copilot / Gemini) behind `IExecutorProfile`. |
 | 6 | `Aefos.Tools` | `source/mcp/Tools` | no | Pure Delphi file-editing tools (line/column, disk, templates). No IDE coupling. |
@@ -233,15 +232,6 @@ storage-agnostic `…Chat.Core.SessionStore` unit; the SQLite implementation
 (`…SessionStore.SQLite`) self-registers and is swappable for a test double.
 Migration is **non-destructive** — legacy `sessions\*.json` are imported once and
 left in place.
-
-## Licensing
-
-`Aefos.License` adds node-locked, single-seat licensing (one seat per copy of
-Delphi) wired into both Chat and Terminal via a **License…** menu item. The BPL
-splits into Client (HTTP to the Supabase backend), Gate (the local enforcement
-point), Token (RS256 token handling — phase 2), and UI. The server side is a Supabase schema + Edge Function + registration flow (lead
-capture, auto-activate, e-mail) and is **not part of this repository** — it is a
-hosted service. See [licensing.md](licensing.md) for the client-side contract.
 
 ## Known debt / in-flux areas
 

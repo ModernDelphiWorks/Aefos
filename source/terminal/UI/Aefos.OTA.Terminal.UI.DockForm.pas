@@ -392,8 +392,7 @@ implementation
     Aefos.OTA.Terminal.Core.TerminalHost,
     Aefos.OTA.Terminal.Core.WelcomeModel, Aefos.OTA.Terminal.Core.CommandPalette, Aefos.OTA.Terminal.UI.CommandPaletteView,
     Aefos.OTA.Terminal.Core.WindowPlacement,
-    Aefos.OTA.Terminal.UI.ComposerMemory,
-    Aefos.License.Gate;
+    Aefos.OTA.Terminal.UI.ComposerMemory;
 
 {$R *.dfm}
 
@@ -626,12 +625,6 @@ constructor TAefosTerminalDockForm.Create(AOwner: TComponent);
 begin
   inherited;
   Caption := 'Aefos Terminal';
-  // Show the license type in the window title/tab (Trial / Free / Pro...).
-  try
-    if Aefos.License.Gate.TLicenseGate.ShortLabel <> '' then
-      Caption := 'Aefos Terminal ' + #$2014 + ' ' + Aefos.License.Gate.TLicenseGate.ShortLabel;
-  except
-  end;
   // IDE desktop persistence (DeskSection/AutoSave + RegisterDesktopFormClass)
   // DISABLED (2026-06-16): no UnregisterDesktopFormClass exists, so a
   // Build-All-in-IDE dangles the registered class and the AutoSave'd .dst section

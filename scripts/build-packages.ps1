@@ -33,10 +33,10 @@ param(
   [string]$Version = 'all',
   [ValidateSet('Release', 'Debug')]
   [string]$Config = 'Release',
-  # Win32 is the classic IDE. Win64x is Delphi 13's separate 64-bit IDE
+  # Win32 is the classic IDE. Win64 is Delphi 13's separate 64-bit IDE
   # (bin64\bds.exe) -- a design-time BPL must match the process bitness, so
   # the two are different builds, not one build installed twice.
-  [ValidateSet('Win32', 'Win64x', 'all')]
+  [ValidateSet('Win32', 'Win64', 'all')]
   [string]$Platform = 'Win32'
 )
 
@@ -81,13 +81,13 @@ function Ensure-LibVTerm([string]$Rsvars, [string]$Plat) {
   $vtermDir = Join-Path $root 'source\terminal\ThirdParty\libvterm'
   # The one artefact that matters: Core.LibVTerm.pas links exactly this via {$L}
   # (a unity object -- the per-file .obj's alone don't satisfy the single-pass linker).
-  # bcc32c emits 32-bit OMF into obj\; bcc64x emits COFF x64 into obj\Win64x\.
+  # bcc32c emits 32-bit OMF into obj\; bcc64 emits ELF x64 into obj\Win64\.
   # Each linker rejects the other's output with E2045, which reads like a
   # corrupt file and is really the wrong architecture -- hence two folders.
   if ($Plat -eq 'Win32') {
     $unity = Join-Path $vtermDir 'obj\libvterm_unity.obj'
   } else {
-    $unity = Join-Path $vtermDir 'obj\Win64x\libvterm_unity.o'
+    $unity = Join-Path $vtermDir 'obj\Win64\libvterm_unity.o'
   }
   if (Test-Path $unity) { return }
   Write-Host "  libvterm objects missing -- building them (fresh checkout)." -ForegroundColor Yellow
@@ -99,7 +99,7 @@ function Ensure-LibVTerm([string]$Rsvars, [string]$Plat) {
   }
 }
 
-$plats = if ($Platform -eq 'all') { @('Win32', 'Win64x') } else { @($Platform) }
+$plats = if ($Platform -eq 'all') { @('Win32', 'Win64') } else { @($Platform) }
 
 $built = @()
 foreach ($v in $targets) {
@@ -109,9 +109,9 @@ foreach ($v in $targets) {
     continue
   }
   foreach ($plat in $plats) {
-    # Only Delphi 13 has a 64-bit IDE to load a Win64x package.
-    if ($plat -eq 'Win64x' -and $v -ne '37.0') {
-      Write-Host "  --  Delphi $v has no 64-bit IDE -- skipping Win64x." -ForegroundColor DarkGray
+    # Only Delphi 13 has a 64-bit IDE to load a Win64 package.
+    if ($plat -eq 'Win64' -and $v -ne '37.0') {
+      Write-Host "  --  Delphi $v has no 64-bit IDE -- skipping Win64." -ForegroundColor DarkGray
       continue
     }
     Ensure-LibVTerm $rsvars $plat
@@ -121,7 +121,7 @@ foreach ($v in $targets) {
     cmd /c $cmd
     if ($LASTEXITCODE -ne 0) { throw "Build FAILED for Delphi $v/$plat (exit $LASTEXITCODE)." }
 
-    # Stage into installer\bpl\<ver>\ for Win32, <ver>\Win64x\ for the 64-bit
+    # Stage into installer\bpl\<ver>\ for Win32, <ver>\Win64\ for the 64-bit
     # IDE -- the installer copies each set to the directory its IDE reads.
     $src = Get-PublicBplDir $v $plat
     $dst = Join-Path $stage $v

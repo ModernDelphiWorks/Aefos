@@ -20,8 +20,9 @@ already use (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D6)](#requirements)
 [![License](https://img.shields.io/badge/license-GPL%20v3-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Security%20policy-success)](https://www.pubpascal.dev/packages/aefos)
+[![Support](https://img.shields.io/badge/support-donate-ff69b4)](https://link.mercadopago.com.br/aefosai)
 
-[⬇️ Download](../../releases) · [📖 User Manual](https://moderndelphiworks.github.io/Aefos/) · [🐛 Report a bug](../../issues/new/choose) · [🔒 Security](SECURITY.md)
+[⬇️ Download](../../releases) · [📖 User Manual](https://moderndelphiworks.github.io/Aefos/) · [🐛 Report a bug](../../issues/new/choose) · [🔒 Security](SECURITY.md) · [💙 Support Aefos](https://link.mercadopago.com.br/aefosai)
 
 **English** · [Português (PT-BR)](README.pt-BR.md)
 
@@ -132,13 +133,15 @@ Full walkthrough in the [User Manual](https://moderndelphiworks.github.io/Aefos/
 
 ## Supporting the project
 
-Aefos is free software and stays that way — there is no paid tier to upgrade to.
-What keeps it moving is the AI subscriptions its own development runs on, and
-those are paid by one person.
+Aefos is free software and stays that way — there is no paid tier to
+upgrade to. What keeps it moving is the AI subscriptions its own development
+runs on, and those are paid by one person.
 
-If Aefos saves you time, the **Sponsor** button at the top of this page is the way
-to help. Companies: sponsorship is invoiceable, a personal payment link usually is
-not.
+If Aefos saves you time, **[you can contribute here](https://link.mercadopago.com.br/aefosai)** — or use the
+**Sponsor** button at the top of this page.
+
+Companies: sponsorship is invoiceable, a personal payment link usually is not
+— if your accounts payable needs an invoice, say so and it will be sorted.
 
 ## Reporting bugs & requests
 

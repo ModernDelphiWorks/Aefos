@@ -110,7 +110,9 @@ uses
   Aefos.OTA.Chat.Adapter.DebuggerNotifier,
   Aefos.OTA.Chat.Adapter.MainMenu,
   Aefos.OTA.Chat.Adapter.AgentSuggest,
+{$IF CompilerVersion >= 36}
   Aefos.OTA.InlineGhost,
+{$IFEND}
   Aefos.OTA.Chat.UI.OutputPanel.Edge,
   Aefos.OTA.Chat.UI.ChatInspectorFacade,
   Aefos.OTA.Chat.UI.ChatPanel,
@@ -3332,7 +3334,9 @@ begin
   // the chat except to exist in the same design package; it owns its own
   // painter, keys and teardown. RegisterSelf never raises -- a completion
   // feature that cannot start must not stop the rest of Aefos loading.
+  {$IF CompilerVersion >= 36}   // ghost text: Delphi 12 Athens and up
   TAefosInlineGhost.RegisterSelf;
+  {$IFEND}
 end;
 
 procedure _ShutdownAgentSuggestBinding;

@@ -6,7 +6,7 @@
   The CLI is a plain Win32 console EXE (RTL-only: System.Net + threading, no
   ToolsAPI, no VCL) - ONE binary serves every supported IDE version, so it is
   compiled once with whichever RAD Studio command line is installed (D13/37.0
-  preferred, then D12/23.0). No IDE needs to be open.
+  preferred, then D12/23.0, then D11/22.0). No IDE needs to be open.
 
 .EXAMPLE
   pwsh -NoProfile -File scripts/build-agent-cli.ps1
@@ -25,7 +25,7 @@ $dcu  = Join-Path $repo 'cli\.build'
 if (-not (Test-Path $dpr)) { throw "CLI program not found: $dpr" }
 
 # Resolve a RAD Studio rsvars.bat.
-$candidates = if ($Version) { @($Version) } else { @('37.0', '23.0') }
+$candidates = if ($Version) { @($Version) } else { @('37.0', '23.0', '22.0') }
 $rsvars = $null
 foreach ($v in $candidates) {
   $p = "C:\Program Files (x86)\Embarcadero\Studio\$v\bin\rsvars.bat"

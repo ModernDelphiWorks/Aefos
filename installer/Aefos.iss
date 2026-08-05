@@ -13,8 +13,8 @@
 ;
 ;  Delphi 13 counts as TWO targets, not one: it ships a second IDE executable
 ;  (bin64\bds.exe), and a design-time package is loaded into the IDE PROCESS -- so
-;  a Win32 BPL is invisible to the 64-bit IDE and vice-versa. The Win64x set is
-;  built separately, installed into Bpl\Win64x, and registered under its own
+;  a Win32 BPL is invisible to the 64-bit IDE and vice-versa. The Win64 set is
+;  built separately, installed into Bpl\Win64, and registered under its own
 ;  "Known Packages x64" key.
 ;
 ;  Per-version BPLs are RTL-version-specific and CANNOT be shared - a Delphi 12
@@ -57,8 +57,8 @@
 #define HaveD12  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD12 + "\Aefos.OTA.Chat.bpl")
 #define HaveD13  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD13 + "\Aefos.OTA.Chat.bpl")
 ; The 64-bit IDE payload is independent: -Platform Win32 (the default) stages
-; nothing under Win64x and the whole block below vanishes at compile time.
-#define HaveD13x FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD13 + "\Win64x\Aefos.OTA.Chat.bpl")
+; nothing under Win64 and the whole block below vanishes at compile time.
+#define HaveD13x FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD13 + "\Win64\Aefos.OTA.Chat.bpl")
 #if !HaveD11 && !HaveD12 && !HaveD13
   #error No staged BPLs found under .\bpl\<ver>. Run scripts\build-packages.ps1 then installer\build-installer.ps1.
 #endif
@@ -88,7 +88,7 @@ SolidCompression=yes
 WizardStyle=modern
 ShowLanguageDialog=yes
 ; The SETUP itself stays a 32-bit process. This says nothing about the packages:
-; Delphi 13 gained a 64-bit IDE and we now ship Win64x BPLs for it (see HaveD13x).
+; Delphi 13 gained a 64-bit IDE and we now ship Win64 BPLs for it (see HaveD13x).
 ; What this setting controls is where {pf} and the registry redirector point, and
 ; every path here is written literally, so 32-bit mode is both correct and the
 ; safer default on a machine with no 64-bit IDE at all.
@@ -231,7 +231,7 @@ Source: "{#BplSrc}\{#VerD13}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Em
 ; --- Delphi 13, 64-bit IDE (bin64\bds.exe) - a SEPARATE set of packages --------
 ; Delphi 13 ships two IDE executables, and a design-time BPL is loaded into the
 ; IDE PROCESS: a Win32 package simply does not appear in the 64-bit IDE, and vice
-; versa. So this is a second build (Platform=Win64x), installed into the Win64x
+; versa. So this is a second build (Platform=Win64), installed into the Win64
 ; subfolder the IDE itself writes to, and registered under its OWN registry key --
 ; "Known Packages x64", which is a different key from the 32-bit one (verified: 80
 ; entries there, all under $(BDS)\bin64).
@@ -239,22 +239,22 @@ Source: "{#BplSrc}\{#VerD13}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Em
 ; Optional exactly like a version payload: build-packages.ps1 -Platform Win32 (the
 ; default) stages nothing here, and this whole block disappears at compile time.
 #if HaveD13x
-Source: "{#BplSrc}\{#VerD13}\Win64x\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64x\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64x\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64x\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64x\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64x\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64x\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64x\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64x\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64x\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 ; A 64-bit IDE process cannot bind the 32-bit loader RAD Studio ships, so this is
 ; the x64 one -- staged by build-installer.ps1 from the same place the Lazarus
 ; installer gets it. Without it the chat would fall back to plain text in the
 ; 64-bit IDE only, which is exactly the kind of difference nobody would think to
 ; look for.
-Source: "{#BplSrc}\{#VerD13}\Win64x\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 #endif
 
 ; --- WebView2 Evergreen STANDALONE (offline) - OPTIONAL embed (-DBundleWebView2) -
@@ -297,9 +297,9 @@ Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages";    Valu
 ; installs nothing visible in the 64-bit IDE -- it reads "Known Packages x64",
 ; and the two lists never see each other.
 #if HaveD13x
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x\Aefos.OTA.Chat.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64x\dclAefosWebView.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64\Aefos.OTA.Chat.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64\dclAefosWebView.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
 #endif
 #endif
 

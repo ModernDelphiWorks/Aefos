@@ -79,15 +79,15 @@ foreach ($v in $staged) {
   Copy-Item $wv2 $dir -Force   # ensure the loader is present (VM build may lack it)
   Write-Host "  ok  Delphi $v  ($($Bpls.Count) BPLs + WebView2Loader.dll)" -ForegroundColor Green
 
-  # Delphi 13's 64-bit IDE, when its packages were built (-Platform Win64x). It is
+  # Delphi 13's 64-bit IDE, when its packages were built (-Platform Win64). It is
   # a separate set: a design-time BPL loads into the IDE PROCESS, so the Win32 ones
   # above are invisible to bin64\bds.exe.
-  $x64Dir = Join-Path $dir 'Win64x'
+  $x64Dir = Join-Path $dir 'Win64'
   if (Test-Path (Join-Path $x64Dir 'Aefos.OTA.Chat.bpl')) {
     $missing64 = $Bpls | Where-Object { -not (Test-Path (Join-Path $x64Dir $_)) }
     if ($missing64) {
-      throw "Delphi $v/Win64x: staged folder is missing $($missing64.Count) BPL(s): " +
-            "$($missing64 -join ', '). Re-run build-packages.ps1 -Version $v -Platform Win64x."
+      throw "Delphi $v/Win64: staged folder is missing $($missing64.Count) BPL(s): " +
+            "$($missing64 -join ', '). Re-run build-packages.ps1 -Version $v -Platform Win64."
     }
     # A 64-bit IDE process cannot bind the 32-bit loader RAD Studio ships, and RAD
     # Studio has no x64 one (verified: nothing under any bin64). It comes from the
@@ -100,9 +100,9 @@ foreach ($v in $staged) {
     }
     if (Test-Path $loader64) {
       Copy-Item $loader64 $x64Dir -Force
-      Write-Host "  ok  Delphi $v/Win64x  ($($Bpls.Count) BPLs + x64 WebView2Loader.dll)" -ForegroundColor Green
+      Write-Host "  ok  Delphi $v/Win64  ($($Bpls.Count) BPLs + x64 WebView2Loader.dll)" -ForegroundColor Green
     } else {
-      throw "Delphi $v/Win64x: no x64 WebView2Loader.dll. See " +
+      throw "Delphi $v/Win64: no x64 WebView2Loader.dll. See " +
             "installer\lazarus\redist\x86_64\README.md."
     }
   }

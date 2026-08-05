@@ -8,7 +8,7 @@ rem
 rem  TWO PLATFORMS, TWO COMPILERS, AND THEY ARE NOT INTERCHANGEABLE.
 rem
 rem    Win32   bcc32c.exe  (bin)    -> 32-bit OMF   -> obj\*.obj
-rem    Win64x  bcc64x.exe  (bin64)  -> COFF x64     -> obj\Win64x\*.o
+rem    Win64   bcc64.exe   (bin)    -> ELF x64      -> obj\Win64\*.o
 rem
 rem  Each platform's Delphi linker REJECTS the other's object outright, with
 rem  "E2045 Bad object file format" - which reads like a corrupt file and is
@@ -16,11 +16,11 @@ rem  really the wrong architecture. Hence separate output folders: a build can
 rem  never pick up the wrong one, whoever ran last.
 rem
 rem  The legacy bcc32.exe is C89/C++03 and CANNOT compile libvterm (C99
-rem  designated initializers + mixed declarations). bcc32c and bcc64x are the
+rem  designated initializers + mixed declarations). bcc32c and bcc64 are the
 rem  Clang-based compilers and both handle it.
 rem
 rem  Usage:  build-objs.bat            (Win32, the default)
-rem          build-objs.bat Win64x     (Win64 Modern, for the 64-bit IDE)
+rem          build-objs.bat Win64      (classic Win64, for the 64-bit IDE)
 rem    Requires the compiler on PATH, or the BDS environment variable pointing
 rem    at the RAD Studio root (set by rsvars.bat / inside the IDE).
 rem
@@ -35,9 +35,9 @@ set PLATFORM=%~1
 if "%PLATFORM%"=="" set PLATFORM=Win32
 
 rem -- Locate the compiler and decide where the objects land -------------------
-if /I "%PLATFORM%"=="Win64x" goto :win64
+if /I "%PLATFORM%"=="Win64" goto :win64
 if /I "%PLATFORM%"=="Win32" goto :win32
-echo *** Unknown platform "%PLATFORM%" - expected Win32 or Win64x ***
+echo *** Unknown platform "%PLATFORM%" - expected Win32 or Win64 ***
 endlocal & exit /b 1
 
 :win32
@@ -48,10 +48,10 @@ if defined BDS if exist "%BDS%\bin\bcc32c.exe" set BCC="%BDS%\bin\bcc32c.exe"
 goto :compile
 
 :win64
-set OUTDIR=%HERE%obj\Win64x
+set OUTDIR=%HERE%obj\Win64
 set OBJEXT=o
-set BCC=bcc64x.exe
-if defined BDS if exist "%BDS%\bin64\bcc64x.exe" set BCC="%BDS%\bin64\bcc64x.exe"
+set BCC=bcc64.exe
+if defined BDS if exist "%BDS%\bin\bcc64.exe" set BCC="%BDS%\bin\bcc64.exe"
 goto :compile
 
 :compile

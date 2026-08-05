@@ -70,7 +70,7 @@
         <SanitizedProjectName>Aefos_Harness</SanitizedProjectName>
         <DCC_Description>Aefos Harness - IDE Design/Code view duality + backstage helpers</DCC_Description>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.2.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.2.0</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.3.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.3.0</VerInfo_Keys>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_iOSDevice64)'!=''">
@@ -89,7 +89,7 @@
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.2.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.2.0</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.3.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.3.0</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_UsePackage>rtl;vcl;designide;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
@@ -102,7 +102,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <BCC_EnableBatchCompilation>true</BCC_EnableBatchCompilation>
         <DCC_UsePackage>rtl;vcl;designide;$(DCC_UsePackage)</DCC_UsePackage>
-        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.2.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.2.0</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.3.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.3.0</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>

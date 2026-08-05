@@ -48,7 +48,7 @@
 ; ============================================================================
 
 #define AppName    "Aefos AI (Lazarus)"
-#define AppVer     "0.25.0-beta"
+#define AppVer     "0.25.1-beta"
 #define Publisher  "ModernDelphiWorks"
 ; The name of the IDE this setup produces, as the user will see it in the Start
 ; menu. This setup does NOT create that shortcut - the install engine does - so
@@ -391,7 +391,10 @@ Source: "redist\libvterm.dll"; DestDir: "{app}"; Flags: ignoreversion
 ; disagree. Installing them under {app}\<cpu>\ matches the first candidate
 ; Get-AefosIsolatedPayloadDlls looks at.
 #if FileExists(AddBackslash(SourcePath) + "redist\x86_64\libvterm.dll")
-Source: "redist\x86_64\*"; DestDir: "{app}\x86_64"; Flags: ignoreversion
+; *.dll, not *: the folder also holds the README that explains where the
+; proprietary WebView2 loader comes from, and that belongs in the repository, not
+; dropped beside the user's lazarus.exe.
+Source: "redist\x86_64\*.dll"; DestDir: "{app}\x86_64"; Flags: ignoreversion
 #endif
 #if FileExists(AddBackslash(SourcePath) + "redist\arm64\libvterm.dll")
 Source: "redist\arm64\*";  DestDir: "{app}\arm64";  Flags: ignoreversion

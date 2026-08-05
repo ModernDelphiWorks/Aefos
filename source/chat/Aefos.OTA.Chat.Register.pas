@@ -108,7 +108,6 @@ uses
   Aefos.OTA.Chat.UI.Options.Binding,
   Aefos.OTA.Chat.Adapter.IDENotifier,
   Aefos.OTA.Chat.Adapter.DebuggerNotifier,
-  Aefos.License.Gate,
   Aefos.OTA.Chat.Adapter.MainMenu,
   Aefos.OTA.Chat.Adapter.AgentSuggest,
   Aefos.OTA.InlineGhost,
@@ -3207,7 +3206,6 @@ type
     procedure OpenClick(Sender: TObject);
     procedure AboutClick(Sender: TObject);
     procedure WebClick(Sender: TObject);
-    procedure LicenseClick(Sender: TObject);
   end;
 
 const
@@ -3239,32 +3237,6 @@ begin
   ShellExecute(0, 'open', PChar(ChatWebUrl), nil, nil, SW_SHOWNORMAL);
 end;
 
-
-procedure TChatMenuHandlers.LicenseClick(Sender: TObject);
-var
-  LLabel: string;
-begin
-  // Opens the Aefos.License BPL's activation screen (passive runtime package).
-  Aefos.License.Gate.TLicenseGate.ShowManager;
-  // Refresh the menu caption so a just-activated/registered state shows without
-  // restarting the IDE (Sender is the License menu item).
-  if Sender is TMenuItem then
-    try
-      TMenuItem(Sender).Caption := Aefos.License.Gate.TLicenseGate.StatusText;
-    except
-    end;
-  // Refresh the dock window title with the (possibly new) license type live.
-  if Assigned(Aefos.OTA.Chat.UI.ChatPanel.GChatPanel) then
-    try
-      LLabel := Aefos.License.Gate.TLicenseGate.ShortLabel;
-      if LLabel <> '' then
-        Aefos.OTA.Chat.UI.ChatPanel.GChatPanel.Caption :=
-          'Aefos Chat ' + #$2014 + ' ' + LLabel
-      else
-        Aefos.OTA.Chat.UI.ChatPanel.GChatPanel.Caption := 'Aefos Chat';
-    except
-    end;
-end;
 
 // The IDE 'View' menu (falls back to the menu-bar root), same host the adapter
 // used before — no shared parent, unique caption, so this never touches the
@@ -3299,7 +3271,7 @@ end;
 
 procedure _InitChatMenuBar;
 var
-  LParent, LOpen, LSep, LLicense, LAbout, LWeb: TMenuItem;
+  LParent, LOpen, LSep, LAbout, LWeb: TMenuItem;
 begin
   LParent := _ChatMenuHost;
   if not Assigned(LParent) then
@@ -3320,16 +3292,6 @@ begin
   LSep.Caption := '-';
   GChatMenuItem.Add(LSep);
 
-  LLicense := TMenuItem.Create(GChatMenuItem);
-  // Show the license state right in the menu, computed at LOAD so it is visible
-  // from IDE startup (Trial/Free/Active...). Guarded — never break the menu.
-  try
-    LLicense.Caption := Aefos.License.Gate.TLicenseGate.StatusText;
-  except
-    LLicense.Caption := 'License' + #$2026;
-  end;
-  LLicense.OnClick := GChatMenuHandlers.LicenseClick;
-  GChatMenuItem.Add(LLicense);
 
   LAbout := TMenuItem.Create(GChatMenuItem);
   LAbout.Caption := 'About Aefos AI' + #$2026;

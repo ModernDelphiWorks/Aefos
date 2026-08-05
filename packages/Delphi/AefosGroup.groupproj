@@ -9,9 +9,6 @@
         <Projects Include="dclAefosWebView.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Aefos.License.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="Aefos.Harness.dproj">
             <Dependencies/>
         </Projects>
@@ -61,15 +58,6 @@
     </Target>
     <Target Name="dclAefosWebView:Make">
         <MSBuild Projects="dclAefosWebView.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="Aefos_License">
-        <MSBuild Projects="Aefos.License.dproj"/>
-    </Target>
-    <Target Name="Aefos_License:Clean">
-        <MSBuild Projects="Aefos.License.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Aefos_License:Make">
-        <MSBuild Projects="Aefos.License.dproj" Targets="Make"/>
     </Target>
     <Target Name="Aefos_Harness">
         <MSBuild Projects="Aefos.Harness.dproj"/>
@@ -144,13 +132,13 @@
         <MSBuild Projects="Aefos.OTA.Terminal.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Aefos_WebView;dclAefosWebView;Aefos_License;Aefos_Harness;Aefos_Providers;Aefos_Tools;Aefos_MCP_Core;Aefos_MCP_Tools_OTA;Aefos_Data;Aefos_OTA_Chat;Aefos_OTA_Terminal"/>
+        <CallTarget Targets="Aefos_WebView;dclAefosWebView;Aefos_Harness;Aefos_Providers;Aefos_Tools;Aefos_MCP_Core;Aefos_MCP_Tools_OTA;Aefos_Data;Aefos_OTA_Chat;Aefos_OTA_Terminal"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Aefos_WebView:Clean;dclAefosWebView:Clean;Aefos_License:Clean;Aefos_Harness:Clean;Aefos_Providers:Clean;Aefos_Tools:Clean;Aefos_MCP_Core:Clean;Aefos_MCP_Tools_OTA:Clean;Aefos_Data:Clean;Aefos_OTA_Chat:Clean;Aefos_OTA_Terminal:Clean"/>
+        <CallTarget Targets="Aefos_WebView:Clean;dclAefosWebView:Clean;Aefos_Harness:Clean;Aefos_Providers:Clean;Aefos_Tools:Clean;Aefos_MCP_Core:Clean;Aefos_MCP_Tools_OTA:Clean;Aefos_Data:Clean;Aefos_OTA_Chat:Clean;Aefos_OTA_Terminal:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Aefos_WebView:Make;dclAefosWebView:Make;Aefos_License:Make;Aefos_Harness:Make;Aefos_Providers:Make;Aefos_Tools:Make;Aefos_MCP_Core:Make;Aefos_MCP_Tools_OTA:Make;Aefos_Data:Make;Aefos_OTA_Chat:Make;Aefos_OTA_Terminal:Make"/>
+        <CallTarget Targets="Aefos_WebView:Make;dclAefosWebView:Make;Aefos_Harness:Make;Aefos_Providers:Make;Aefos_Tools:Make;Aefos_MCP_Core:Make;Aefos_MCP_Tools_OTA:Make;Aefos_Data:Make;Aefos_OTA_Chat:Make;Aefos_OTA_Terminal:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

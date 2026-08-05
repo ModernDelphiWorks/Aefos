@@ -28,7 +28,7 @@ TOC_PT = [
     ("07-usando-o-terminal.md", "7. Usando o Terminal"),
     ("08-provedores-de-ia.md", "8. Provedores de IA"),
     ("09-configuracao.md", "9. Configuração"),
-    ("10-licenciamento.md", "10. Licenciamento"),
+    ("10-licenciamento.md", "10. Licença"),
     ("11-solucao-de-problemas.md", "11. Solução de problemas"),
     ("12-privacidade-e-licenca.md", "12. Privacidade e licença"),
 ]
@@ -43,7 +43,7 @@ TOC_EN = [
     ("07-using-the-terminal.md", "7. Using the Terminal"),
     ("08-ai-providers.md", "8. AI providers"),
     ("09-configuration.md", "9. Configuration"),
-    ("10-licensing.md", "10. Licensing"),
+    ("10-licensing.md", "10. License"),
     ("11-troubleshooting.md", "11. Troubleshooting"),
     ("12-privacy-and-license.md", "12. Privacy & license"),
 ]

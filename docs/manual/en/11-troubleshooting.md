@@ -35,13 +35,6 @@ Common symptoms and how to fix them. If nothing here helps, see
 |---------|--------------|-----|
 | Prompt glyphs show as "tofu" boxes | Font without Nerd/powerline glyphs | Pick a compatible font (e.g. a *Nerd Font*) in the Terminal options |
 | **Ctrl+P** and **Ctrl+R** seem to conflict | They are different things | **Ctrl+P** = Aefos palette; **Ctrl+R** = the shell's native reverse search |
-| Terminal unavailable | **Pro** edition feature | See [Licensing](10-licensing.md) |
 
-## License
-
-| Symptom | Likely cause | Fix |
-|---------|--------------|-----|
-| Pro feature blocked | No active Pro license (or expired trial) | In **View → Aefos AI (Chat)**, open the license item (e.g. *License: active*) and activate the key |
-| Activation fails | No network at activation time | Validation needs network; afterward it works offline within the grace window |
 
 ➡️ Next: [Privacy & license](12-privacy-and-license.md)

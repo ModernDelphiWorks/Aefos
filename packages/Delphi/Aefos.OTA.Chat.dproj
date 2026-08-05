@@ -116,7 +116,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.1.0</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_UsePackage>vcl;rtl;vclie;Aefos.MCP.Core;Aefos.MCP.Tools.OTA;Aefos.License;Aefos.Providers;soaprtl;dbrtl;IndySystem;IndyProtocols;IndyCore;vcldb;FireDAC;FireDACCommonDriver;FireDACCommon;FireDACSqliteDriver;Aefos.Data;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;rtl;vclie;Aefos.MCP.Core;Aefos.MCP.Tools.OTA;Aefos.Providers;soaprtl;dbrtl;IndySystem;IndyProtocols;IndyCore;vcldb;FireDAC;FireDACCommonDriver;FireDACCommon;FireDACSqliteDriver;Aefos.Data;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>vcl;rtl;vclie;Aefos.MCP.Tools.OTA;soaprtl;dbrtl;IndySystem;IndyProtocols;IndyCore;vcldb;FireDAC;FireDACCommonDriver;FireDACCommon;FireDACSqliteDriver;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
@@ -170,7 +170,6 @@
         <DCCReference Include="Aefos.Data.dcp"/>
         <DCCReference Include="Aefos.MCP.Core.dcp"/>
         <DCCReference Include="Aefos.MCP.Tools.OTA.dcp"/>
-        <DCCReference Include="Aefos.License.dcp"/>
         <DCCReference Include="Aefos.Providers.dcp"/>
         <DCCReference Include="Aefos.WebView.dcp"/>
         <DCCReference Include="..\..\source\chat\Adapter\Aefos.OTA.Chat.Adapter.AgentSuggest.pas"/>

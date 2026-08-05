@@ -91,7 +91,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.1.0</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_UsePackage>vcl;rtl;vclimg;vclwinx;designide;Aefos.MCP.Core;Aefos.Tools;Aefos.License;Aefos.Harness;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;rtl;vclimg;vclwinx;designide;Aefos.MCP.Core;Aefos.Tools;Aefos.Harness;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_iOSDevice64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
@@ -125,7 +125,6 @@
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="Aefos.MCP.Core.dcp"/>
         <DCCReference Include="Aefos.Tools.dcp"/>
-        <DCCReference Include="Aefos.License.dcp"/>
         <DCCReference Include="Aefos.Harness.dcp"/>
         <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.MessageTextPolicy.pas"/>
         <DCCReference Include="..\..\source\mcp\OTA\Aefos.MCP.OTA.ContentWritePolicy.pas"/>

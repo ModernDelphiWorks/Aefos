@@ -32,8 +32,7 @@ uses
   Vcl.Graphics,
   Vcl.Imaging.pngimage,
   ToolsAPI,
-  Aefos.OTA.Chat.Core.SupportInfo,
-  Aefos.License.Gate;
+  Aefos.OTA.Chat.Core.SupportInfo;
 
 {$R 'Aefos.OTA.Chat.UI.Branding.res'}
 
@@ -93,11 +92,7 @@ end;
 // Pro...), read from the cache at load. Guarded — never break registration.
 function _SplashStatus: string;
 begin
-  try
-    Result := Aefos.License.Gate.TLicenseGate.SplashLabel;
-  except
-    Result := '';
-  end;
+  Result := '';
   if Result = '' then
     Result := 'Licensed';
 end;

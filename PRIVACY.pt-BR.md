@@ -6,16 +6,18 @@
 
 Esta Política de Privacidade explica como o Aefos AI ("Aefos", "nós") trata dados
 pessoais relacionados ao software Aefos AI (o "Software"). Foi redigida em
-conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — "LGPD") e
-complementa o Contrato de Licença de Usuário Final (EULA) do Aefos AI
-([`LICENSE`](LICENSE)).
+conformidade com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — "LGPD").
+O Software é software livre sob a GNU GPL v3
+([`LICENSE`](LICENSE), com as permissões adicionais em
+[`ADDITIONAL-PERMISSIONS.md`](ADDITIONAL-PERMISSIONS.md)).
 
 > **Resumo em linguagem clara (não vinculante).** O Aefos é um plugin local de IDE.
 > Ele **não** executa um modelo de IA e **não** coleta seu código-fonte ou seus
 > prompts — esses vão diretamente para a ferramenta de IA de linha de comando que
 > *você* escolhe, sujeitos à política de privacidade dessa ferramenta. Os únicos
-> dados pessoais que tratamos são os necessários para (a) ativar e validar uma
-> licença paga e (b) opcionalmente manter o produto confiável por meio de
+> Software é livre, sem chave de licença e sem ativação, então ele não envia
+> **nada** a nenhum backend nosso. Os únicos dados pessoais que podemos tratar
+> são os necessários para manter o produto confiável por meio de
 > diagnósticos técnicos limitados.
 
 ---
@@ -35,33 +37,14 @@ Use o contato acima para exercer qualquer um dos direitos descritos na Seção 8
 
 ## 2. Abrangência
 
-Esta Política cobre os dados pessoais tratados pelo próprio Software e pelo backend
-de licenciamento ao qual ele se conecta. Ela **não** cobre ferramentas, modelos,
-APIs ou serviços de IA de terceiros que você decida usar com o Software — esses são
-regidos pelas suas próprias políticas de privacidade (ver Seção 7 e Seção 6 do
-EULA).
+Esta Política cobre os dados pessoais tratados pelo próprio Software. Ela
+**não** cobre ferramentas, modelos, APIs ou serviços de IA de terceiros que
+você decida usar com o Software — esses são regidos pelas suas próprias
+políticas de privacidade, publicadas por cada fornecedor.
 
 ## 3. O que tratamos, por quê e com qual base legal
 
-### 3.1 Dados de ativação e validação de licença
-
-Ao ativar ou validar uma licença paga (Pro/Enterprise), o Software envia ao nosso
-backend de licenciamento:
-
-- a chave de licença que você digita;
-- um **fingerprint da máquina** não reversível (identificador derivado desta cópia
-  do Delphi nesta máquina/usuário — usado para impor a regra de um assento e evitar
-  abuso);
-- o **e-mail** associado à chave (quando você o fornece);
-- metadados técnicos como seu **endereço IP** e os **horários** das requisições.
-
-- **Finalidade:** ativar a licença, impor o limite por assento, prevenir pirataria e
-  abuso e prestar suporte.
-- **Base legal (LGPD):** execução de contrato / procedimentos preliminares
-  (art. 7º, V) e legítimo interesse do controlador na proteção contra uso não
-  autorizado (art. 7º, IX), ponderado com os seus direitos.
-
-### 3.2 Dados de diagnóstico e telemetria (limitados)
+### 3.1 Dados de diagnóstico e telemetria (limitados)
 
 O Software pode tratar informações técnicas e de diagnóstico limitadas (por exemplo,
 eventos de erro, versão, edição e sinais de disponibilidade de recursos) para manter
@@ -75,14 +58,14 @@ expressamente (por exemplo, anexando logs a uma solicitação de suporte).
 - **Base legal (LGPD):** legítimo interesse (art. 7º, IX) e, quando aplicável, seu
   consentimento (art. 7º, I).
 
-### 3.3 Dados armazenados apenas no seu dispositivo
+### 3.2 Dados armazenados apenas no seu dispositivo
 
 Sessões de chat, histórico de comandos e o log de auditoria local são armazenados
 **localmente** na sua máquina (por exemplo, em `%APPDATA%\Aefos`). Nós não coletamos
 nem transmitimos esses dados locais. Você os controla e pode apagá-los a qualquer
 momento.
 
-### 3.4 O que NÃO coletamos
+### 3.3 O que NÃO coletamos
 
 - Nós **não** operamos um modelo de IA e **não** recebemos seus prompts nem o código
   que o agente lê, gera ou edita. Esse conteúdo é enviado pela CLI de terceiros que
@@ -96,20 +79,14 @@ Não tratamos, de forma consciente, dados pessoais de crianças ou adolescentes.
 
 ## 5. Retenção
 
-Mantemos os dados de licença e validação enquanto a licença estiver ativa e pelo
-período necessário ao cumprimento de obrigações legais, fiscais, de segurança e de
-auditoria, após o que são eliminados ou anonimizados. Dados de diagnóstico são
-mantidos apenas pelo tempo necessário às finalidades da Seção 3.2.
+Dados de diagnóstico são mantidos apenas pelo tempo necessário às
+finalidades da Seção 3.1.
 
 ## 6. Compartilhamento e operadores
 
 Não vendemos dados pessoais. Compartilhamos apenas com:
 
-- **Infraestrutura/operadores** que hospedam o backend de licenciamento (por
-  exemplo, nosso provedor de banco de dados/Edge Function, atualmente o Supabase),
-  atuando sob nossas instruções;
-- **Autoridades**, quando exigido para cumprir obrigação legal ou regulatória;
-- **Provedores de envio de e-mail** usados para enviar mensagens de licença/cadastro.
+- **Autoridades**, quando exigido para cumprir obrigação legal ou regulatória.
 
 Essas partes tratam os dados sob nossas instruções e conforme a lei aplicável.
 
@@ -146,8 +123,7 @@ o direito de peticionar à Autoridade Nacional de Proteção de Dados (ANPD).
 
 Adotamos medidas técnicas e administrativas razoáveis para proteger os dados pessoais
 contra acessos não autorizados, perda, alteração e divulgação indevida (LGPD,
-art. 46), incluindo controles de acesso e segurança em nível de linha (RLS) no
-backend de licenciamento. Nenhum método de transmissão ou armazenamento é totalmente
+art. 46). Nenhum método de transmissão ou armazenamento é totalmente
 seguro, e não podemos garantir segurança absoluta.
 
 ## 11. Alterações desta Política

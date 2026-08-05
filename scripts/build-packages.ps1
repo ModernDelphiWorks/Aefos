@@ -43,7 +43,7 @@ if (-not (Test-Path $grp)) { throw "Group project not found: $grp" }
 
 $Supported = @('22.0', '23.0', '37.0')   # 22.0 = D11, 23.0 = D12, 37.0 = D13
 $Bpls = @(
-  'Aefos.License.bpl', 'Aefos.Harness.bpl', 'Aefos.Providers.bpl',
+  'Aefos.Harness.bpl', 'Aefos.Providers.bpl',
   'Aefos.WebView.bpl', 'Aefos.Tools.bpl', 'Aefos.MCP.Core.bpl',
   'Aefos.MCP.Tools.OTA.bpl', 'Aefos.Data.bpl', 'Aefos.OTA.Chat.bpl',
   'Aefos.OTA.Terminal.bpl', 'dclAefosWebView.bpl'

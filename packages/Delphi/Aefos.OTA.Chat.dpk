@@ -41,7 +41,6 @@ requires
   Aefos.Data,
   Aefos.MCP.Core,
   Aefos.MCP.Tools.OTA,
-  Aefos.License,
   Aefos.Providers,
   Aefos.WebView;
 

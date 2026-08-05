@@ -8,6 +8,25 @@ Dates are in `YYYY-MM-DD`.
 
 ## [Unreleased]
 
+### Removed
+
+**The licence gate is gone.** There is no key, no activation, no trial and no
+editions: every feature ships enabled, including the Terminal, the MCP server
+and the agent tools.
+
+With the source public, the gate had stopped being a lock and become a liability:
+under the GPL any fork could remove it in five minutes, while the client kept
+registering a machine fingerprint in the maintainer's own database — which
+would have meant every build by every stranger phoning home to it.
+
+So the whole feature was removed rather than disabled: the `Aefos.License` package
+and its four units, the activation dialog, the menu items, the trial badge, the
+"(Pro)" tags, and all 44 call sites across both the RAD Studio and Lazarus
+editions. The installer now ships 10 runtime packages instead of 11.
+
+The licence code remains in this repository's HISTORY, in the commit that first
+published the source. That is a fact of git, not an oversight.
+
 ### Licence
 
 **Aefos AI became free software on 2026-08-05.** The software is now licensed

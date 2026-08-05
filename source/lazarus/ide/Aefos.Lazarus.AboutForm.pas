@@ -40,8 +40,7 @@ uses
   LCLType,       // DT_CALCRECT / DT_WORDBREAK / DT_NOPREFIX for the body height calc
   LCLIntf,       // DrawText (measure wrapped text height, same seam as the Delphi calc)
   LazUTF8,       // GetEnvironmentVariableUTF8 / UTF16ToUTF8 - path + license text
-  LazFileUtils,  // AppendPathDelim / FileExistsUTF8
-  Aefos.License.Gate;  // real license status line (shared cross-compiler gate)
+  LazFileUtils;  // AppendPathDelim / FileExistsUTF8
 
 const
   cAboutCaption  = 'About Aefos AI';
@@ -80,10 +79,6 @@ begin
     'A harness for your own AI CLI inside the Lazarus IDE ' + cEmDash +
       ' never a direct LLM client.' + LineEnding + LineEnding +
     'Version: 1.1.0' + LineEnding +
-    // Real license status from the shared gate (trial/active/expired/...),
-    // instead of the old hardcoded "active". StatusText already includes the
-    // "License: " prefix. Converted UnicodeString -> LCL UTF-8 at the boundary.
-    UTF16ToUTF8(TLicenseGate.StatusText) + LineEnding +
     'Requires: Lazarus + FPC (Win32/Win64)' + LineEnding +
     'AI CLI: Codex and Gemini are bundled; Claude Code and Copilot are ' +
       'user-supplied. The plugin owns no credentials.' + LineEnding + LineEnding +

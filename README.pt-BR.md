@@ -75,63 +75,29 @@ Passos completos no [manual](https://moderndelphiworks.github.io/Aefos/).
 | CLI de IA | Pelo menos uma: Claude Code / Codex / GitHub Copilot CLI / Gemini (traga a sua) |
 | Markdown rico (opcional) | [Runtime do WebView2](https://aka.ms/webview2) |
 
-## Licença e ativação
+## Licença
 
-**O software é software livre sob a [GNU GPL v3](LICENSE)**, com duas permissões
-adicionais concedidas pela seção 7 da GPLv3 (veja
-[`ADDITIONAL-PERMISSIONS.md`](ADDITIONAL-PERMISSIONS.md)): o código que o Aefos escreve
-para você é **seu**, sob qualquer licença que você escolher, e a linkagem com as
-bibliotecas do RAD Studio — sem as quais um pacote design-time não pode existir —
-é expressamente permitida. A licença que governava o software antes de 5 de agosto
-de 2026 fica registrada em [`EULA-historical.md`](EULA-historical.md).
+**O Aefos AI é software livre sob a [GNU GPL v3](LICENSE)** — todo ele. Não há
+chave, ativação, período de teste nem edições: todo recurso está no build que
+você baixa, incluindo o Terminal, o servidor MCP e as ferramentas do agente.
 
-Uma **chave de licença** compra o serviço hospedado em volta do software, não o
-software em si.
+Duas permissões adicionais são concedidas pela seção 7 da GPLv3 (veja
+[ADDITIONAL-PERMISSIONS.md](ADDITIONAL-PERMISSIONS.md)): o código que o Aefos
+escreve para você é **seu**, sob qualquer licença — usar o Aefos não cria
+obrigação nenhuma sobre o que você constrói — e a linkagem com as bibliotecas
+do RAD Studio, sem as quais um pacote design-time não pode existir, é
+expressamente permitida.
 
-**A edição Community é grátis — nenhuma chave necessária.** Instale e use o Chat
-(incluindo o **modo Agent**) na hora. A Community é grátis para uso **pessoal,
-educacional e empresarial interno** — sem taxa por assento, sem limite de usuários,
-sem pegadinha.
-
-**Pro / Enterprise** liberam o Terminal, configuração automática de MCP, assistentes,
-histórico de sessões e contexto avançado. Para ativar uma chave:
-
-1. Abra **View → Aefos AI (Chat)** e clique no **item de licença** no topo — ele mostra
-   seu status atual (ex.: *License: Trial* ou *License: active*).
-2. Cole sua **chave de licença**.
-3. Pronto — isso vincula **esta cópia do Delphi** ao seu assento. O status passa a
-   *active*.
-
-**Como a licença funciona:**
-- **Uma chave = um Delphi ativo** por máquina/usuário (assento único, node-locked).
-- **Funciona offline:** após a primeira validação online, continua funcionando
-  **sem internet** dentro de uma janela de tolerância.
-- **Sem chave?** Um **período de avaliação** embutido deixa você testar os recursos Pro.
+A licença que governava o software antes de 5 de agosto de 2026, quando ele era
+proprietário, fica como registro em [EULA-historical.md](EULA-historical.md).
 
 ## Atualizar, reinstalar e mudar de máquina
 
-Esta é a parte que mais gera dúvida — leia antes de desinstalar.
-
-| Situação | O que fazer | O que acontece com sua licença |
-|-----------|-------------|--------------------------------|
-| **Atualizar para uma versão nova** (mesma máquina) | Feche o RAD Studio e rode o novo `Aefos-Setup-*.exe` **por cima** do antigo | ✅ **Preservada** — você **não** redigita a chave nem desativa |
-| **Reinstalar** (mesma máquina) | Igual acima — é só rodar o instalador de novo | ✅ **Preservada** (a ativação está ligada a esta máquina) |
-| **Mudar de máquina** | **Desative primeiro** na antiga: **View → Aefos AI (Chat) → item de licença → Deactivate**. Depois instale na nova e ative a chave lá. | 🔄 O assento é **liberado e reutilizado** na nova máquina (transferência por você mesmo) |
-| **Desinstalar de vez** | Use **Configurações → Aplicativos** do Windows (ou o desinstalador). Se pretende usar a chave em outro lugar, **desative antes** (acima) | ⚠️ Desinstalar sozinho **não** libera o assento — **desative** para liberá-lo |
-
-> ⚠️ **Ponto-chave:** desinstalar e reinstalar na **mesma** máquina mantém sua
-> licença. Só **mudar de máquina** exige **Deactivate** antes, para o assento único
-> ficar livre para ativar em outro lugar. (A Community não precisa de nada disso.)
+Feche o RAD Studio e rode o novo `Aefos-Setup-*.exe` por cima do antigo. é todo o
+procedimento — para atualizar, reinstalar ou mudar de máquina. Nada mais fica
+preso a uma máquina, então não há o que desativar ou transferir.
 
 Passo a passo completo no [Manual do Usuário](https://moderndelphiworks.github.io/Aefos/).
-
-## Edições
-
-| Edição | Preço | Para quem |
-|--------|-------|-----------|
-| **Community** | **Grátis** | Pessoal, educacional **e empresarial interno** — sem cobrança por assento, sem penalidade |
-| **Pro** | Assinatura | Terminal, auto-setup de MCP, assistentes, histórico, contexto avançado |
-| **Enterprise** | Contrato | Uso corporativo amplo, suporte, governança |
 
 ## Reportar bugs e pedidos
 

@@ -23,7 +23,6 @@ uses
   Vcl.StdCtrls,
   Vcl.ComCtrls,
   Vcl.Dialogs,
-  Aefos.License.Gate,
   Aefos.Provider.Types,
   Aefos.OTA.Chat.UI.Options.Binding;
 
@@ -505,14 +504,6 @@ begin
       end).Start;
     Exit;
   end;
-  // Pro gate: the AUTO-setup (self-provision + .mcp.json) is the Pro convenience.
-  // SOFT beta proceeds + upsells once; HARD GA blocks (Community can still write
-  // the .mcp.json by hand).
-  if not Aefos.License.Gate.TLicenseGate.Enforce(AEFOS_CAP_MCP, LUpsell) then
-  begin
-    LabelMcpTestStatus.Caption := 'MCP auto-setup is a Pro feature.';
-    Exit;
-  end;
   if LUpsell <> '' then
     ShowMessage(LUpsell);
   if LKind = ekCodex then
@@ -642,13 +633,6 @@ begin
     for LKind := Low(TExecutorKind) to High(TExecutorKind) do
     begin
       LName := TProviderRegistry.ExecutorKindDisplayName(LKind);
-      // Quiet Pro lock (provider gating is the primary paywall): providers outside
-      // the free tier carry a "(Pro)" tag so the wall is self-evident in the
-      // selector — no nag. Enforced at GA via GATE_HARD_MODE; informational in beta.
-      // Item order stays ordinal, so ItemIndex<->TExecutorKind still maps 1:1.
-      if not Aefos.License.Gate.TLicenseGate.AllowsProvider(
-               TProviderRegistry.ExecutorKindToString(LKind)) then
-        LName := LName + '   (Pro)';
       ComboExecutor.Items.Add(LName);
     end;
   finally

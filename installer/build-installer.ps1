@@ -32,7 +32,7 @@ $iss   = Join-Path $here 'Aefos.iss'
 
 $Supported = @('22.0', '23.0', '37.0')
 $Bpls = @(
-  'Aefos.License.bpl', 'Aefos.Harness.bpl', 'Aefos.Providers.bpl',
+  'Aefos.Harness.bpl', 'Aefos.Providers.bpl',
   'Aefos.WebView.bpl', 'Aefos.Tools.bpl', 'Aefos.MCP.Core.bpl',
   'Aefos.MCP.Tools.OTA.bpl', 'Aefos.Data.bpl', 'Aefos.OTA.Chat.bpl',
   'Aefos.OTA.Terminal.bpl', 'dclAefosWebView.bpl'

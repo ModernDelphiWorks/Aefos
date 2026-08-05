@@ -33,8 +33,7 @@ uses
   Vcl.ExtCtrls,
   Vcl.Graphics,
   Vcl.Imaging.pngimage,
-  Aefos.OTA.Chat.Core.SupportInfo,
-  Aefos.License.Gate;
+  Aefos.OTA.Chat.Core.SupportInfo;
 
 const
   ABOUT_LOGO_RES = 'AEFOS_ABOUT_LOGO';
@@ -69,19 +68,11 @@ end;
 // The descriptive lines below the logo. Every fact is read from SupportInfo;
 // the lockup art already carries the 'Aefos AI' wordmark and tagline.
 function _BodyText: string;
-var
-  LLicense: string;
 begin
-  try
-    LLicense := Aefos.License.Gate.TLicenseGate.StatusText;  // "License: trial (...)" etc.
-  except
-    LLicense := 'License: (unknown)';
-  end;
   Result :=
     'A harness for your own AI CLI inside RAD Studio ' + #$2014 +
       ' never a direct LLM client.' + sLineBreak + sLineBreak +
     SUPPORT_LABEL_VERSION + PluginVersion + sLineBreak +
-    LLicense + sLineBreak +
     FormatAboutLines + sLineBreak + sLineBreak +
     'See ' + SUPPORT_BRANDING_DOC;
 end;

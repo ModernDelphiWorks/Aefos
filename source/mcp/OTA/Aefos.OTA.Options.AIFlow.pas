@@ -187,8 +187,7 @@ uses
   Vcl.Menus,
   Vcl.Dialogs,
   ToolsAPI,
-  Aefos.OTA.Options.AIFlow.Store,
-  Aefos.License.Gate;
+  Aefos.OTA.Options.AIFlow.Store;
 
 const
   AREA_NAME = 'Aefos';
@@ -686,14 +685,6 @@ begin
   // caption is built from the setting rather than baked into the .dfm -- a
   // reference list that can go stale is worse than no list.
   _RefreshInlineShortcutLabel;
-  // Pro gate: silent reload is a Pro feature. Quiet lock - tag "(Pro)"; at GA
-  // (hard mode) the free tier cannot toggle it. Beta is soft, so it stays usable.
-  if not TLicenseGate.Allows(AEFOS_CAP_AIFLOW) then
-  begin
-    FFrame.chkSilentReload.Caption := FFrame.chkSilentReload.Caption + '   (Pro)';
-    if TLicenseGate.GateHard then
-      FFrame.chkSilentReload.Enabled := False;
-  end;
 end;
 
 procedure TAIFlowAddInOptions.DialogClosed(Accepted: Boolean);
@@ -703,11 +694,6 @@ begin
   if Accepted and Assigned(FFrame) then
   begin
     LSilent := FFrame.chkSilentReload.Checked;
-    // Hard-mode Pro gate: the free tier cannot enable silent reload. Beta is soft
-    // (GATE_HARD_MODE off), so this only bites at GA.
-    if LSilent and TLicenseGate.GateHard
-       and not TLicenseGate.Allows(AEFOS_CAP_AIFLOW) then
-      LSilent := False;
     _WriteAskToReload(not LSilent);
     // Persist the four shared-config agent knobs (consent mode, edit-review mode,
     // auto-save, issue-reporting) in ONE atomic write. Doing it as a batch (was

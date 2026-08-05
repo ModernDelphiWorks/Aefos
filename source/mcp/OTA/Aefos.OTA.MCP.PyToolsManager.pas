@@ -44,7 +44,6 @@ uses
   Vcl.Menus,
   ToolsAPI,
   Aefos.MCP.Provision,
-  Aefos.License.Gate,
   Aefos.OTA.UI.ThemeHelper;
 
 const
@@ -471,8 +470,6 @@ begin
   // and stays visible during the soft beta. A menu item that is simply not there
   // is also the one failure a user cannot ask about: nothing on screen to point
   // at. So during beta it shows, tagged '(Pro)'; at GA it goes away.
-  if Aefos.License.Gate.TLicenseGate.HiddenByTier('pytools') then
-    Exit;
   try
     LHost := _ViewMenuHost;
     if LHost = nil then
@@ -484,10 +481,6 @@ begin
       GMenuClicker := TPyToolsMenuClicker.Create;
       GMenuItem := TMenuItem.Create(LHost);
       GMenuItem.Caption := CMenuCaption;
-      // Say WHY it is there but inert for this tier, the same way the AI Flow
-      // page tags its own Pro row. Silence would just look broken.
-      if not Aefos.License.Gate.TLicenseGate.Allows('pytools') then
-        GMenuItem.Caption := CMenuCaption + CMenuProTag;
       GMenuItem.OnClick := GMenuClicker.Click;
       LHost.Add(GMenuItem);
     end

@@ -34,7 +34,6 @@ The product builds from `packages/Delphi/AefosGroup.groupproj` (eleven packages)
    ```
    Aefos.WebView
    → dclAefosWebView
-   → Aefos.License
    → Aefos.Harness
    → Aefos.Providers
    → Aefos.Tools
@@ -77,7 +76,7 @@ a monorepo-wide build script lands. Each package's Release/Win32 build auto-stag
    `C:\Aefos\bpl`) and add it to the Windows **PATH**, or to the IDE library
    path under **Tools → Options → Language → Delphi → Library → Library path**
    (Win32). This ensures the runtime BPLs (`Aefos.WebView.bpl`,
-   `Aefos.License.bpl`, `Aefos.Harness.bpl`, `Aefos.Providers.bpl`,
+   `Aefos.Harness.bpl`, `Aefos.Providers.bpl`,
    `Aefos.Tools.bpl`, `Aefos.MCP.Core.bpl`, `Aefos.MCP.Tools.OTA.bpl`,
    `Aefos.Data.bpl`) are found at load time.
 2. **Register the design-time package(s).** Go to **Components → Install Packages… →

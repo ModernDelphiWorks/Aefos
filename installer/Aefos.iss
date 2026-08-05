@@ -174,7 +174,6 @@ Source: "redist\cli\THIRD-PARTY-LICENSES.txt"; DestDir: "{userappdata}\Aefos\bin
 
 ; --- Delphi 11 (BDS 22.0) payload - only if staged; installed only if chosen ----
 #if HaveD11
-Source: "{#BplSrc}\{#VerD11}\Aefos.License.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
@@ -190,7 +189,6 @@ Source: "{#BplSrc}\{#VerD11}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Em
 
 ; --- Delphi 12 (BDS 23.0) payload - only if staged; installed only if chosen ----
 #if HaveD12
-Source: "{#BplSrc}\{#VerD12}\Aefos.License.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
@@ -206,7 +204,6 @@ Source: "{#BplSrc}\{#VerD12}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Em
 
 ; --- Delphi 13 (BDS 37.0) payload - only if staged; installed only if chosen ----
 #if HaveD13
-Source: "{#BplSrc}\{#VerD13}\Aefos.License.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')

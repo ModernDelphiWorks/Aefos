@@ -13,8 +13,9 @@ que você já usa (Claude Code, Codex, GitHub Copilot CLI, Gemini).
 [![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6)](#requisitos)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL%20v3-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Pol%C3%ADtica%20de%20Seguran%C3%A7a-success)](https://www.pubpascal.dev/packages/aefos)
+[![Support](https://img.shields.io/badge/support-donate-ff69b4)](https://link.mercadopago.com.br/aefosai)
 
-[⬇️ Download](../../releases) · [📖 Manual do Usuário](https://moderndelphiworks.github.io/Aefos/) · [🐛 Reportar bug](../../issues/new/choose) · [🔒 Segurança](SECURITY.md)
+[⬇️ Download](../../releases) · [📖 Manual do Usuário](https://moderndelphiworks.github.io/Aefos/) · [🐛 Reportar bug](../../issues/new/choose) · [🔒 Segurança](SECURITY.md) · [💙 Apoie o Aefos](https://link.mercadopago.com.br/aefosai)
 
 [English](README.md) · **Português (PT-BR)**
 
@@ -101,12 +102,15 @@ Passo a passo completo no [Manual do Usuário](https://moderndelphiworks.github.
 
 ## Apoiando o projeto
 
-O Aefos é software livre e continua assim — não existe versão paga para onde
-migrar. O que mantém ele andando são as assinaturas de IA que o próprio
+O Aefos é software livre e continua assim — não existe versão paga para
+onde migrar. O que mantém ele andando são as assinaturas de IA que o próprio
 desenvolvimento consome, e elas saem do bolso de uma pessoa só.
 
-Se o Aefos te poupa tempo, o botão **Sponsor** no topo desta página é o caminho.
-Empresas: patrocínio é faturável; link de pagamento pessoal, em geral, não.
+Se o Aefos te poupa tempo, **[você pode contribuir aqui](https://link.mercadopago.com.br/aefosai)** — ou usar o
+botão **Sponsor** no topo desta página.
+
+Empresas: patrocínio é faturável; link de pagamento pessoal, em geral, não
+— se o financeiro aí precisa de nota, é só pedir que a gente resolve.
 
 ## Reportar bugs e pedidos
 

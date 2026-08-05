@@ -44,7 +44,7 @@ Portuguese.
 ## Verify your download
 
 ```
-sha256  98553307f63c9d725d5a21c027e93b851731740bb88bf9acecff9b8475778f67
+sha256  6c61e378bdf8630b1462a52a2352fcd851aff7d673b7da923d849de970284b45
 ```
 
 ```powershell

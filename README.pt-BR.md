@@ -100,17 +100,37 @@ preso a uma máquina, então não há o que desativar ou transferir.
 
 Passo a passo completo no [Manual do Usuário](https://moderndelphiworks.github.io/Aefos/).
 
-## Apoiando o projeto
+<div align="center">
 
-O Aefos é software livre e continua assim — não existe versão paga para
-onde migrar. O que mantém ele andando são as assinaturas de IA que o próprio
-desenvolvimento consome, e elas saem do bolso de uma pessoa só.
+## ❤️ Apoie o Aefos
 
-Se o Aefos te poupa tempo, **[você pode contribuir aqui](https://link.mercadopago.com.br/aefosai)** — ou usar o
-botão **Sponsor** no topo desta página.
+**O Aefos AI é software livre (GPL v3) — feito e mantido por um desenvolvedor só.**
 
-Empresas: patrocínio é faturável; link de pagamento pessoal, em geral, não
-— se o financeiro aí precisa de nota, é só pedir que a gente resolve.
+### **[→ Doar / Apoiar o Aefos AI ←](https://link.mercadopago.com.br/aefosai)**
+
+*Qualquer valor, qualquer forma de pagamento — você escolhe as duas. Cartão, Pix ou boleto.*
+
+**Prefere Pix?** Chega inteiro ao projeto, sem taxa de processadora.
+
+<img src="assets/pix-qr.png" alt="QR Code Pix — Aefos AI" width="220">
+
+**Chave Pix (aleatória):** `4b155305-2671-4c39-8d58-7b9b5c428e18`
+
+</div>
+
+Se o Aefos poupa tempo seu ou do seu time, **considere doar.** Não há paywall
+nem versão paga para onde migrar: todo recurso está no build que você baixa. O
+que mantém o projeto vivo, funcionando a cada nova versão do RAD Studio e com o
+roadmap andando são as doações e as assinaturas de IA que o próprio
+desenvolvimento consome, pagas por uma pessoa só.
+
+**Empresas:** usar o Aefos internamente não custa nada e não obriga a nada. Se
+ele faz parte da sua toolchain, patrociná-lo é a forma mais barata de mantê-lo
+de pé — e patrocínio é faturável, onde um link de pagamento pessoal em geral
+não é: é só pedir que a gente resolve. Contribuição em código vale tanto
+quanto dinheiro; veja [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
 
 ## Reportar bugs e pedidos
 

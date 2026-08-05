@@ -131,17 +131,37 @@ transfer.
 
 Full walkthrough in the [User Manual](https://moderndelphiworks.github.io/Aefos/).
 
-## Supporting the project
+<div align="center">
 
-Aefos is free software and stays that way — there is no paid tier to
-upgrade to. What keeps it moving is the AI subscriptions its own development
-runs on, and those are paid by one person.
+## ❤️ Support Aefos
 
-If Aefos saves you time, **[you can contribute here](https://link.mercadopago.com.br/aefosai)** — or use the
-**Sponsor** button at the top of this page.
+**Aefos AI is free software (GPL v3) — built and maintained by one developer.**
 
-Companies: sponsorship is invoiceable, a personal payment link usually is not
-— if your accounts payable needs an invoice, say so and it will be sorted.
+### **[→ Donate / Sponsor Aefos AI ←](https://link.mercadopago.com.br/aefosai)**
+
+*Any amount, any payment method — you choose both. Card, Pix or boleto.*
+
+**In Brazil? Pix goes further** — it reaches the project with no processor fee.
+
+<img src="assets/pix-qr.png" alt="Pix QR code — Aefos AI" width="220">
+
+**Pix key (random):** `4b155305-2671-4c39-8d58-7b9b5c428e18`
+
+</div>
+
+If Aefos saves you or your team time, **please consider donating.** There is no
+paywall and no paid tier to upgrade to: every feature is in the build you
+download. What keeps it maintained, keeps it working across new RAD Studio
+releases and keeps the roadmap moving are donations and the AI subscriptions its
+own development runs on, which one person pays for.
+
+**Companies:** using Aefos internally costs you nothing and obliges you to
+nothing. If it is part of your toolchain, sponsoring it is the cheapest way to
+keep it alive, and sponsorship is invoiceable where a personal payment link is
+not — ask and it will be sorted. Contributions in code are just as welcome as
+money; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
 
 ## Reporting bugs & requests
 

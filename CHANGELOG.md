@@ -6,6 +6,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Dates are in `YYYY-MM-DD`.
 
+## [1.3.0] - 2026-08-05
+
+**Delphi 11 Alexandria is supported.** The installer now carries a BDS 22.0
+payload beside 23.0 and 37.0, built and proven in a Delphi 11 VM from this
+repository.
+
+### Added
+
+**Delphi 11 Alexandria (BDS 22.0)**, with one feature withheld: **inline
+completion (ghost text) needs Delphi 12 or newer.** It is built on
+`ToolsAPI.Editor.INTACodeEditorEvents.PaintLine`, and that unit does not exist
+before Athens. Everything else — Chat, Terminal, the MCP server, the agent
+tools — is present.
+
+### Fixed
+
+**The build scripts did not parse under Windows PowerShell 5.1**, which is what a
+stock Windows has. `build-packages.ps1` used `&&` in argument position, which 5.1
+rejects at parse time: sixteen errors, nothing runs. Nine scripts also carried
+non-ASCII characters with no BOM, and 5.1 reads a BOM-less `.ps1` as CP1252 — so
+the third byte of a UTF-8 em dash became a typographic quote, which 5.1 accepts as
+a string delimiter, closing the string mid-sentence and turning the rest of the
+words into code. Anyone who cloned this repository without PowerShell 7 could not
+build it.
+
+**String literals over 255 characters** stopped the compiler on Delphi 11 and
+anything older (`E2056`). There were 108, 107 of them in the generated assets, up
+to 900 characters each; all are re-chunked to 250, with the payload verified
+byte-identical.
+
+**The libvterm objects would not link on Delphi 11.** Its `bcc32c` reaches the
+standard streams through the C runtime `FILE` table rather than the helper the
+unit already stubs; an empty table satisfies the linker and is never read, since
+every stdio call here is stubbed.
+
+**The CLI build scripts gave up on a machine with only Delphi 11**, looking for
+37.0 then 23.0 and stopping. They now fall through to 22.0.
+
+**The Lazarus installer shipped a README** into the user's Lazarus folder along
+with the 64-bit runtime DLLs. It ships only the DLLs now.
+
 ## [1.2.0] - 2026-08-05
 
 **Aefos AI is free software.** The source is published, the licence gate is gone,
@@ -460,7 +501,8 @@ debugger**, and it can run entirely on **local models** — no cloud, no key.
 - Published a machine-readable **SBOM** (CycloneDX 1.5) and a **security disclosure
   policy** (coordinated vulnerability disclosure).
 
-[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v0.30.0...v1.0.0

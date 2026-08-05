@@ -10,7 +10,7 @@
 ## Install
 
 1. **Close Lazarus.** The installer rebuilds `lazarus.exe`, so it cannot be running.
-2. Run `Aefos-Lazarus-Setup-0.25.0-beta.exe` (needs admin — it writes into the Lazarus folder).
+2. Run `Aefos-Lazarus-Setup-0.25.1-beta.exe` (needs admin — it writes into the Lazarus folder).
 3. The rebuild takes a couple of minutes. Your original `lazarus.exe` is backed up
    beside it first.
 4. Reopen Lazarus. Aefos appears in the menu bar.
@@ -48,7 +48,7 @@ sha256  98553307f63c9d725d5a21c027e93b851731740bb88bf9acecff9b8475778f67
 ```
 
 ```powershell
-Get-FileHash .\Aefos-Lazarus-Setup-0.25.0-beta.exe -Algorithm SHA256
+Get-FileHash .\Aefos-Lazarus-Setup-0.25.1-beta.exe -Algorithm SHA256
 ```
 
 ## Feedback

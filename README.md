@@ -13,11 +13,11 @@
 
 ***AEFOS** — **A**gent **E**xecution **F**low **O**rchestration **S**ystem.*
 
-In-IDE AI **Chat** + **Terminal** for RAD Studio — Delphi 13 and 12 Athens —
-powered by the AI CLI you already use (Claude Code, Codex, GitHub Copilot CLI,
-Gemini).
+In-IDE AI **Chat** + **Terminal** for RAD Studio — Delphi 13, 12 Athens and 11
+Alexandria — powered by the AI CLI you already use (Claude Code, Codex, GitHub
+Copilot CLI, Gemini).
 
-[![Version](https://img.shields.io/badge/version-1.2.0-brightgreen)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.0-brightgreen)](CHANGELOG.md)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D6)](#requirements)
 [![License](https://img.shields.io/badge/license-GPL%20v3-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Security%20policy-success)](https://www.pubpascal.dev/packages/aefos)
@@ -72,7 +72,7 @@ Everything Aefos ships is in this repository, and it builds with no absolute
 paths — package files use repo-relative sources.
 
 ```powershell
-scripts\build-packages.ps1 -Version all   # 23.0 = D12, 37.0 = D13
+scriptsuild-packages.ps1 -Version all   # 22.0 = D11, 23.0 = D12, 37.0 = D13
 installer\build-installer.ps1
 ```
 
@@ -123,7 +123,7 @@ Before installing, make sure you have:
 
 | Item | Requirement |
 |------|-------------|
-| **IDE** | RAD Studio **Delphi 13** (BDS 37.0) or **Delphi 12 Athens** (BDS 23.0). Aefos is an IDE plugin, so the IDE must already be installed |
+| **IDE** | RAD Studio **Delphi 13** (BDS 37.0), **Delphi 12 Athens** (BDS 23.0) or **Delphi 11 Alexandria** (BDS 22.0). Aefos is an IDE plugin, so the IDE must already be installed. *Inline completion (ghost text) needs 12 or newer.* |
 | **OS** | **Windows** |
 | **AI CLI** | At least **one** AI coding CLI you already use: Claude Code, Codex, GitHub Copilot CLI, or Gemini. *Aefos brings no AI model — you bring your own CLI.* |
 | **WebView2** | [Microsoft Edge WebView2 Runtime](https://aka.ms/webview2) — used for the rich Chat. **The installer provisions it automatically;** you don't need to install it yourself. |

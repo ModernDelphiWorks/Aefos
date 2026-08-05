@@ -12,6 +12,20 @@ Dates are in `YYYY-MM-DD`.
 and every feature ships enabled. **Delphi 12 Athens (BDS 23.0)** and **Delphi 13
 (BDS 37.0)**; the installer detects what you have and lets you pick.
 
+### Changed
+
+**The installer no longer bundles an AI CLI.** 1.1.0 shipped Codex and Gemini
+beside the agent so a fresh install was productive immediately. With the source
+public that trade stopped being worth it: redistributing third-party binaries
+adds licence surface and ships versions that go stale between releases, and the
+installer drops from 109 MB to about 5 MB. Aefos is, and is documented as,
+**bring your own CLI** — install the one you already use and point Aefos at it,
+or leave the path empty and let it be found on PATH.
+
+Nothing is taken away from anyone: the bundled binaries were installed with
+`uninsneveruninstall`, so a 1.1.0 user keeps the copy already in
+`%APPDATA%\Aefos\bin`. New installs simply do not get one.
+
 ### Removed
 
 **The licence gate is gone.** There is no key, no activation, no trial and no

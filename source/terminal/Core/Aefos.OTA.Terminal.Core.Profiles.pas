@@ -64,7 +64,10 @@ const
   AI_CLIENT_TYPE_KEY = 'AIClientType';
   CLAUDE_EXE_NAME     = 'claude';
   // Prompt style 0 (default): full powerline — calendar+date | clock+time | folder+cwd.
-  POWERSHELL_POWERLINE_ARGS = '-NoExit -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; function prompt { $esc = [char]27; $c1 = [char]0xF073; $c2 = [char]0xF017; $c3 = [char]0xF07C; $sep = [char]0xE0B0; $date = Get-Date -Format ''MM-dd''; $time = Get-Date -Format ''HH:mm''; $cwd = $pwd.ProviderPath; $b1 = $esc + ''[48;2;0;150;200m'' + $esc + ''[38;2;0;0;0m '' + $c1 + '' '' + $date + '' ''; $s1 = $esc + ''[38;2;0;150;200m'' + $esc + ''[48;2;0;180;100m'' + $sep; $b2 = $esc + ''[38;2;0;0;0m '' + $c2 + '' '' + $time + '' ''; $s2 = $esc + ''[38;2;0;180;100m'' + $esc + ''[48;2;200;200;20m'' + $sep; $b3 = $esc + ''[38;2;0;0;0m '' + $c3 + '' '' + $cwd + '' ''; $s3 = $esc + ''[38;2;200;200;20m'' + $esc + ''[49m'' + $sep + $esc + ''[0m''; Write-Host -NoNewline ($b1 + $s1 + $b2 + $s2 + $b3 + $s3 + '' ''); return '' '' }; Clear-Host"';
+  POWERSHELL_POWERLINE_ARGS = '-NoExit -Command "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; function prompt { $esc = [char]27; $c1 = [char]0xF073; $c2 = [char]0xF017; $c3 = [char]0xF07C; $sep = [char]0xE0B0; $date = Get-Date -Format ''MM-dd''; $time = Get-Da' +
+    'te -Format ''HH:mm''; $cwd = $pwd.ProviderPath; $b1 = $esc + ''[48;2;0;150;200m'' + $esc + ''[38;2;0;0;0m '' + $c1 + '' '' + $date + '' ''; $s1 = $esc + ''[38;2;0;150;200m'' + $esc + ''[48;2;0;180;100m'' + $sep; $b2 = $esc + ''[38;2;0;0;0m '' + $c2 + '' '' +' +
+    ' $time + '' ''; $s2 = $esc + ''[38;2;0;180;100m'' + $esc + ''[48;2;200;200;20m'' + $sep; $b3 = $esc + ''[38;2;0;0;0m '' + $c3 + '' '' + $cwd + '' ''; $s3 = $esc + ''[38;2;200;200;20m'' + $esc + ''[49m'' + $sep + $esc + ''[0m''; Write-Host -NoNewline ($b1 + $' +
+    's1 + $b2 + $s2 + $b3 + $s3 + '' ''); return '' '' }; Clear-Host"';
 
 function TryFindExeOnPath(const AName: string; out APath: string): Boolean;
 var

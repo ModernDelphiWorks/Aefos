@@ -500,7 +500,7 @@ Write-Step "`n-- Registering package link --"
 # Manager). staticpackages.inc only carries the name; without a link that points
 # at a real .lpk, such a rebuild fails and takes the user's IDE with it.
 #
-# ⚠️ Two lazbuild traps, both paid for on 2026-07-17:
+# ! Two lazbuild traps, both paid for on 2026-07-17:
 #   1. lazbuild's own --help documents "--add-package-link=<.lpk file>", but its
 #      option parser REJECTS that form ("Option at position N does not allow an
 #      argument: add-package-link"). The file must be POSITIONAL.

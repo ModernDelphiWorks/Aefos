@@ -49,7 +49,7 @@ const
   // config without VerInfo). The .dproj VerInfo stays the primary source; this
   // only guarantees the splash/About never degrade to a blank version — keep it
   // in sync with the .dproj FileVersion on release.
-  FALLBACK_VERSION = '1.3.0';
+  FALLBACK_VERSION = '1.4.0';
   PRODUCT_DESC =
     'Aefos AI - Terminal: integrated terminal in the RAD Studio IDE with ' +
     'an in-process MCP server exposing OTA tools to a local AI CLI harness.';

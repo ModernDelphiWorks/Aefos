@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Dates are in `YYYY-MM-DD`.
 
+## [1.4.0] - 2026-08-05
+
+**Delphi 13's 64-bit IDE is supported.** Aefos now installs into the 64-bit IDE
+as well as the classic 32-bit one, with its own set of packages.
+
+### Added
+
+**Delphi 13 (BDS 37.0), 64-bit IDE.** Delphi 13 ships two IDE executables, and a
+design-time package is loaded into the IDE *process* — so a 32-bit package is
+invisible to the 64-bit IDE and always was. The installer now carries a second set
+of packages built for Win64, installs them into `Bpl\Win64`, and registers them
+under the `Known Packages x64` key the 64-bit IDE reads. Confirmed running: chat
+panel, WebView2 rendering and the MCP server, all inside the 64-bit process.
+
+Nothing changes for the 32-bit IDE, and the two sets coexist: different files,
+different folders, different registry keys.
+
+### Fixed
+
+**The 64-bit build reported version 1.0.0.** Delphi writes a default version block
+for every new platform configuration, and the version bump deliberately skipped
+untagged blocks — correct while only the 32-bit build shipped, wrong the day the
+64-bit one did. The 64-bit blocks now carry the same keys as the 32-bit build.
+
 ## [1.3.0] - 2026-08-05
 
 **Delphi 11 Alexandria is supported.** The installer now carries a BDS 22.0
@@ -501,7 +525,8 @@ debugger**, and it can run entirely on **local models** — no cloud, no key.
 - Published a machine-readable **SBOM** (CycloneDX 1.5) and a **security disclosure
   policy** (coordinated vulnerability disclosure).
 
-[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.0.0...v1.1.0

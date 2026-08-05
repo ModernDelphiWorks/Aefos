@@ -150,3 +150,10 @@ docs/manual/_html-en/
 # OS / editor noise
 Thumbs.db
 .DS_Store
+
+# The 64-bit Lazarus payload: these two are FREE (MIT / public domain) and are
+# committed so a 64-bit installer can be built without an x86_64 mingw-w64
+# toolchain. WebView2Loader.dll is NOT here -- it is proprietary; see the README
+# beside them for where to fetch it.
+!installer/lazarus/redist/x86_64/libvterm.dll
+!installer/lazarus/redist/x86_64/sqlite3.dll

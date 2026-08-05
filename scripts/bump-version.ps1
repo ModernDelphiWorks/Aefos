@@ -1,8 +1,7 @@
 <#
   bump-version.ps1 — single-command version bump across EVERY place the Aefos
   version is hardcoded, so a release never drifts again (the 0.18.0 release shipped
-  Chat 0.17.0 because OTA_PLUGIN_VERSION was a separate manual const — see
-  meta/install-feedback-friend-2026-06-20.md #4).
+  Chat 0.17.0 because OTA_PLUGIN_VERSION was a separate manual const).
 
   The version lives in, and this script rewrites, all of:
     - installer/Aefos.iss                          (#define AppVer "x.y.z")

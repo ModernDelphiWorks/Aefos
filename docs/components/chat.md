@@ -1,7 +1,8 @@
 # Component — Chat
 
-**BPL:** `Aefos.OTA.Chat` · **Source:** `source/chat` · **Vendored web assets:**
-`third-party/` (embedded into `Assets.pas` by `scripts/embed-webview-assets.ps1`).
+**BPL:** `Aefos.OTA.Chat` · **Source:** `source/chat` · **Vendored web assets:** marked and
+highlight.js ship already embedded in `Aefos.OTA.Chat.UI.OutputPanel.Assets.pas`; their
+licences are reproduced verbatim in `THIRD-PARTY-NOTICES.txt`.
 
 ## What it is
 

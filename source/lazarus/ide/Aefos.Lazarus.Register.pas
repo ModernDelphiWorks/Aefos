@@ -207,11 +207,6 @@ const
   cSecChatReviewName = 'secAefosAIChatReview';
   cMenuApproveAllName = 'itmAefosAIApproveAll';
   cMenuRejectAllName  = 'itmAefosAIRejectAll';
-  cMenuLicenseName   = 'itmAefosAILicense';
-  { Fallback caption used only before the first StatusText read (the live status
-    replaces it at registration). }
-  cLicenseCaption    = 'License...';
-
   { Environment override: when AEFOS_LAZ_MCP_AUTOSTART=1, Register starts the MCP
     server at package load. This is how the headless runtime proof drives the
     server without a mouse click (the IDE cannot be clicked in a smoke run); it
@@ -596,7 +591,6 @@ var
   LToggleMcp: TNotifyEvent;
   LApproveAll: TNotifyEvent;
   LRejectAll: TNotifyEvent;
-  LLicense: TNotifyEvent;
   LCmdCategory: TIDECommandCategory;
   LAboutCommand: TIDECommand;
 begin
@@ -689,11 +683,8 @@ begin
   { The LCL chat window: windowed WebView2 host + bridge. }
   RegisterIDEMenuCommand(LSecOpen, cMenuChatName, cOpenChatCaption, LChat);
 
-  { Group 2 -- settings + product info (Options / About / web / License), the
-    block the Delphi submenu places below the separator. The live "License:
-    <state>" item mirrors the Delphi Chat submenu (Aefos.OTA.Chat.Register): the
-    shared cross-compiler gate (Aefos.License.Gate) now backs both editions, so
-    the state is REAL (trial/active/expired), not faked. }
+  { Group 2 -- settings + product info (Options / About / web), the block the
+    Delphi submenu places below the separator. }
   LSecInfo := RegisterIDEMenuSection(LChatRoot, cSecChatInfoName);
   { Deep-link into Tools > Options at the Aefos AI executor page. }
   RegisterIDEMenuCommand(LSecInfo, cMenuOptionsName, cOptionsCaption, LOptions);
@@ -755,14 +746,13 @@ begin
                  Open Terminal
                  Action Center
                  --------------------------
-                 License: <live state>
                  About Aefos AI...
 
     "Open Terminal" shows/docks the native terminal panel
     (Aefos.Lazarus.TerminalWindow); "Action Center" opens the saved-actions catalog
     window (Aefos.Lazarus.ActionCenterWindow), matching the Delphi terminal group
-    order. The info block reuses the SAME shared License gate + About dialog the
-    Chat submenu uses, so parity is real, not faked. }
+    order. The info block reuses the SAME About dialog the Chat submenu uses,
+    so parity is real, not faked. }
   LTerminalRoot := RegisterIDESubMenu(mnuView, cMenuTerminalRootName,
     cTerminalMenuCaption);
   LSecTerminalOpen := RegisterIDEMenuSection(LTerminalRoot, cSecTerminalOpenName);
@@ -772,9 +762,8 @@ begin
     cActionCenterCaption, LActionCenter);
 
   { Info block -- its own section so a divider separates it from "Open Terminal".
-    The live "License: <state>" item is a DISTINCT command from the Chat one; both
-    are refreshed together by _RefreshLicenseCaptions. About reuses the same handler
-    (no shortcut here -- the Chat/About item already owns the rebindable command). }
+    About reuses the same handler as the Chat submenu (no shortcut here -- the
+    Chat/About item already owns the rebindable command). }
   LSecTerminalInfo := RegisterIDEMenuSection(LTerminalRoot, cSecTerminalInfoName);
   RegisterIDEMenuCommand(LSecTerminalInfo, cMenuTerminalAboutName, cAboutCaption,
     LAbout);

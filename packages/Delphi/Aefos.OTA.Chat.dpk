@@ -108,8 +108,6 @@ contains
   Aefos.OTA.Chat.UI.AboutForm in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.AboutForm.pas',
   Aefos.OTA.UI.MCPToolInspector.Assets in '..\..\source\mcp\OTA\Aefos.OTA.UI.MCPToolInspector.Assets.pas',
   Aefos.OTA.UI.MCPToolInspector in '..\..\source\mcp\OTA\Aefos.OTA.UI.MCPToolInspector.pas',
-  Aefos.OTA.Chat.UI.Branding in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.Branding.pas' {$IFDEF DEBUG},
-  Aefos.Test.Artifact in '..\..\meta\chat\tests\Aefos.Test.Artifact.pas',
-  Aefos.Smoke.Matcher in '..\..\meta\chat\tests\Smoke\Aefos.Smoke.Matcher.pas' {$ENDIF};
+  Aefos.OTA.Chat.UI.Branding in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.Branding.pas';
 
 end.

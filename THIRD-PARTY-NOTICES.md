@@ -34,9 +34,9 @@ be incorporated into a GPL work without any conflict.
 
 | # | Component | Version | Licence | Where | GPLv3 |
 |---|-----------|---------|---------|-------|-------|
-| 3 | **marked** | 14.1.4 | **MIT** | `meta/chat/vendor/marked/` (`LICENSE` present) | ✅ Compatible |
-| 4 | **Markdown** (John Gruber, syntax description shipped inside marked's `LICENSE`) | — | **BSD 3-Clause** | `meta/chat/vendor/marked/LICENSE` | ✅ Compatible — **3**-clause, no advertising clause |
-| 5 | **highlight.js** | 11.11.1 | **BSD 3-Clause** | `meta/chat/vendor/highlight/` (`LICENSE` present) | ✅ Compatible — **3**-clause, no advertising clause |
+| 3 | **marked** | 14.1.4 | **MIT** | embedded in `source/chat/UI/Aefos.OTA.Chat.UI.OutputPanel.Assets.pas`; licence verbatim in `THIRD-PARTY-NOTICES.txt` | ✅ Compatible |
+| 4 | **Markdown** (John Gruber, syntax description shipped inside marked's `LICENSE`) | — | **BSD 3-Clause** | licence verbatim in `THIRD-PARTY-NOTICES.txt` | ✅ Compatible — **3**-clause, no advertising clause |
+| 5 | **highlight.js** | 11.11.1 | **BSD 3-Clause** | embedded in `source/chat/UI/Aefos.OTA.Chat.UI.OutputPanel.Assets.pas`; licence verbatim in `THIRD-PARTY-NOTICES.txt` | ✅ Compatible — **3**-clause, no advertising clause |
 
 Both BSD notices were read in full and confirmed to be the **3-clause** form.
 Neither contains the GPL-incompatible **4-clause "advertising"** term ("All
@@ -120,12 +120,6 @@ component above was checked against this list. **None matched:**
   only vendored directory without a `LICENSE` file is SQLite, whose public-domain
   status and exact upstream artefact are documented and hash-pinned in
   `source/data/ThirdParty/sqlite/UPSTREAM.txt`.
-
-Also worth recording, though outside the shipped product:
-`poc/WebViewDock/Windows10Dark.vsf` is an **Embarcadero VCL style** file living
-in the proof-of-concept tree. It is not part of any shipped package, but it is
-an Embarcadero asset sitting in a repository that is about to become public.
-Removing it, or confirming it may be redistributed, is a small follow-up.
 
 ---
 

@@ -6,7 +6,7 @@
     - On this machine:  pwsh -File scripts\build-packages.ps1   (builds+stages D12/D13)
     - In the Delphi 11 VM: pwsh -File scripts\build-packages.ps1 -Version 22.0,
       then copy that VM's installer\bpl\22.0\ folder into THIS repo's installer\bpl\.
-  This script does NOT build or fetch BPLs — it only validates what is staged,
+  This script does NOT build or fetch BPLs -- it only validates what is staged,
   drops the WebView2 loader beside each version's BPLs, and runs ISCC.
 
   Supported design-time versions:
@@ -83,7 +83,7 @@ foreach ($v in $staged) {
 # Bundled third-party AI CLIs. On release pass -FetchClis to stage the CURRENT
 # upstream binaries; otherwise we just report whatever is already staged. The
 # installer omits any CLI not present here (skipifsourcedoesntexist), so a build
-# with none staged is valid — it ships the plugin + AefosAgent.exe alone.
+# with none staged is valid -- it ships the plugin + AefosAgent.exe alone.
 $cliDir = Join-Path $here 'redist\cli'
 if ($FetchClis) {
   Write-Host "Fetching current AI CLIs into redist\cli ..." -ForegroundColor Cyan

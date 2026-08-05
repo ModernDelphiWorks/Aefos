@@ -4,7 +4,7 @@
   %APPDATA%\Aefos\bin. Run this BEFORE build-installer.ps1 on every release so
   the shipped CLIs are the CURRENT upstream versions ("evergreen at release").
 
-  What it stages (redist\cli\*.exe is gitignored — fetched fresh, never committed):
+  What it stages (redist\cli\*.exe is gitignored -- fetched fresh, never committed):
     - codex.exe   : official standalone Windows binary (Apache-2.0), openai/codex
                     GitHub release asset codex-x86_64-pc-windows-msvc.exe.
     - gemini.exe  : Apache-2.0 Node app with NO official Windows binary (verified:
@@ -12,7 +12,7 @@
                     from the published npm package with Bun's --compile (ESM + code-
                     splitting aware, where Node SEA and pkg both fail on this bundle).
                     Needs Node/npm on the build machine; Bun is pulled via npx.
-    - copilot.exe : NOT bundled — its license forbids wrapping/repackaging and there
+    - copilot.exe : NOT bundled -- its license forbids wrapping/repackaging and there
                     is no official standalone binary, so a SEA build is disallowed.
                     Detect-only, like Claude Code.
     - THIRD-PARTY-LICENSES.txt : aggregated attribution for whatever WAS staged.
@@ -65,7 +65,7 @@ function Get-RawText {
 }
 
 function Build-GeminiExe {
-  # Gemini ships no Windows binary — only a JS bundle. Compile a standalone
+  # Gemini ships no Windows binary -- only a JS bundle. Compile a standalone
   # gemini.exe from the published npm package with Bun's --compile. Bun is ESM +
   # code-splitting aware; Node SEA (single-file only) and pkg (ESM chunk resolution
   # fails at runtime, ERR_MODULE_NOT_FOUND) both proved unable to package this
@@ -224,7 +224,7 @@ if ($geminiVer) {
   $staged += [pscustomobject]@{ Name = 'Gemini CLI'; Repo = 'google-gemini/gemini-cli'; Tag = "v$geminiVer"; License = 'Apache-2.0' }
 }
 
-# --- copilot (NOT bundled — license forbids repackaging) ------------------------
+# --- copilot (NOT bundled -- license forbids repackaging) ------------------------
 Write-Host "copilot:" -ForegroundColor White
 Write-Host "  skip  not bundled by design: its license forbids wrapping/repackaging " -ForegroundColor DarkGray -NoNewline
 Write-Host "and there is no official standalone binary (detect-only, like Claude)." -ForegroundColor DarkGray
@@ -247,7 +247,7 @@ foreach ($s in $staged) {
   [void]$sb.AppendLine('')
 }
 foreach ($s in $staged) {
-  [void]$sb.AppendLine("=== $($s.License) — $($s.Name) ===")
+  [void]$sb.AppendLine("=== $($s.License) -- $($s.Name) ===")
   [void]$sb.AppendLine('')
   [void]$sb.AppendLine((Get-RawText "https://raw.githubusercontent.com/$($s.Repo)/main/LICENSE"))
   [void]$sb.AppendLine('')

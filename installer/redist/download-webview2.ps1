@@ -1,15 +1,15 @@
 <#
-  Fetch the WebView2 Evergreen STANDALONE (offline) installers — x64 / x86 / ARM64 —
+  Fetch the WebView2 Evergreen STANDALONE (offline) installers -- x64 / x86 / ARM64 --
   into this folder, so build-installer.ps1 can embed the one matching the target arch
   (Aefos.iss bundles redist\MicrosoftEdgeWebView2RuntimeInstaller<arch>.exe with the
   `dontcopy` flag and runs it /silent /install when the runtime is missing).
 
   Source: winget's Microsoft.EdgeWebView2Runtime manifest, which points at Microsoft's
   OFFICIAL download host (msedge.sf.dl.delivery.mp.microsoft.com) and VERIFIES the
-  installer hash — so this is the official binary, not a third-party mirror. There is
+  installer hash -- so this is the official binary, not a third-party mirror. There is
   NO stable fwlink for the standalone (it's an open MS request), hence winget.
 
-  The .exe files are gitignored (*.exe, ~190 MB each) — run this once on a build box
+  The .exe files are gitignored (*.exe, ~190 MB each) -- run this once on a build box
   to (re)materialise them. Re-run to refresh to the latest runtime version.
 
   Usage:  pwsh -File installer\redist\download-webview2.ps1

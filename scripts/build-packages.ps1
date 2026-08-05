@@ -2,7 +2,7 @@
   Builds AND stages the Aefos package group for one or more RAD Studio versions.
 
   The same .dproj files target every supported Delphi: the version is chosen by
-  which rsvars.bat (i.e. which $(BDS)) drives msbuild — the projects use $(BDS)
+  which rsvars.bat (i.e. which $(BDS)) drives msbuild -- the projects use $(BDS)
   macros, so nothing in them is version-specific. We build Win32/Release only
   (the design-time BPLs load into the 32-bit IDE) and stage the built BPLs into
   installer\bpl\<ver>\ so installer\build-installer.ps1 can package them.
@@ -14,10 +14,10 @@
 
   Cross-machine note: a version builds only where its RAD Studio is installed AND
   registered (command-line dcc needs the per-user product registry). Build each
-  version on the machine that has it — e.g. Delphi 11 inside its VM — then bring
+  version on the machine that has it -- e.g. Delphi 11 inside its VM -- then bring
   that machine's installer\bpl\<ver>\ folder over to whoever compiles the .iss.
 
-  IMPORTANT — DCC_ForceExecute=true: older command-line msbuild (seen on Delphi
+  IMPORTANT -- DCC_ForceExecute=true: older command-line msbuild (seen on Delphi
   12) otherwise fails with "DCC command-line too long" (MSB6003). ForceExecute
   routes the long search paths through a compiler commands file. Harmless on
   newer versions, so we pass it for every version (one code path).
@@ -66,23 +66,23 @@ if ($Version -eq 'all') {
 
 # libvterm is vendored C, linked into the Terminal BPL via {$L}. Its objects are
 # build output and therefore gitignored (source\terminal\ThirdParty\libvterm\
-# .gitignore), so a FRESH checkout — a clone, a CI runner, an agent's git
-# worktree — has the sources but no .obj/.lib and the Terminal BPL fails to link.
+# .gitignore), so a FRESH checkout -- a clone, a CI runner, an agent's git
+# worktree -- has the sources but no .obj/.lib and the Terminal BPL fails to link.
 # Building them is not optional and needs nothing we don't already have (bcc32c
 # ships with RAD Studio; rsvars puts it on PATH), so the build heals itself
 # instead of demanding a manual step nobody remembers.
 function Ensure-LibVTerm([string]$Rsvars) {
   $vtermDir = Join-Path $root 'source\terminal\ThirdParty\libvterm'
   # The one artefact that matters: Core.LibVTerm.pas links exactly this via {$L}
-  # (a unity object — the per-file .obj's alone don't satisfy the single-pass linker).
+  # (a unity object -- the per-file .obj's alone don't satisfy the single-pass linker).
   $unity = Join-Path $vtermDir 'obj\libvterm_unity.obj'
   if (Test-Path $unity) { return }
-  Write-Host "  libvterm objects missing — building them (fresh checkout)." -ForegroundColor Yellow
+  Write-Host "  libvterm objects missing -- building them (fresh checkout)." -ForegroundColor Yellow
   $bat = Join-Path $vtermDir 'build-objs.bat'
   if (-not (Test-Path $bat)) { throw "libvterm build-objs.bat not found at $bat" }
   cmd /c "`"$Rsvars`" && pushd `"$vtermDir`" && call `"$bat`" && popd"
   if (-not (Test-Path $unity)) {
-    throw "libvterm build did not produce obj\libvterm_unity.obj — the Terminal BPL cannot link."
+    throw "libvterm build did not produce obj\libvterm_unity.obj -- the Terminal BPL cannot link."
   }
 }
 
@@ -90,7 +90,7 @@ $built = @()
 foreach ($v in $targets) {
   $rsvars = "C:\Program Files (x86)\Embarcadero\Studio\$v\bin\rsvars.bat"
   if (-not (Test-Path $rsvars)) {
-    Write-Warning "Delphi $v not installed (no rsvars at $rsvars) — skipping."
+    Write-Warning "Delphi $v not installed (no rsvars at $rsvars) -- skipping."
     continue
   }
   Ensure-LibVTerm $rsvars

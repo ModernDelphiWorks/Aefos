@@ -9,7 +9,7 @@
   Captions/Hints, the single most visible 5-minute-skim defect for an external
   reviewer. This guard scans every source/**/*.dfm and FAILS (exit 1) when a
   user-facing string property (Caption/Hint/Text/TextHint) contains:
-    - a Latin-1 accented-letter escape (#160..#255) -> e.g. 'a'#231#227'o' (ação),
+    - a Latin-1 accented-letter escape (#160..#255) -> e.g. 'a'#231#227'o' (acao),
       a strong non-English signal. Typographic chars English does use (bullet
       #8226, em/en dash #8212/#8211, ellipsis #8230) are 4-digit and NOT flagged.
     - a clearly-Portuguese word with no English collision (denylist below).
@@ -56,7 +56,7 @@ foreach ($file in $dfmFiles) {
 }
 
 if ($violations.Count -gt 0) {
-  Write-Host "ENGLISH-ONLY GUARD FAILED — Portuguese / non-English text in shipped .dfm:" -ForegroundColor Red
+  Write-Host "ENGLISH-ONLY GUARD FAILED -- Portuguese / non-English text in shipped .dfm:" -ForegroundColor Red
   $violations | ForEach-Object { Write-Host "  $_" -ForegroundColor Yellow }
   Write-Host ("`n{0} violation(s). User-facing form text must be English (Aefos rule)." -f $violations.Count) -ForegroundColor Red
   exit 1

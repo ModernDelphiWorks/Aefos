@@ -253,7 +253,7 @@ if ($Method -eq 'Restore') {
     $backup = Get-ChildItem -Path $LazDir -Filter 'lazarus-aefos-backup-*.exe' -ErrorAction SilentlyContinue |
         Sort-Object Name | Select-Object -First 1
     if (-not $backup) {
-        # ⚠️ lazarus.old.exe is NOT a stock exe. It is lazbuild's own ROLLING
+        # ! lazarus.old.exe is NOT a stock exe. It is lazbuild's own ROLLING
         # backup: make renames the previous lazarus.exe aside before linking, so
         # after any Aefos install it is itself an Aefos-linked build. Verified on
         # the maintainer's machine 2026-07-17 - after repeated installs both

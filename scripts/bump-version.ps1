@@ -1,5 +1,5 @@
 <#
-  bump-version.ps1 — single-command version bump across EVERY place the Aefos
+  bump-version.ps1 -- single-command version bump across EVERY place the Aefos
   version is hardcoded, so a release never drifts again (the 0.18.0 release shipped
   Chat 0.17.0 because OTA_PLUGIN_VERSION was a separate manual const).
 
@@ -40,7 +40,7 @@ function Edit-File($path, [scriptblock]$transform, $label) {
   if (-not (Test-Path $full)) { Write-Host "  SKIP (missing) $path" -ForegroundColor DarkYellow; return }
   $orig = Get-Content -Raw -LiteralPath $full
   $new  = & $transform $orig
-  if ($new -eq $orig) { Write-Host "  =    $path ($label — already current / no match)"; return }
+  if ($new -eq $orig) { Write-Host "  =    $path ($label -- already current / no match)"; return }
   if ($PSCmdlet.ShouldProcess($path, "bump -> $Version")) {
     # Preserve the file's existing encoding bytes by writing UTF-8 (no BOM change for
     # ASCII content; .pas with non-ASCII keep their bytes since we only swap digits).
@@ -67,7 +67,7 @@ Edit-File 'source/chat/Core/Aefos.OTA.Chat.Core.MainMenu.pas' {
   param($t) $t -replace "(OTA_PLUGIN_VERSION\s*=\s*')[0-9][0-9.]*(')", "`${1}$Version`${2}"
 } 'OTA_PLUGIN_VERSION'
 
-# 3b) Issue-report version fallback (MCP.Tools.OTA BPL — cannot read the Chat const
+# 3b) Issue-report version fallback (MCP.Tools.OTA BPL -- cannot read the Chat const
 #     across BPL layers, so it carries its own fallback literal; bump it here too).
 Edit-File 'source/mcp/OTA/Aefos.OTA.MCP.IssueReport.pas' {
   param($t) $t -replace "(CPluginVersionFallback\s*=\s*')[0-9][0-9.]*(')", "`${1}$Version`${2}"
@@ -89,5 +89,5 @@ Get-ChildItem (Join-Path $root 'packages/Delphi') -Filter *.dproj | ForEach-Obje
 }
 
 Write-Host ""
-Write-Host "Done — $changed file(s) updated to $Version." -ForegroundColor Cyan
+Write-Host "Done -- $changed file(s) updated to $Version." -ForegroundColor Cyan
 Write-Host "Next: rebuild the group (Release/Win32) + dclAefosWebView, then build-installer.ps1." -ForegroundColor DarkCyan

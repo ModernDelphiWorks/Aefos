@@ -31,9 +31,9 @@ try {
 
   # UTF-8 WITHOUT a BOM. [System.Text.Encoding]::UTF8 is BOM-emitting, so the
   # StreamWriter prepends EF BB BF to the FIRST frame; the server then sees
-  # "﻿{...}" for the initialize handshake and rejects it with -32700
+  # those three bytes ahead of the "{...}" initialize handshake and rejects it -32700
   # (malformed JSON), which the MCP client surfaces as a failed server. Only the
-  # first frame carries the BOM, so later frames (tools/list) would parse — a
+  # first frame carries the BOM, so later frames (tools/list) would parse -- a
   # confusing partial failure. A single shared no-BOM encoding fixes both
   # directions.
   $utf8NoBom  = [System.Text.UTF8Encoding]::new($false)
@@ -56,7 +56,7 @@ try {
     $line = $stdIn.ReadLine()
     if ($null -eq $line) { break }
 
-    # Rewrite protocolVersion in initialize frames — the server only accepts
+    # Rewrite protocolVersion in initialize frames -- the server only accepts
     # 2025-06-18; Claude CLI may send an older version and trigger -32602.
     $lineToSend = $line
     $isNotification = $false

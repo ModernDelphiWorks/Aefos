@@ -1,0 +1,9 @@
+# Renders the "Sponsor" button at the top of the repository page.
+#
+# `custom` takes a list, so more destinations can be added later WITHOUT
+# replacing this one -- a Pix key for Brazilian donors (no intermediary fee) and
+# `github: [isaquepinheiro]` once GitHub Sponsors is enabled on the account.
+# Sponsors is the one that matters for companies: it invoices them, and a company
+# cannot put a personal payment link through its accounts payable.
+custom:
+  - https://link.mercadopago.com.br/aefosai

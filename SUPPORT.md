@@ -6,7 +6,7 @@ Thanks for using **Aefos AI**. Here is how to get help, depending on what you ne
 
 Most questions are answered in the **[User Manual](README.md#documentation)**
 (PT-BR / EN) — installation, first steps, Chat, Terminal, providers, configuration,
-licensing, and a troubleshooting/FAQ section.
+the licence, and a troubleshooting/FAQ section.
 
 ## 🐛 Found a bug?
 
@@ -24,15 +24,15 @@ licensing, and a troubleshooting/FAQ section.
 
 ## ❓ Questions & discussion
 
-Use **[Discussions](../../discussions)** for usage questions, ideas, and general help
-(enable Discussions in the repository settings).
+Use **[Discussions](../../discussions)** for usage questions, ideas, and general
+help.
 
 ## 🔒 Security
 
 **Do not** open a public issue for a security vulnerability. Follow the private
 process in **[SECURITY.md](SECURITY.md)**.
 
-## 🧾 Licensing, partnerships, legal
+## 🧾 Partnerships and legal
 
 Email **tecsisinfo.com.br@gmail.com** · Official channel: <https://www.pubpascal.dev>
 

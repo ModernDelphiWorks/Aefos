@@ -61,7 +61,20 @@
   produced the chronic AV + locked .bpl + F2039.
 }
 
+{
+  DELPHI 12 AND UP ONLY. The painting seam this feature is built on --
+  ToolsAPI.Editor.INTACodeEditorEvents.PaintLine -- does not exist before
+  Athens (CompilerVersion 36). On an older IDE the whole unit compiles to
+  nothing rather than being dropped from the package: it is listed in the
+  .dpk contains clause, so the compiler builds it whether or not anything
+  uses it, and a unit that merely goes unreferenced would still fail.
+
+  Everything Aefos does apart from ghost text is unaffected.
+}
+
 interface
+
+{$IF CompilerVersion >= 36}   // Delphi 12 Athens and up
 
 uses
   ToolsAPI;
@@ -80,7 +93,11 @@ type
     class procedure ApplySettings; static;
   end;
 
+{$IFEND}
+
 implementation
+
+{$IF CompilerVersion >= 36}   // Delphi 12 Athens and up
 
 uses
   System.SysUtils,
@@ -1830,5 +1847,7 @@ finalization
     TAefosInlineGhost.UnregisterSelf;
   except // NOSONAR -- teardown must never raise.
   end;
+
+{$IFEND}
 
 end.

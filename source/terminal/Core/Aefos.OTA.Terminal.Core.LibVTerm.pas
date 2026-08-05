@@ -467,6 +467,17 @@ function ___get_std_stream(AIndex: Integer): Pointer; cdecl;
 begin
   Result := nil;
 end;
+
+{ Delphi 11's bcc32c reaches the standard streams a different way: instead of
+  calling ___get_std_stream it references the C RTL's FILE table, _streams, as
+  DATA. Nothing ever reads it -- every stdio call above is stubbed, and fprintf
+  returns before touching a stream -- so an empty table is enough. It exists
+  purely so the linker has something to bind the external to.
+
+  Athens and later do not reference it, and an unused variable costs nothing, so
+  this is declared unconditionally rather than behind another version test. }
+var
+  __streams: array[0..2] of Pointer;
 {$ENDIF}
 
 end.

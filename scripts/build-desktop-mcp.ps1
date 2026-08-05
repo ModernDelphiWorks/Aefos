@@ -14,7 +14,8 @@
   which closes the D11/D12 gap (those IDEs do not ship Winapi.UIAutomation).
 
   Compiled with whichever RAD Studio command line is installed (D13/37.0
-  preferred, then D12/23.0). No IDE needs to be open. Pass -Version to force one.
+  preferred, then D12/23.0, then D11/22.0). No IDE needs to be open. Pass -Version
+  to force one.
 
   -Test also stands the freshly built .exe up as a real MCP server and drives a
   minimal handshake over stdio: initialize -> tools/list -> tools/call
@@ -38,7 +39,7 @@ $dcu  = Join-Path $repo 'mcps\desktop\.build'
 
 if (-not (Test-Path $dpr)) { throw "Desktop MCP program not found: $dpr" }
 
-$candidates = if ($Version) { @($Version) } else { @('37.0', '23.0') }
+$candidates = if ($Version) { @($Version) } else { @('37.0', '23.0', '22.0') }
 $rsvars = $null
 foreach ($v in $candidates) {
   $p = "C:\Program Files (x86)\Embarcadero\Studio\$v\bin\rsvars.bat"

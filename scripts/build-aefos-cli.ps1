@@ -6,7 +6,7 @@
   A plain Win32 console EXE (RTL + the Aefos.Compat.* shims in source\compat for
   HTTP/SHA-256/ZIP/JSON/IO - no ToolsAPI, no VCL). ONE binary serves every IDE
   version; compiled once with whichever RAD Studio command line is installed
-  (D13/37.0 preferred, then D12/23.0). No IDE needs to be open. The same sources
+  (D13/37.0 preferred, then D12/23.0, then D11/22.0). No IDE needs to be open. The same sources
   build under FPC 3.2.2 (see scripts\build-fpc.ps1 -Clis).
 
 .EXAMPLE
@@ -25,7 +25,7 @@ $dcu  = Join-Path $repo 'cli\.build-aefos'
 
 if (-not (Test-Path $dpr)) { throw "CLI program not found: $dpr" }
 
-$candidates = if ($Version) { @($Version) } else { @('37.0', '23.0') }
+$candidates = if ($Version) { @($Version) } else { @('37.0', '23.0', '22.0') }
 $rsvars = $null
 foreach ($v in $candidates) {
   $p = "C:\Program Files (x86)\Embarcadero\Studio\$v\bin\rsvars.bat"

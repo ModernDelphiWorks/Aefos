@@ -82,7 +82,7 @@ user's own licence. They are the reason
 | Component | Licence | Relationship | GPLv3 |
 |-----------|---------|--------------|-------|
 | **Embarcadero RAD Studio** runtime + design-time (`rtl`, `vcl`, `vclie`, `designide`, `ToolsAPI`, `FireDAC`, …) | Proprietary (Embarcadero EULA) | **Linked.** A design-time `.bpl` cannot exist without `designide`. | ✅ Resolved by the **linking exception** — `ADDITIONAL-PERMISSIONS.md` §2 |
-| **Microsoft Edge WebView2 Runtime** | Proprietary (Microsoft) | Hosted/called; detected, never redistributed | ✅ Resolved by the same exception; also arguably a GPLv3 §1 **System Library** |
+| **Microsoft Edge WebView2 Runtime** | Proprietary (Microsoft) | Hosted/called. The **runtime** is detected on the user machine, never redistributed; the small **`WebView2Loader.dll`** ships in the installer under Microsoft SDK terms | ✅ Resolved by the same exception; also arguably a GPLv3 §1 **System Library** |
 | **Lazarus / Free Pascal (LCL, RTL)** — Lazarus edition | **modified LGPL** / LGPL with static-linking exception | Linked | ✅ Compatible — designed to be linkable from any licence |
 | **User-supplied AI CLIs** (Claude Code, Codex, Copilot CLI, Gemini) | Each vendor's own | Spawned as a **separate process** over stdin/stdout | ✅ Separate programs at arm's length — no combined work, no GPL reach |
 

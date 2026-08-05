@@ -32,7 +32,12 @@ param(
   [ValidateSet('22.0', '23.0', '37.0', 'all')]
   [string]$Version = 'all',
   [ValidateSet('Release', 'Debug')]
-  [string]$Config = 'Release'
+  [string]$Config = 'Release',
+  # Win32 is the classic IDE. Win64x is Delphi 13's separate 64-bit IDE
+  # (bin64\bds.exe) -- a design-time BPL must match the process bitness, so
+  # the two are different builds, not one build installed twice.
+  [ValidateSet('Win32', 'Win64x', 'all')]
+  [string]$Platform = 'Win32'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -49,8 +54,9 @@ $Bpls = @(
   'Aefos.OTA.Terminal.bpl', 'dclAefosWebView.bpl'
 )
 
-function Get-PublicBplDir([string]$Ver) {
-  Join-Path $env:PUBLIC "Documents\Embarcadero\Studio\$Ver\Bpl"
+function Get-PublicBplDir([string]$Ver, [string]$Plat) {
+  $base = Join-Path $env:PUBLIC "Documents\Embarcadero\Studio\$Ver\Bpl"
+  if ($Plat -eq 'Win32') { $base } else { Join-Path $base $Plat }
 }
 
 # Resolve the version list. 'all' = every supported version installed on THIS
@@ -71,20 +77,29 @@ if ($Version -eq 'all') {
 # Building them is not optional and needs nothing we don't already have (bcc32c
 # ships with RAD Studio; rsvars puts it on PATH), so the build heals itself
 # instead of demanding a manual step nobody remembers.
-function Ensure-LibVTerm([string]$Rsvars) {
+function Ensure-LibVTerm([string]$Rsvars, [string]$Plat) {
   $vtermDir = Join-Path $root 'source\terminal\ThirdParty\libvterm'
   # The one artefact that matters: Core.LibVTerm.pas links exactly this via {$L}
   # (a unity object -- the per-file .obj's alone don't satisfy the single-pass linker).
-  $unity = Join-Path $vtermDir 'obj\libvterm_unity.obj'
+  # bcc32c emits 32-bit OMF into obj\; bcc64x emits COFF x64 into obj\Win64x\.
+  # Each linker rejects the other's output with E2045, which reads like a
+  # corrupt file and is really the wrong architecture -- hence two folders.
+  if ($Plat -eq 'Win32') {
+    $unity = Join-Path $vtermDir 'obj\libvterm_unity.obj'
+  } else {
+    $unity = Join-Path $vtermDir 'obj\Win64x\libvterm_unity.o'
+  }
   if (Test-Path $unity) { return }
   Write-Host "  libvterm objects missing -- building them (fresh checkout)." -ForegroundColor Yellow
   $bat = Join-Path $vtermDir 'build-objs.bat'
   if (-not (Test-Path $bat)) { throw "libvterm build-objs.bat not found at $bat" }
-  cmd /c "`"$Rsvars`" && pushd `"$vtermDir`" && call `"$bat`" && popd"
+  cmd /c "`"$Rsvars`" && pushd `"$vtermDir`" && call `"$bat`" $Plat && popd"
   if (-not (Test-Path $unity)) {
-    throw "libvterm build did not produce obj\libvterm_unity.obj -- the Terminal BPL cannot link."
+    throw "libvterm build produced no unity object for $Plat -- the Terminal BPL cannot link."
   }
 }
+
+$plats = if ($Platform -eq 'all') { @('Win32', 'Win64x') } else { @($Platform) }
 
 $built = @()
 foreach ($v in $targets) {
@@ -93,27 +108,36 @@ foreach ($v in $targets) {
     Write-Warning "Delphi $v not installed (no rsvars at $rsvars) -- skipping."
     continue
   }
-  Ensure-LibVTerm $rsvars
-  Write-Host "=== Building Aefos group for Delphi $v ($Config/Win32) ===" -ForegroundColor Cyan
-  $cmd = "`"$rsvars`" && msbuild `"$grp`" /t:Build /p:Config=$Config /p:Platform=Win32 " +
-         "/p:DCC_ForceExecute=true /v:minimal /nologo"
-  cmd /c $cmd
-  if ($LASTEXITCODE -ne 0) { throw "Build FAILED for Delphi $v (exit $LASTEXITCODE)." }
+  foreach ($plat in $plats) {
+    # Only Delphi 13 has a 64-bit IDE to load a Win64x package.
+    if ($plat -eq 'Win64x' -and $v -ne '37.0') {
+      Write-Host "  --  Delphi $v has no 64-bit IDE -- skipping Win64x." -ForegroundColor DarkGray
+      continue
+    }
+    Ensure-LibVTerm $rsvars $plat
+    Write-Host "=== Building Aefos group for Delphi $v ($Config/$plat) ===" -ForegroundColor Cyan
+    $cmd = "`"$rsvars`" && msbuild `"$grp`" /t:Build /p:Config=$Config /p:Platform=$plat " +
+           "/p:DCC_ForceExecute=true /v:minimal /nologo"
+    cmd /c $cmd
+    if ($LASTEXITCODE -ne 0) { throw "Build FAILED for Delphi $v/$plat (exit $LASTEXITCODE)." }
 
-  # Stage the freshly built BPLs into installer\bpl\<ver>\.
-  $src = Get-PublicBplDir $v
-  $dst = Join-Path $stage $v
-  New-Item -ItemType Directory -Force $dst | Out-Null
-  $missing = @()
-  foreach ($b in $Bpls) {
-    $f = Join-Path $src $b
-    if (Test-Path $f) { Copy-Item $f $dst -Force } else { $missing += $b }
+    # Stage into installer\bpl\<ver>\ for Win32, <ver>\Win64x\ for the 64-bit
+    # IDE -- the installer copies each set to the directory its IDE reads.
+    $src = Get-PublicBplDir $v $plat
+    $dst = Join-Path $stage $v
+    if ($plat -ne 'Win32') { $dst = Join-Path $dst $plat }
+    New-Item -ItemType Directory -Force $dst | Out-Null
+    $missing = @()
+    foreach ($b in $Bpls) {
+      $f = Join-Path $src $b
+      if (Test-Path $f) { Copy-Item $f $dst -Force } else { $missing += $b }
+    }
+    if ($missing.Count -gt 0) {
+      throw "Delphi $v/${plat}: built but $($missing.Count) BPL(s) not found in $src : $($missing -join ', ')."
+    }
+    Write-Host "  OK  Delphi $v/$plat  ($($Bpls.Count) BPLs)" -ForegroundColor Green
+    $built += "$v/$plat"
   }
-  if ($missing.Count -gt 0) {
-    throw "Delphi ${v}: built but $($missing.Count) BPL(s) not found in $src : $($missing -join ', ')."
-  }
-  Write-Host "  OK  Delphi $v  ->  installer\bpl\$v\ ($($Bpls.Count) BPLs)" -ForegroundColor Green
-  $built += $v
 }
 
 if ($built.Count -eq 0) { throw "Nothing built (none of $($targets -join ', ') is installed)." }

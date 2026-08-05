@@ -1,0 +1,794 @@
+unit Aefos.Addons.Installer;
+{$IFDEF FPC}{$mode delphiunicode}{$ENDIF}
+
+{
+  Aefos Addons - install/uninstall/update/list orchestration.
+
+  Ties the pieces together: resolve a slug from the registry, download + verify
+  the pinned zip, extract, validate the bundle, lay out the present artifacts
+  under ~/.aefos, refresh the MCP aggregate the plugin merges, and record the
+  ledger. Every layout target is slug-scoped under ~/.aefos, so uninstall is a
+  bounded delete of exactly this addon's three folders.
+
+  Progress is reported through an injected line-sink so the dpr owns stdout.
+}
+
+interface
+
+uses
+  SysUtils,
+  Aefos.Addons.Types;
+
+type
+  // The progress line sink. On Delphi a `reference to` (so a standalone or
+  // captured proc binds). FPC 3.2.2 has no anonymous methods; a plain
+  // procedural type is enough here - every call site passes a standalone
+  // procedure and the installer never builds a closure for it.
+  // KNOWN DIVERGENCE: the two branches are DIFFERENT types. Passing a
+  // capturing anonymous method on the Delphi side compiles there but will
+  // break the FPC build - keep call sites on plain procedures (or convert
+  // this to a carrier-object callback when a closure becomes necessary).
+  {$IFDEF FPC}
+  TAddonLog = procedure(const ALine: string);
+  {$ELSE}
+  TAddonLog = reference to procedure(const ALine: string);
+  {$ENDIF}
+
+  TInstallOptions = record
+    Yes: Boolean;       // --yes: pre-consent third-party (mcp/tools) code
+    AefosVersion: string; // installed Aefos version for the requirement gate
+    { Factory: one named owner for building the options record instead of a
+      Default() + field-by-field fill at the call site. }
+    class function Create(AYes: Boolean;
+      const AAefosVersion: string): TInstallOptions; static;
+  end;
+
+  { Static, sealed namespace for install/uninstall/update/list orchestration.
+    Never instantiated; the class IS the namespace, so the old 'Addon(s)' name
+    prefixes/suffixes are gone. }
+  TAddonInstaller = class sealed
+  public
+    { Installs (or reinstalls) ASlug at the registry's pinned version. Raises an
+      EAddonError subclass on any failure; a partial extract is cleaned up. }
+    class procedure Install(const ASlug: string; const AOptions: TInstallOptions;
+      const ALog: TAddonLog); static;
+
+    { Removes ASlug: deletes its slug-scoped folders, refreshes the MCP
+      aggregate, drops it from the ledger. Raises EAddonNotFound when it is not
+      installed. }
+    class procedure Uninstall(const ASlug: string; const ALog: TAddonLog); static;
+
+    { Sha-aware update of a single slug. Loads the ledger, fetches the registry,
+      and compares (DecideUpdate): up-to-date => reports and does nothing (no
+      download); changed => clean-replace via Install. Raises EAddonNotFound when
+      the slug is not installed, or not in the registry. }
+    class procedure Update(const ASlug: string; const AOptions: TInstallOptions;
+      const ALog: TAddonLog); static;
+
+    { Sha-aware update of EVERY installed slug. Fetches the registry once, then
+      runs the DecideUpdate comparison per installed addon; refreshes the changed
+      ones and reports the up-to-date ones. A slug no longer in the registry is
+      warned and skipped (never errors the whole run). Ends with a summary. }
+    class procedure UpdateAll(const AOptions: TInstallOptions;
+      const ALog: TAddonLog); static;
+
+    { Dry-run: reports "<slug>: update available" / "<slug>: current" without
+      installing anything. ASlug empty => every installed addon; otherwise just
+      that one (raises EAddonNotFound when it is not installed). }
+    class procedure CheckUpdates(const ASlug: string; const ALog: TAddonLog); static;
+
+    { Prints the ledger (one line per installed addon) via ALog. }
+    class procedure List(const ALog: TAddonLog); static;
+  end;
+
+implementation
+
+uses
+  Classes,
+  DateUtils,
+  Aefos.Compat.IO,
+  Aefos.Compat.Json,
+  Generics.Collections,
+  Aefos.Addons.Paths,
+  Aefos.Addons.Manifest,
+  Aefos.Addons.Ledger,
+  Aefos.Addons.McpRewrite,
+  Aefos.Addons.Net;
+
+// Classic-RTL string helpers (FPC 3.2.2 has no TStringHelper): kept
+// unit-private, byte-identical to the Delphi string methods they replace.
+
+// string.Split(delims): splits on any delimiter char, keeping empty segments;
+// an empty AText yields a zero-length array.
+function _SplitStr(const AText: string;
+  const ADelims: array of Char): TArray<string>;
+var
+  LIndex, LStart, LCount, LDelim: Integer;
+  LIsDelim: Boolean;
+begin
+  SetLength(Result, 0);
+  if AText = '' then
+    Exit;
+  LStart := 1;
+  LCount := 0;
+  for LIndex := 1 to Length(AText) do
+  begin
+    LIsDelim := False;
+    for LDelim := 0 to High(ADelims) do
+      if AText[LIndex] = ADelims[LDelim] then
+      begin
+        LIsDelim := True;
+        Break;
+      end;
+    if LIsDelim then
+    begin
+      SetLength(Result, LCount + 1);
+      Result[LCount] := Copy(AText, LStart, LIndex - LStart);
+      Inc(LCount);
+      LStart := LIndex + 1;
+    end;
+  end;
+  SetLength(Result, LCount + 1);
+  Result[LCount] := Copy(AText, LStart, Length(AText) - LStart + 1);
+end;
+
+function _InCharSet(const ACh: Char; const AChars: array of Char): Boolean;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(AChars) do
+    if ACh = AChars[LIndex] then
+      Exit(True);
+  Result := False;
+end;
+
+// string.Substring(startIndex): 0-based start, to the end of the string.
+function _SubstrFrom(const AText: string; const AStart0: Integer): string;
+begin
+  if AStart0 >= Length(AText) then
+    Exit('');
+  Result := Copy(AText, AStart0 + 1, Length(AText) - AStart0);
+end;
+
+// string.TrimLeft(chars): drop leading chars in the set.
+function _TrimLeftChars(const AText: string;
+  const AChars: array of Char): string;
+var
+  LIndex: Integer;
+begin
+  LIndex := 1;
+  while (LIndex <= Length(AText)) and _InCharSet(AText[LIndex], AChars) do
+    Inc(LIndex);
+  Result := Copy(AText, LIndex, Length(AText) - LIndex + 1);
+end;
+
+// string.TrimRight(chars): drop trailing chars in the set.
+function _TrimRightChars(const AText: string;
+  const AChars: array of Char): string;
+var
+  LLast: Integer;
+begin
+  LLast := Length(AText);
+  while (LLast >= 1) and _InCharSet(AText[LLast], AChars) do
+    Dec(LLast);
+  Result := Copy(AText, 1, LLast);
+end;
+
+// string.StartsWith(prefix, True): case-insensitive.
+function _StartsWithCI(const AText, APrefix: string): Boolean;
+begin
+  Result := SameText(Copy(AText, 1, Length(APrefix)), APrefix);
+end;
+
+// string.Contains(sub).
+function _ContainsText(const AText, ASub: string): Boolean;
+begin
+  Result := Pos(ASub, AText) > 0;
+end;
+
+{ TInstallOptions }
+
+class function TInstallOptions.Create(AYes: Boolean;
+  const AAefosVersion: string): TInstallOptions;
+begin
+  Result := Default(TInstallOptions);
+  Result.Yes := AYes;
+  Result.AefosVersion := AAefosVersion;
+end;
+
+{ TAddonInstaller }
+
+function _NowUtcIso: string;
+var
+  LNow: TDateTime;
+begin
+  {$IFDEF FPC}
+  LNow := LocalTimeToUniversal(Now);
+  {$ELSE}
+  LNow := TTimeZone.Local.ToUniversalTime(Now);
+  {$ENDIF}
+  Result := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss"Z"', LNow);
+end;
+
+// A human label for a version that may be empty (evergreen). Prints "v<X>" when
+// a version is stamped, and "current" when it is not - so a log line never emits
+// a bare "v" with nothing after it.
+function _VerLabel(const AVersion: string): string;
+begin
+  if Trim(AVersion) = '' then
+    Result := 'current'
+  else
+    Result := 'v' + Trim(AVersion);
+end;
+
+// Non-raising registry lookup (TAddonManifestParser.FindEntry raises). Used by
+// the "all" / dry-run paths so a slug no longer in the registry can be reported
+// and skipped rather than aborting the whole run.
+function _TryFindEntry(const AEntries: TArray<TAddonRegistryEntry>;
+  const ASlug: string; out AEntry: TAddonRegistryEntry): Boolean;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(AEntries) do
+    if SameText(AEntries[LIndex].Slug, ASlug) then
+    begin
+      AEntry := AEntries[LIndex];
+      Exit(True);
+    end;
+  AEntry := Default(TAddonRegistryEntry);
+  Result := False;
+end;
+
+// Recursively copies ASrcDir into ADstDir, appending every written file to
+// AFiles. No-op when ASrcDir is absent (artifact simply not shipped).
+procedure _CopyTree(const ASrcDir, ADstDir: string;
+  const AFiles: TList<string>);
+var
+  LFiles, LDirs: TArray<string>;
+  LIndex: Integer;
+  LRel, LTarget: string;
+begin
+  if not TDirectory.Exists(ASrcDir) then
+    Exit;
+  ForceDirectories(ADstDir);
+  LDirs := TDirectory.GetDirectories(ASrcDir, '*', TSearchOption.soAllDirectories);
+  for LIndex := 0 to High(LDirs) do
+  begin
+    LRel := _SubstrFrom(LDirs[LIndex], Length(ASrcDir));
+    ForceDirectories(TPath.Combine(ADstDir, _TrimLeftChars(LRel, ['\', '/'])));
+  end;
+  LFiles := TDirectory.GetFiles(ASrcDir, '*', TSearchOption.soAllDirectories);
+  for LIndex := 0 to High(LFiles) do
+  begin
+    LRel := _TrimLeftChars(_SubstrFrom(LFiles[LIndex], Length(ASrcDir)), ['\', '/']);
+    LTarget := TPath.Combine(ADstDir, LRel);
+    ForceDirectories(ExtractFileDir(LTarget));
+    TFile.Copy(LFiles[LIndex], LTarget, True);
+    AFiles.Add(LTarget);
+  end;
+end;
+
+procedure _CopyOneFile(const ASrcFile, ADstFile: string;
+  const AFiles: TList<string>);
+begin
+  if not TFile.Exists(ASrcFile) then
+    Exit;
+  ForceDirectories(ExtractFileDir(ADstFile));
+  TFile.Copy(ASrcFile, ADstFile, True);
+  AFiles.Add(ADstFile);
+end;
+
+// Lays down an addon's mcp.json from its bundle server.json, substituting the
+// ${ADDON_ROOT} token with AAddonRootAbs (the addon's absolute install dir) so
+// a RAW spawn (no shell, no %VAR% expansion) can launch the server command.
+// A server.json without the token is written byte-for-byte unchanged.
+procedure _WriteMcpFragment(const ASrcFile, ADstFile, AAddonRootAbs: string;
+  const AFiles: TList<string>);
+var
+  LJson: string;
+begin
+  if not TFile.Exists(ASrcFile) then
+    Exit;
+  LJson := TFile.ReadAllText(ASrcFile, TEncoding.UTF8);
+  LJson := TAddonMcpRewrite.RewriteRootToken(LJson, AAddonRootAbs);
+  ForceDirectories(ExtractFileDir(ADstFile));
+  TFile.WriteAllBytes(ADstFile, TEncoding.UTF8.GetBytes(LJson));
+  AFiles.Add(ADstFile);
+end;
+
+// Rebuilds ~/.aefos\addons\mcp-servers.json from every ledger addon that ships
+// an mcp.json fragment. The plugin merges this file into aefos-mcp.json; the
+// CLI never writes aefos-mcp.json itself (contract §5).
+procedure _RefreshMcpAggregate;
+var
+  LItems: TArray<TInstalledAddon>;
+  LIndex: Integer;
+  LFragPath, LFrag: string;
+  LRoot, LServers: TJSONObject;
+  LFragVal: TJSONValue;
+  LPair: TJSONPair;
+  LBytes: TBytes;
+begin
+  LItems := TAddonLedger.Load;
+  LRoot := TJSONObject.Create;
+  try
+    LServers := TJSONObject.Create;
+    LRoot.AddPair('mcpServers', LServers);
+    for LIndex := 0 to High(LItems) do
+    begin
+      if not LItems[LIndex].Artifacts.HasMcp then
+        Continue;
+      LFragPath := TPath.Combine(TAddonPaths.AddonDir(LItems[LIndex].Slug), 'mcp.json');
+      if not TFile.Exists(LFragPath) then
+        Continue;
+      try
+        LFrag := TFile.ReadAllText(LFragPath, TEncoding.UTF8);
+      except
+        Continue;
+      end;
+      // Resolve ${ADDON_ROOT} against this addon's absolute install dir before
+      // merging, so the aggregate the plugin consumes never carries a token or
+      // %VAR% a raw spawn cannot expand. No-op for token-less fragments.
+      LFrag := TAddonMcpRewrite.RewriteRootToken(LFrag, TAddonPaths.AddonDir(LItems[LIndex].Slug));
+      LFragVal := TJSONObject.ParseJSONValue(LFrag);
+      try
+        if LFragVal is TJSONObject then
+          for LPair in TJSONObject(LFragVal) do
+            LServers.AddPair(LPair.JsonString.Value, LPair.JsonValue.Clone as TJSONValue);
+      finally
+        LFragVal.Free;
+      end;
+    end;
+    ForceDirectories(TAddonPaths.AddonsRoot);
+    LBytes := TEncoding.UTF8.GetBytes(LRoot.Format(2));
+    TFile.WriteAllBytes(TAddonPaths.McpAggregatePath, LBytes);
+  finally
+    LRoot.Free;
+  end;
+end;
+
+procedure _RemoveSlugDirs(const ASlug: string);
+var
+  LDir: string;
+begin
+  for LDir in [TAddonPaths.CommandDir(ASlug), TAddonPaths.SkillDir(ASlug), TAddonPaths.TemplateDir(ASlug),
+    TAddonPaths.AddonDir(ASlug)] do
+    if TDirectory.Exists(LDir) then
+      TDirectory.Delete(LDir, True);
+end;
+
+procedure _RequireConsent(const AEntry: TAddonRegistryEntry;
+  const AManifest: TAddonManifest; const AOptions: TInstallOptions;
+  const ALog: TAddonLog);
+var
+  LRunsCode: Boolean;
+begin
+  LRunsCode := AManifest.Artifacts.HasMcp or AManifest.Artifacts.HasTools;
+  if LRunsCode and (AEntry.Trust <> atOfficial) and (not AOptions.Yes) then
+    raise EAddonError.CreateFmt(
+      'addon "%s" is community-trust and ships runnable code (mcp/tools). ' +
+      'Re-run with --yes to consent to installing third-party code.',
+      [AEntry.Slug]);
+  if LRunsCode then
+    ALog(Format('  ! %s ships runnable code (%s-trust) - it will run on your machine.',
+      [AEntry.Slug, AEntry.Trust.ToStr]));
+end;
+
+// True when APath resolves inside ~/.aefos — the containment guard so a
+// malicious target_path ("..\..\Windows") can never escape the content root.
+function _UnderUserRoot(const APath: string): Boolean;
+var
+  LRoot, LFull: string;
+begin
+  LRoot := IncludeTrailingPathDelimiter(TPath.GetFullPath(TAddonPaths.UserRoot));
+  LFull := TPath.GetFullPath(APath);
+  Result := _StartsWithCI(LFull, LRoot) or
+    SameText(ExcludeTrailingPathDelimiter(LFull), ExcludeTrailingPathDelimiter(LRoot));
+end;
+
+// Resolves a mapping's Source against the extracted bundle. The portal may
+// publish a REPO-relative source ("addons/<slug>/command/") while the extracted
+// bundle is slug-rooted, so the real content lives at "<bundle>/command/". Try
+// the source as-is first; if that folder is absent, fall back to just its last
+// path segment ("addons/<slug>/command/" -> "command" -> "<bundle>/command").
+// Returns '' when neither resolves to an existing directory.
+function _ResolveMappingSource(const ABundleDir, ASource: string): string;
+var
+  LDirect, LSeg, LFallback: string;
+  LParts: TArray<string>;
+begin
+  LDirect := TPath.Combine(ABundleDir, ASource);
+  if TDirectory.Exists(LDirect) then
+    Exit(LDirect);
+  LParts := _SplitStr(_TrimRightChars(ASource, ['\', '/']), ['\', '/']);
+  if Length(LParts) > 0 then
+  begin
+    LSeg := LParts[High(LParts)];
+    if LSeg <> '' then
+    begin
+      LFallback := TPath.Combine(ABundleDir, LSeg);
+      if TDirectory.Exists(LFallback) then
+        Exit(LFallback);
+    end;
+  end;
+  Result := '';
+end;
+
+// Applies the portal's install[] mappings: each { source, target_path } copies
+// the bundle-relative folder into ~/.aefos\target_path (clean-replaced). Records
+// every written file (AFiles) and each target dir (ARoots, for uninstall), and
+// infers the ledger artifacts from the target's first segment.
+procedure _ApplyInstallMappings(const ABundleDir: string;
+  const AMappings: TArray<TAddonInstallMapping>;
+  const AFiles, ARoots: TList<string>; out AArtifacts: TAddonArtifacts;
+  const ALog: TAddonLog);
+var
+  LIndex: Integer;
+  LSrc, LDst, LSeg: string;
+  LSegParts: TArray<string>;
+begin
+  AArtifacts := Default(TAddonArtifacts);
+  for LIndex := 0 to High(AMappings) do
+  begin
+    LSrc := _ResolveMappingSource(ABundleDir, AMappings[LIndex].Source);
+    LDst := TPath.GetFullPath(TPath.Combine(TAddonPaths.UserRoot,
+      AMappings[LIndex].TargetPath));
+    if not _UnderUserRoot(LDst) then
+      raise EAddonIntegrity.CreateFmt(
+        'install target "%s" escapes ~/.aefos.', [AMappings[LIndex].TargetPath]);
+    if LSrc = '' then
+    begin
+      ALog(Format('  ! mapping source "%s" not in bundle - skipped.',
+        [AMappings[LIndex].Source]));
+      Continue;
+    end;
+    if TDirectory.Exists(LDst) then
+      TDirectory.Delete(LDst, True);           // clean-replace this target
+    _CopyTree(LSrc, LDst, AFiles);
+    ARoots.Add(ExcludeTrailingPathDelimiter(LDst));
+    // A degenerate target_path ('/' or '\') trims+splits to a ZERO-length
+    // array (Split('') = empty array - proven on the real RTL), so [0] here
+    // was an unguarded read; classify it as nothing instead of crashing.
+    LSegParts := _SplitStr(_TrimLeftChars(AMappings[LIndex].TargetPath,
+      ['\', '/']), ['\', '/']);
+    if Length(LSegParts) > 0 then
+      LSeg := LowerCase(LSegParts[0])
+    else
+      LSeg := '';
+    if LSeg = 'commands' then AArtifacts.HasCommand := True
+    else if LSeg = 'skills' then AArtifacts.HasSkill := True
+    else if LSeg = 'addons' then
+    begin
+      if _ContainsText(LowerCase(AMappings[LIndex].Source), 'mcp') then AArtifacts.HasMcp := True;
+      if _ContainsText(LowerCase(AMappings[LIndex].Source), 'tool') then AArtifacts.HasTools := True;
+    end;
+    ALog(Format('  + %-8s %s', [LSeg, LDst]));
+  end;
+end;
+
+class procedure TAddonInstaller.Install(const ASlug: string;
+  const AOptions: TInstallOptions; const ALog: TAddonLog);
+var
+  LRegistry: TArray<TAddonRegistryEntry>;
+  LEntry: TAddonRegistryEntry;
+  LManifest: TAddonManifest;
+  LTempZip, LTempDir, LBundleDir, LManifestPath, LShortSha: string;
+  LFiles, LRoots: TList<string>;
+  LArts: TAddonArtifacts;
+  LItem: TInstalledAddon;
+begin
+  if not TAddonPaths.IsValidSlug(ASlug) then
+    raise EAddonError.CreateFmt('invalid addon slug "%s".', [ASlug]);
+
+  ALog(Format('Resolving %s ...', [ASlug]));
+  LRegistry := TAddonManifestParser.ParseRegistry(TAddonNet.DownloadText(TAddonNet.RegistryUrl));
+  LEntry := TAddonManifestParser.FindEntry(LRegistry, ASlug); // raises EAddonNotFound
+
+  if not TAddonVersion.Satisfies(AOptions.AefosVersion, LEntry.RequiresAefos) then
+    raise EAddonRequirement.CreateFmt(
+      'addon "%s" requires Aefos %s but this is %s.',
+      [ASlug, LEntry.RequiresAefos, AOptions.AefosVersion]);
+
+  // The temp discriminator must not depend on a version that may be empty
+  // (evergreen). The sha256 is always present and IS the identity, so a short
+  // prefix of it is the stable temp key.
+  LShortSha := Copy(LEntry.Sha256, 1, 12);
+  LTempDir := TPath.Combine(TPath.GetTempPath,
+    'aefos-addon-' + ASlug + '-' + LShortSha);
+  LTempZip := LTempDir + '.zip';
+  try
+    ALog(Format('Downloading %s %s ...', [ASlug, _VerLabel(LEntry.Version)]));
+    TAddonNet.DownloadFile(LEntry.Url, LTempZip);
+    ALog('Verifying integrity (sha256) ...');
+    TAddonNet.VerifySha256(LTempZip, LEntry.Sha256);
+
+    if TDirectory.Exists(LTempDir) then
+      TDirectory.Delete(LTempDir, True);
+    TAddonNet.ExtractZip(LTempZip, LTempDir);
+
+    // The archive must carry exactly one top-level <slug>\ folder.
+    LBundleDir := TPath.Combine(LTempDir, ASlug);
+    if not TDirectory.Exists(LBundleDir) then
+      raise EAddonIntegrity.CreateFmt(
+        'archive for "%s" has no top-level "%s\" folder.', [ASlug, ASlug]);
+    LManifestPath := TPath.Combine(LBundleDir, 'addon.json');
+    if not TFile.Exists(LManifestPath) then
+      raise EAddonManifest.CreateFmt('bundle "%s" has no addon.json.', [ASlug]);
+    LManifest := TAddonManifestParser.ParseManifest(
+      TFile.ReadAllText(LManifestPath, TEncoding.UTF8));
+    if not SameText(LManifest.Slug, ASlug) then
+      raise EAddonManifest.CreateFmt(
+        'bundle slug "%s" does not match "%s".', [LManifest.Slug, ASlug]);
+    // Version cross-check only when BOTH sides carry one. Under evergreen an
+    // empty version on either side is legitimate; the sha256 verification above
+    // already guarantees the bytes match. The slug guard stays unconditional.
+    if (LManifest.Version <> '') and (LEntry.Version <> '') and
+       not SameText(LManifest.Version, LEntry.Version) then
+      raise EAddonManifest.CreateFmt(
+        'bundle version "%s" does not match registry "%s".',
+        [LManifest.Version, LEntry.Version]);
+
+    _RequireConsent(LEntry, LManifest, AOptions, ALog);
+
+    LFiles := TList<string>.Create;
+    LRoots := TList<string>.Create;
+    try
+      if Length(LManifest.Install) > 0 then
+      begin
+        // Portal manifest: explicit source -> ~/.aefos\target_path mappings.
+        _ApplyInstallMappings(LBundleDir, LManifest.Install, LFiles, LRoots,
+          LArts, ALog);
+        // A declared install mapping that copies NOTHING is never a success -
+        // it means the bundle layout did not match addon.json. Fail loudly so a
+        // silent no-op can never be recorded as "installed" again.
+        if LFiles.Count = 0 then
+          raise EAddonIntegrity.CreateFmt(
+            'install copied no files for "%s" - the addon.json install mapping ' +
+            'did not match the bundle layout.', [ASlug]);
+      end
+      else
+      begin
+        // Fixed-layout fallback (artifacts booleans): clean-replace slug dirs.
+        _RemoveSlugDirs(ASlug);
+        LArts := LManifest.Artifacts;
+        if LArts.HasCommand then
+        begin
+          _CopyOneFile(TPath.Combine(LBundleDir, 'command\COMMAND.md'),
+            TPath.Combine(TAddonPaths.CommandDir(ASlug), 'COMMAND.md'), LFiles);
+          LRoots.Add(TAddonPaths.CommandDir(ASlug));
+          ALog('  + command  ' + TAddonPaths.CommandDir(ASlug));
+        end;
+        if LArts.HasSkill then
+        begin
+          _CopyTree(TPath.Combine(LBundleDir, 'skill'), TAddonPaths.SkillDir(ASlug), LFiles);
+          LRoots.Add(TAddonPaths.SkillDir(ASlug));
+          ALog('  + skill    ' + TAddonPaths.SkillDir(ASlug));
+        end;
+        if LArts.HasMcp then
+        begin
+          // Resolve ${ADDON_ROOT} to the absolute install dir so a raw MCP
+          // spawn (no shell) can find the server command.
+          _WriteMcpFragment(TPath.Combine(LBundleDir, 'mcp\server.json'),
+            TPath.Combine(TAddonPaths.AddonDir(ASlug), 'mcp.json'), TAddonPaths.AddonDir(ASlug), LFiles);
+          LRoots.Add(TAddonPaths.AddonDir(ASlug));
+          ALog('  + mcp      ' + TPath.Combine(TAddonPaths.AddonDir(ASlug), 'mcp.json'));
+        end;
+        if LArts.HasTools then
+        begin
+          _CopyTree(TPath.Combine(LBundleDir, 'tools'),
+            TPath.Combine(TAddonPaths.AddonDir(ASlug), 'tools'), LFiles);
+          LRoots.Add(TAddonPaths.AddonDir(ASlug));
+          ALog('  + tools    ' + TPath.Combine(TAddonPaths.AddonDir(ASlug), 'tools'));
+        end;
+        if LArts.HasTemplates then
+        begin
+          // Carry-along scaffolds (ADR-0001 §Decision 4): NOT a type, a folder the
+          // addon carries. Installs scoped to the slug so the command/OKF that
+          // references it resolves by slug and there is no global collision.
+          _CopyTree(TPath.Combine(LBundleDir, 'templates'), TAddonPaths.TemplateDir(ASlug),
+            LFiles);
+          LRoots.Add(TAddonPaths.TemplateDir(ASlug));
+          ALog('  + templates ' + TAddonPaths.TemplateDir(ASlug));
+        end;
+      end;
+
+      LItem := Default(TInstalledAddon);
+      LItem.Slug := ASlug;
+      LItem.Version := LEntry.Version;
+      LItem.Trust := LEntry.Trust;
+      LItem.Sha256 := LEntry.Sha256;
+      LItem.InstalledAt := _NowUtcIso;
+      LItem.Artifacts := LArts;
+      LItem.Files := LFiles.ToArray;
+      LItem.Roots := LRoots.ToArray;
+      TAddonLedger.Save(TAddonLedger.Upsert(TAddonLedger.Load, LItem));
+    finally
+      LRoots.Free;
+      LFiles.Free;
+    end;
+
+    if LArts.HasMcp then
+    begin
+      _RefreshMcpAggregate;
+      ALog('  * MCP server registered (plugin picks it up on next provision).');
+    end;
+
+    ALog(Format('Installed %s %s.', [ASlug, _VerLabel(LEntry.Version)]));
+    if LManifest.Artifacts.HasCommand then
+      ALog(Format('  /%s is now available in Aefos chat.', [ASlug]));
+  finally
+    try
+      if TFile.Exists(LTempZip) then
+        TFile.Delete(LTempZip);
+      if TDirectory.Exists(LTempDir) then
+        TDirectory.Delete(LTempDir, True);
+    except
+      // best-effort temp cleanup
+    end;
+  end;
+end;
+
+class procedure TAddonInstaller.Uninstall(const ASlug: string;
+  const ALog: TAddonLog);
+var
+  LItems: TArray<TInstalledAddon>;
+  LItem: TInstalledAddon;
+  LRoot: string;
+begin
+  if not TAddonPaths.IsValidSlug(ASlug) then
+    raise EAddonError.CreateFmt('invalid addon slug "%s".', [ASlug]);
+  LItems := TAddonLedger.Load;
+  if not TAddonLedger.TryFind(LItems, ASlug, LItem) then
+    raise EAddonNotFound.CreateFmt('addon "%s" is not installed.', [ASlug]);
+  // Remove exactly the target dirs recorded at install (guarded under ~/.aefos);
+  // fall back to the slug dirs for a pre-Roots ledger entry.
+  if Length(LItem.Roots) > 0 then
+  begin
+    for LRoot in LItem.Roots do
+      if _UnderUserRoot(LRoot) and TDirectory.Exists(LRoot) then
+        TDirectory.Delete(LRoot, True);
+  end
+  else
+    _RemoveSlugDirs(ASlug);
+  TAddonLedger.Save(TAddonLedger.Remove(LItems, ASlug));
+  if LItem.Artifacts.HasMcp then
+    _RefreshMcpAggregate;
+  ALog(Format('Removed %s %s.', [ASlug, _VerLabel(LItem.Version)]));
+end;
+
+class procedure TAddonInstaller.Update(const ASlug: string;
+  const AOptions: TInstallOptions; const ALog: TAddonLog);
+var
+  LItems: TArray<TInstalledAddon>;
+  LItem: TInstalledAddon;
+  LRegistry: TArray<TAddonRegistryEntry>;
+  LEntry: TAddonRegistryEntry;
+begin
+  LItems := TAddonLedger.Load;
+  if not TAddonLedger.TryFind(LItems, ASlug, LItem) then
+    raise EAddonNotFound.CreateFmt('addon "%s" is not installed.', [ASlug]);
+  LRegistry := TAddonManifestParser.ParseRegistry(TAddonNet.DownloadText(TAddonNet.RegistryUrl));
+  LEntry := TAddonManifestParser.FindEntry(LRegistry, ASlug); // raises EAddonNotFound
+  case LItem.DecideUpdate(LEntry) of
+    uaUpToDate:
+      ALog(Format('%s is already current.', [ASlug]));
+    uaUpdate:
+      begin
+        ALog(Format('Updating %s ...', [ASlug]));
+        // Clean-replace at the registry's current build (install re-verifies sha).
+        TAddonInstaller.Install(ASlug, AOptions, ALog);
+      end;
+  end;
+end;
+
+class procedure TAddonInstaller.UpdateAll(const AOptions: TInstallOptions;
+  const ALog: TAddonLog);
+var
+  LItems: TArray<TInstalledAddon>;
+  LRegistry: TArray<TAddonRegistryEntry>;
+  LEntry: TAddonRegistryEntry;
+  LIndex, LUpdated, LCurrent: Integer;
+  LSlug: string;
+begin
+  LItems := TAddonLedger.Load;
+  if Length(LItems) = 0 then
+  begin
+    ALog('No addons installed.');
+    Exit;
+  end;
+  LRegistry := TAddonManifestParser.ParseRegistry(TAddonNet.DownloadText(TAddonNet.RegistryUrl));
+  LUpdated := 0;
+  LCurrent := 0;
+  for LIndex := 0 to High(LItems) do
+  begin
+    LSlug := LItems[LIndex].Slug;
+    if not _TryFindEntry(LRegistry, LSlug, LEntry) then
+    begin
+      ALog(Format('  ! %s is no longer in the registry - skipped.', [LSlug]));
+      Continue;
+    end;
+    case LItems[LIndex].DecideUpdate(LEntry) of
+      uaUpToDate:
+        begin
+          ALog(Format('%s is already current.', [LSlug]));
+          Inc(LCurrent);
+        end;
+      uaUpdate:
+        begin
+          ALog(Format('Updating %s ...', [LSlug]));
+          TAddonInstaller.Install(LSlug, AOptions, ALog);
+          Inc(LUpdated);
+        end;
+    end;
+  end;
+  ALog(Format('%d updated, %d already current.', [LUpdated, LCurrent]));
+end;
+
+class procedure TAddonInstaller.CheckUpdates(const ASlug: string;
+  const ALog: TAddonLog);
+var
+  LItems: TArray<TInstalledAddon>;
+  LRegistry: TArray<TAddonRegistryEntry>;
+  LItem: TInstalledAddon;
+  LIndex: Integer;
+
+  procedure ReportOne(const AItem: TInstalledAddon);
+  var
+    LFound: TAddonRegistryEntry;
+  begin
+    if not _TryFindEntry(LRegistry, AItem.Slug, LFound) then
+      ALog(Format('%s: no longer in the registry', [AItem.Slug]))
+    else if AItem.DecideUpdate(LFound) = uaUpToDate then
+      ALog(Format('%s: current', [AItem.Slug]))
+    else
+      ALog(Format('%s: update available', [AItem.Slug]));
+  end;
+
+begin
+  LItems := TAddonLedger.Load;
+  LRegistry := TAddonManifestParser.ParseRegistry(TAddonNet.DownloadText(TAddonNet.RegistryUrl));
+  if ASlug <> '' then
+  begin
+    if not TAddonLedger.TryFind(LItems, ASlug, LItem) then
+      raise EAddonNotFound.CreateFmt('addon "%s" is not installed.', [ASlug]);
+    ReportOne(LItem);
+    Exit;
+  end;
+  if Length(LItems) = 0 then
+  begin
+    ALog('No addons installed.');
+    Exit;
+  end;
+  for LIndex := 0 to High(LItems) do
+    ReportOne(LItems[LIndex]);
+end;
+
+class procedure TAddonInstaller.List(const ALog: TAddonLog);
+var
+  LItems: TArray<TInstalledAddon>;
+  LIndex: Integer;
+  LKinds: string;
+begin
+  LItems := TAddonLedger.Load;
+  if Length(LItems) = 0 then
+  begin
+    ALog('No addons installed.');
+    Exit;
+  end;
+  ALog(Format('%d addon(s) installed:', [Length(LItems)]));
+  for LIndex := 0 to High(LItems) do
+  begin
+    LKinds := '';
+    if LItems[LIndex].Artifacts.HasCommand then LKinds := LKinds + 'command ';
+    if LItems[LIndex].Artifacts.HasSkill then LKinds := LKinds + 'skill ';
+    if LItems[LIndex].Artifacts.HasMcp then LKinds := LKinds + 'mcp ';
+    if LItems[LIndex].Artifacts.HasTools then LKinds := LKinds + 'tools ';
+    // _VerLabel prints "current" for an evergreen (versionless) entry, never a
+    // bare "v".
+    ALog(Format('  %-28s %-11s [%s] %s',
+      [LItems[LIndex].Slug, _VerLabel(LItems[LIndex].Version),
+       LItems[LIndex].Trust.ToStr, Trim(LKinds)]));
+  end;
+end;
+
+end.

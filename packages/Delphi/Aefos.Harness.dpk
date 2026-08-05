@@ -1,0 +1,43 @@
+package Aefos.Harness;
+
+// NOTE: the $R *.res resource directive is intentionally omitted so a fresh
+// command-line/group build never fails on a missing Aefos.Harness.res. Open the
+// project in the IDE later to add version info if wanted.
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Aefos Harness - IDE Design/Code view duality + backstage helpers'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  designide;
+
+contains
+  Aefos.Harness.View in '..\..\source\harness\Aefos.Harness.View.pas',
+  Aefos.Harness.Agents in '..\..\source\harness\Aefos.Harness.Agents.pas';
+
+end.

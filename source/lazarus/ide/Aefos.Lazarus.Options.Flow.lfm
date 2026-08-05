@@ -1,0 +1,8 @@
+inherited AefosFlowOptionsFrame: TAefosFlowOptionsFrame
+  Height = 420
+  Width = 560
+  ClientHeight = 420
+  ClientWidth = 560
+  TabOrder = 0
+  Visible = False
+end

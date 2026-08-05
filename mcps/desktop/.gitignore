@@ -1,0 +1,8 @@
+bin/
+dist/
+.build/
+*.exe
+*.zip
+*.dcu
+*.map
+*.png

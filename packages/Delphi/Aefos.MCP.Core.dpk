@@ -1,0 +1,104 @@
+﻿package Aefos.MCP.Core;
+
+{
+  Aefos.MCP.Core — runtime BPL (ESP-004, Epic 1/3 Demand 3/5, ADR-205).
+
+  The entire RTL-only MCP surface, extracted from Aefos.OTA so an
+  external consumer (the terminal-OTA project — project_mcp_terminal_consumer)
+  can depend on it as a module instead of by ad-hoc source inclusion.
+
+  Hard invariants (enforced by Tests.MCPCorePackage + Tests.MCPPackageBoundary):
+    - requires rtl ONLY — never vcl/vclie/designide. Core links into headless
+      hosts; widening requires is a defect, not a fix (ESP C-2).
+    - no `uses ToolsAPI` and no Vcl./FMX. anywhere in src/MCP/.
+    - runtime-only (RUNONLY) — no IDE registration; the host plugin
+      (Aefos.OTA, designtime) requires this package.
+
+  The only OTA-bound piece (TOTAFacade, the IMCPWorkspaceFacade impl) stays in
+  the host plugin as the reference implementation. See
+  docs/handoff/CONSUMING-MCP-CORE.md for the consumption contract.
+}
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$RUNONLY}
+{$DESCRIPTION 'Aefos MCP Core - RTL-only MCP engine (no ToolsAPI)'}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  Aefos.Tools;
+
+contains
+  Aefos.Compat.Json in '..\..\source\compat\Aefos.Compat.Json.pas',
+  Aefos.Compat.Sha256 in '..\..\source\compat\Aefos.Compat.Sha256.pas',
+  Aefos.Compat.IO in '..\..\source\compat\Aefos.Compat.IO.pas',
+  Aefos.MCP.Server in '..\..\source\mcp\Core\Aefos.MCP.Server.pas',
+  Aefos.MCP.AddonGateway in '..\..\source\mcp\Core\Aefos.MCP.AddonGateway.pas',
+  Aefos.MCP.AuditLog in '..\..\source\mcp\Core\Aefos.MCP.AuditLog.pas',
+  Aefos.MCP.BuildManager in '..\..\source\mcp\Core\Aefos.MCP.BuildManager.pas',
+  Aefos.MCP.Consent in '..\..\source\mcp\Core\Aefos.MCP.Consent.pas',
+  Aefos.MCP.EditTracker in '..\..\source\mcp\Core\Aefos.MCP.EditTracker.pas',
+  Aefos.MCP.ReAnchor in '..\..\source\mcp\Core\Aefos.MCP.ReAnchor.pas',
+  Aefos.MCP.Resources in '..\..\source\mcp\Core\Aefos.MCP.Resources.pas',
+  Aefos.MCP.Tools.Common in '..\..\source\mcp\Core\Aefos.MCP.Tools.Common.pas',
+  Aefos.MCP.Tools in '..\..\source\mcp\Core\Aefos.MCP.Tools.pas',
+  Aefos.MCP.Tools.Project in '..\..\source\mcp\Core\Aefos.MCP.Tools.Project.pas',
+  Aefos.MCP.Tools.Units in '..\..\source\mcp\Core\Aefos.MCP.Tools.Units.pas',
+  Aefos.MCP.Tools.Editor in '..\..\source\mcp\Core\Aefos.MCP.Tools.Editor.pas',
+  Aefos.MCP.Tools.Build in '..\..\source\mcp\Core\Aefos.MCP.Tools.Build.pas',
+  Aefos.MCP.Tools.FormsDFM in '..\..\source\mcp\Core\Aefos.MCP.Tools.FormsDFM.pas',
+  Aefos.MCP.Tools.DPR in '..\..\source\mcp\Core\Aefos.MCP.Tools.DPR.pas',
+  Aefos.MCP.Tools.CodeInsight in '..\..\source\mcp\Core\Aefos.MCP.Tools.CodeInsight.pas',
+  Aefos.MCP.Tools.ProjectGroup in '..\..\source\mcp\Core\Aefos.MCP.Tools.ProjectGroup.pas',
+  Aefos.MCP.Tools.Packages in '..\..\source\mcp\Core\Aefos.MCP.Tools.Packages.pas',
+  Aefos.MCP.Tools.IDE in '..\..\source\mcp\Core\Aefos.MCP.Tools.IDE.pas',
+  Aefos.MCP.Tools.Resources in '..\..\source\mcp\Core\Aefos.MCP.Tools.Resources.pas',
+  Aefos.MCP.GitFacade in '..\..\source\mcp\Core\Aefos.MCP.GitFacade.pas',
+  Aefos.MCP.UnifiedDiff in '..\..\source\mcp\Core\Aefos.MCP.UnifiedDiff.pas',
+  Aefos.MCP.Tools.Git in '..\..\source\mcp\Core\Aefos.MCP.Tools.Git.pas',
+  Aefos.MCP.Tools.Rename in '..\..\source\mcp\Core\Aefos.MCP.Tools.Rename.pas',
+  Aefos.MCP.Tools.AuditQuery in '..\..\source\mcp\Core\Aefos.MCP.Tools.AuditQuery.pas',
+  Aefos.MCP.ChatInspector.Types in '..\..\source\mcp\Core\Aefos.MCP.ChatInspector.Types.pas',
+  Aefos.MCP.Tools.ChatInspector in '..\..\source\mcp\Core\Aefos.MCP.Tools.ChatInspector.pas',
+  Aefos.MCP.DFMParser in '..\..\source\mcp\Core\Aefos.MCP.DFMParser.pas',
+  Aefos.MCP.ConsentView in '..\..\source\mcp\Core\Aefos.MCP.ConsentView.pas',
+  Aefos.MCP.ThemeBridge in '..\..\source\mcp\Core\Aefos.MCP.ThemeBridge.pas',
+  Aefos.MCP.DPRParser in '..\..\source\mcp\Core\Aefos.MCP.DPRParser.pas',
+  Aefos.MCP.PasParser in '..\..\source\mcp\Core\Aefos.MCP.PasParser.pas',
+  Aefos.MCP.Transport.NamedPipe in '..\..\source\mcp\Core\Aefos.MCP.Transport.NamedPipe.pas',
+  Aefos.MCP.Provision in '..\..\source\mcp\Core\Aefos.MCP.Provision.pas',
+  Aefos.MCP.ServerMerge in '..\..\source\mcp\Core\Aefos.MCP.ServerMerge.pas',
+  Aefos.MCP.Transport.Http in '..\..\source\mcp\Core\Aefos.MCP.Transport.Http.pas',
+  Aefos.MCP.Types in '..\..\source\mcp\Core\Aefos.MCP.Types.pas',
+  Aefos.MCP.IntentGuard in '..\..\source\mcp\Core\Aefos.MCP.IntentGuard.pas',
+  Aefos.MCP.FlowGuide in '..\..\source\mcp\Core\Aefos.MCP.FlowGuide.pas',
+  Aefos.MCP.InspectorBridge in '..\..\source\mcp\Core\Aefos.MCP.InspectorBridge.pas',
+  Aefos.MCP.Tools.PyTools in '..\..\source\mcp\Core\Aefos.MCP.Tools.PyTools.pas',
+  Aefos.MCP.Tools.ProjectText in '..\..\source\mcp\Core\Aefos.MCP.Tools.ProjectText.pas',
+  Aefos.MCP.Tools.Scaffold in '..\..\source\mcp\Core\Aefos.MCP.Tools.Scaffold.pas';
+
+end.

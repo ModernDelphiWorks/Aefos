@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{10DE2A77-AED2-4C0D-B92D-362756E22F7B}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Aefos.WebView.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="dclAefosWebView.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\..\poc\IdeDockPOC\AefosDockPOC.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Aefos_WebView">
+        <MSBuild Projects="Aefos.WebView.dproj"/>
+    </Target>
+    <Target Name="Aefos_WebView:Clean">
+        <MSBuild Projects="Aefos.WebView.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_WebView:Make">
+        <MSBuild Projects="Aefos.WebView.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dclAefosWebView">
+        <MSBuild Projects="dclAefosWebView.dproj"/>
+    </Target>
+    <Target Name="dclAefosWebView:Clean">
+        <MSBuild Projects="dclAefosWebView.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dclAefosWebView:Make">
+        <MSBuild Projects="dclAefosWebView.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="AefosDockPOC">
+        <MSBuild Projects="..\..\poc\IdeDockPOC\AefosDockPOC.dproj"/>
+    </Target>
+    <Target Name="AefosDockPOC:Clean">
+        <MSBuild Projects="..\..\poc\IdeDockPOC\AefosDockPOC.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AefosDockPOC:Make">
+        <MSBuild Projects="..\..\poc\IdeDockPOC\AefosDockPOC.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Aefos_WebView;dclAefosWebView;AefosDockPOC"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Aefos_WebView:Clean;dclAefosWebView:Clean;AefosDockPOC:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Aefos_WebView:Make;dclAefosWebView:Make;AefosDockPOC:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

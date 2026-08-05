@@ -131,8 +131,8 @@ backups, and validating any generated output before you rely on it.**
   licences. See [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 * **The hosted commercial services** — the licence-key backend, activation, the
   Pro and Enterprise subscriptions, and paid support — are *services*, not the
-  software, and are governed by [`EULA.md`](EULA.md). Nothing there restricts
-  your rights in the GPL-licensed software.
+  software. They have their own terms, provided with the service. Nothing in them
+  restricts your rights in the GPL-licensed software.
 * This document is not legal advice and its authors are not lawyers. If you need
   certainty for a commercial deployment, have your own counsel read it.
 

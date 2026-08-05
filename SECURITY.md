@@ -9,10 +9,10 @@ of our Cyber Resilience Act (CRA) readiness, alongside the Software Bill of Mate
 
 | Version | Supported |
 |---------|-----------|
-| 0.17.x (current beta) | ✅ Security fixes |
-| < 0.17 | ❌ Please update |
+| 1.1.x (current) | ✅ Security fixes |
+| < 1.1 | ❌ Please update |
 
-During the beta, security fixes target the latest released version.
+Security fixes target the latest released version.
 
 ## Reporting a vulnerability — do this privately
 

@@ -1,0 +1,156 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{18E8C895-9630-46FB-8F78-EC8572296C4D}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Aefos.WebView.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="dclAefosWebView.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Aefos.License.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Aefos.Harness.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Aefos.Providers.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Aefos.Tools.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Aefos.MCP.Core.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Aefos.MCP.Tools.OTA.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Aefos.Data.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Aefos.OTA.Chat.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Aefos.OTA.Terminal.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Aefos_WebView">
+        <MSBuild Projects="Aefos.WebView.dproj"/>
+    </Target>
+    <Target Name="Aefos_WebView:Clean">
+        <MSBuild Projects="Aefos.WebView.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_WebView:Make">
+        <MSBuild Projects="Aefos.WebView.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="dclAefosWebView">
+        <MSBuild Projects="dclAefosWebView.dproj"/>
+    </Target>
+    <Target Name="dclAefosWebView:Clean">
+        <MSBuild Projects="dclAefosWebView.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="dclAefosWebView:Make">
+        <MSBuild Projects="dclAefosWebView.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Aefos_License">
+        <MSBuild Projects="Aefos.License.dproj"/>
+    </Target>
+    <Target Name="Aefos_License:Clean">
+        <MSBuild Projects="Aefos.License.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_License:Make">
+        <MSBuild Projects="Aefos.License.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Aefos_Harness">
+        <MSBuild Projects="Aefos.Harness.dproj"/>
+    </Target>
+    <Target Name="Aefos_Harness:Clean">
+        <MSBuild Projects="Aefos.Harness.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_Harness:Make">
+        <MSBuild Projects="Aefos.Harness.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Aefos_Providers">
+        <MSBuild Projects="Aefos.Providers.dproj"/>
+    </Target>
+    <Target Name="Aefos_Providers:Clean">
+        <MSBuild Projects="Aefos.Providers.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_Providers:Make">
+        <MSBuild Projects="Aefos.Providers.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Aefos_Tools">
+        <MSBuild Projects="Aefos.Tools.dproj"/>
+    </Target>
+    <Target Name="Aefos_Tools:Clean">
+        <MSBuild Projects="Aefos.Tools.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_Tools:Make">
+        <MSBuild Projects="Aefos.Tools.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Aefos_MCP_Core">
+        <MSBuild Projects="Aefos.MCP.Core.dproj"/>
+    </Target>
+    <Target Name="Aefos_MCP_Core:Clean">
+        <MSBuild Projects="Aefos.MCP.Core.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_MCP_Core:Make">
+        <MSBuild Projects="Aefos.MCP.Core.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Aefos_MCP_Tools_OTA">
+        <MSBuild Projects="Aefos.MCP.Tools.OTA.dproj"/>
+    </Target>
+    <Target Name="Aefos_MCP_Tools_OTA:Clean">
+        <MSBuild Projects="Aefos.MCP.Tools.OTA.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_MCP_Tools_OTA:Make">
+        <MSBuild Projects="Aefos.MCP.Tools.OTA.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Aefos_Data">
+        <MSBuild Projects="Aefos.Data.dproj"/>
+    </Target>
+    <Target Name="Aefos_Data:Clean">
+        <MSBuild Projects="Aefos.Data.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_Data:Make">
+        <MSBuild Projects="Aefos.Data.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Aefos_OTA_Chat">
+        <MSBuild Projects="Aefos.OTA.Chat.dproj"/>
+    </Target>
+    <Target Name="Aefos_OTA_Chat:Clean">
+        <MSBuild Projects="Aefos.OTA.Chat.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_OTA_Chat:Make">
+        <MSBuild Projects="Aefos.OTA.Chat.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Aefos_OTA_Terminal">
+        <MSBuild Projects="Aefos.OTA.Terminal.dproj"/>
+    </Target>
+    <Target Name="Aefos_OTA_Terminal:Clean">
+        <MSBuild Projects="Aefos.OTA.Terminal.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Aefos_OTA_Terminal:Make">
+        <MSBuild Projects="Aefos.OTA.Terminal.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Aefos_WebView;dclAefosWebView;Aefos_License;Aefos_Harness;Aefos_Providers;Aefos_Tools;Aefos_MCP_Core;Aefos_MCP_Tools_OTA;Aefos_Data;Aefos_OTA_Chat;Aefos_OTA_Terminal"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Aefos_WebView:Clean;dclAefosWebView:Clean;Aefos_License:Clean;Aefos_Harness:Clean;Aefos_Providers:Clean;Aefos_Tools:Clean;Aefos_MCP_Core:Clean;Aefos_MCP_Tools_OTA:Clean;Aefos_Data:Clean;Aefos_OTA_Chat:Clean;Aefos_OTA_Terminal:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Aefos_WebView:Make;dclAefosWebView:Make;Aefos_License:Make;Aefos_Harness:Make;Aefos_Providers:Make;Aefos_Tools:Make;Aefos_MCP_Core:Make;Aefos_MCP_Tools_OTA:Make;Aefos_Data:Make;Aefos_OTA_Chat:Make;Aefos_OTA_Terminal:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

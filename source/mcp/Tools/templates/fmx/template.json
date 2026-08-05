@@ -1,0 +1,8 @@
+{
+  "name": "FMX (FireMonkey) Application",
+  "category": "FMX",
+  "description": "A cross-platform FireMonkey application with an empty main form.",
+  "vars": [
+    { "name": "Name", "label": "Project name", "description": "Pascal identifier, no extension.", "default": "MyFmxApp" }
+  ]
+}

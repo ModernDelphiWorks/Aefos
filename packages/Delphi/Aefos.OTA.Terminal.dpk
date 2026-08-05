@@ -1,0 +1,122 @@
+package Aefos.OTA.Terminal;
+
+{$R *.res}
+{$R 'Aefos.OTA.TerminalFont.res'}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Aefos AI - Terminal (integrated IDE terminal + in-process MCP server)'}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  vclie,
+  vclwinx,
+  vclimg,
+  designide,
+  Aefos.MCP.Core,
+  Aefos.MCP.Tools.OTA,
+  Aefos.License,
+  Aefos.WebView;
+
+contains
+  Aefos.OTA.Terminal.UI.Wizard in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.Wizard.pas',
+  Aefos.OTA.Terminal.UI.ActivityPulse in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ActivityPulse.pas',
+  Aefos.OTA.Terminal.UI.ActionExec in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ActionExec.pas',
+  Aefos.OTA.Terminal.UI.ActionsSidebar in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ActionsSidebar.pas',
+  Aefos.OTA.Terminal.UI.SnippetsSidebar in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.SnippetsSidebar.pas',
+  Aefos.OTA.Terminal.UI.FindBar in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.FindBar.pas',
+  Aefos.OTA.Terminal.UI.DockForm in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.DockForm.pas' {AefosTerminalDockForm},
+  Aefos.OTA.Terminal.Core.TerminalHost in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.TerminalHost.pas',
+  Aefos.OTA.Terminal.Core.Profiles in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Profiles.pas',
+  Aefos.OTA.Terminal.Core.Themes in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Themes.pas',
+  Aefos.OTA.Terminal.Core.LibVTerm in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.LibVTerm.pas',
+  Aefos.OTA.Terminal.Core.MouseEncode in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.MouseEncode.pas',
+  Aefos.OTA.Terminal.Core.Hyperlink in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Hyperlink.pas',
+  Aefos.OTA.Terminal.Core.Reflow in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Reflow.pas',
+  Aefos.OTA.Terminal.Core.SixelDecode in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.SixelDecode.pas',
+  Aefos.OTA.Terminal.Core.VTermBuffer in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.VTermBuffer.pas',
+  Aefos.OTA.Terminal.Core.CellColor in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.CellColor.pas',
+  Aefos.OTA.Terminal.Core.GlyphSupport in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.GlyphSupport.pas',
+  Aefos.OTA.Terminal.Core.ConPTY in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.ConPTY.pas',
+  Aefos.OTA.Terminal.UI.KeyBinding in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.KeyBinding.pas',
+  Aefos.OTA.Terminal.UI.TerminalCanvas in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.TerminalCanvas.pas',
+  Aefos.OTA.Terminal.UI.TerminalView in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.TerminalView.pas',
+  Aefos.OTA.Terminal.Core.Actions in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Actions.pas',
+  Aefos.OTA.Terminal.Core.ActionStore in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.ActionStore.pas',
+  Aefos.OTA.Terminal.Core.ActionRunner in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.ActionRunner.pas',
+  Aefos.OTA.Terminal.Core.ActionPlaceholders in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.ActionPlaceholders.pas',
+  Aefos.OTA.Terminal.UI.ActionCenterView in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ActionCenterView.pas' {ActionCenterView},
+  Aefos.OTA.Terminal.UI.SnippetEditDialog in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.SnippetEditDialog.pas' {SnippetEditDialog},
+  Aefos.OTA.Terminal.UI.SnippetsForm in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.SnippetsForm.pas' {Aefos.OTA.TerminalSnippetsForm},
+  Aefos.OTA.Terminal.UI.FontDialog in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.FontDialog.pas' {Aefos.OTA.TerminalFontDialog},
+  Aefos.OTA.Terminal.Core.Session in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Session.pas',
+  Aefos.OTA.Terminal.Core.Snippets in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Snippets.pas',
+  Aefos.OTA.Terminal.Core.SlashCommands in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.SlashCommands.pas',
+  Aefos.OTA.Terminal.Core.SnippetEditModel in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.SnippetEditModel.pas',
+  Aefos.OTA.Terminal.Core.Layout in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Layout.pas',
+  Aefos.OTA.Terminal.Core.VisualTokens in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.VisualTokens.pas',
+  Aefos.OTA.Terminal.Core.Accessibility in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Accessibility.pas',
+  Aefos.OTA.Terminal.Core.WelcomeModel in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.WelcomeModel.pas',
+  Aefos.OTA.Terminal.Core.FuzzyMatch in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.FuzzyMatch.pas',
+  Aefos.OTA.Terminal.Core.WindowPlacement in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.WindowPlacement.pas',
+  Aefos.OTA.Terminal.Core.CommandPalette in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.CommandPalette.pas',
+  Aefos.OTA.Terminal.UI.WelcomePane in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.WelcomePane.pas',
+  Aefos.OTA.Terminal.UI.WelcomeAssets in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.WelcomeAssets.pas',
+  Aefos.OTA.Terminal.UI.WelcomeHtml in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.WelcomeHtml.pas',
+  Aefos.OTA.Terminal.UI.WelcomeWebPane in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.WelcomeWebPane.pas',
+  Aefos.OTA.Terminal.UI.ComposerHtml in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ComposerHtml.pas',
+  Aefos.OTA.Terminal.UI.ComposerWebPane in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ComposerWebPane.pas',
+  Aefos.OTA.Terminal.UI.ComposerPicker in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ComposerPicker.pas',
+  Aefos.OTA.Terminal.UI.ComposerMemory in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ComposerMemory.pas',
+  Aefos.OTA.Terminal.UI.CommandPaletteView in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.CommandPaletteView.pas',
+  Aefos.OTA.Terminal.UI.IDEThemes in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.IDEThemes.pas',
+  Aefos.OTA.Terminal.UI.ThemedForm in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ThemedForm.pas',
+  Aefos.OTA.Terminal.Core.TestContract in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.TestContract.pas',
+  Aefos.OTA.Terminal.Core.Mustache in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.Mustache.pas',
+  Aefos.OTA.Terminal.Core.SnippetVars in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.SnippetVars.pas',
+  Aefos.OTA.Terminal.Core.GitInfo in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.GitInfo.pas',
+  Aefos.OTA.Terminal.UI.TerminalPainter in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.TerminalPainter.pas',
+  Aefos.OTA.Terminal.Core.SelfTest in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.SelfTest.pas',
+  Aefos.OTA.Terminal.UI.SelfTestChannel in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.SelfTestChannel.pas',
+  Aefos.OTA.Terminal.MCP.RepoRootPolicy in '..\..\source\terminal\Core\Aefos.OTA.Terminal.MCP.RepoRootPolicy.pas',
+  Aefos.OTA.Terminal.MCP.ProjectCreatePolicy in '..\..\source\terminal\Core\Aefos.OTA.Terminal.MCP.ProjectCreatePolicy.pas',
+  Aefos.OTA.Terminal.MCP.ProjectGroupManagerPolicy in '..\..\source\terminal\Core\Aefos.OTA.Terminal.MCP.ProjectGroupManagerPolicy.pas',
+  Aefos.OTA.Terminal.MCP.Config in '..\..\source\terminal\Core\Aefos.OTA.Terminal.MCP.Config.pas',
+  Aefos.OTA.Terminal.MCP.Composition in '..\..\source\terminal\Core\Aefos.OTA.Terminal.MCP.Composition.pas',
+  Aefos.OTA.Terminal.MCP.Host in '..\..\source\terminal\Core\Aefos.OTA.Terminal.MCP.Host.pas',
+  Aefos.OTA.Terminal.MCP.ProjectDir in '..\..\source\terminal\UI\Aefos.OTA.Terminal.MCP.ProjectDir.pas',
+  Aefos.OTA.Terminal.MCP.ProjectCreator in '..\..\source\terminal\UI\Aefos.OTA.Terminal.MCP.ProjectCreator.pas',
+  Aefos.OTA.Terminal.Core.ContextStrip in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.ContextStrip.pas',
+  Aefos.OTA.Terminal.Core.CommandHistory in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.CommandHistory.pas',
+  Aefos.OTA.Terminal.Core.CommandHistoryStore in '..\..\source\terminal\Core\Aefos.OTA.Terminal.Core.CommandHistoryStore.pas',
+  Aefos.OTA.Terminal.UI.ContextProvider in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.ContextProvider.pas',
+  Aefos.OTA.Terminal.UI.Options in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.Options.pas' {TTerminalMCPOptionsFrame},
+  Aefos.OTA.Terminal.UI.AboutForm in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.AboutForm.pas',
+  Aefos.OTA.Terminal.UI.Branding in '..\..\source\terminal\UI\Aefos.OTA.Terminal.UI.Branding.pas';
+
+end.
+
+
+

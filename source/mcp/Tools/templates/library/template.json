@@ -1,0 +1,8 @@
+{
+  "name": "Dynamic-link Library (DLL)",
+  "category": "Library",
+  "description": "A minimal Delphi DLL exporting a sample function.",
+  "vars": [
+    { "name": "Name", "label": "Project name", "description": "Pascal identifier, no extension.", "default": "MyLibrary" }
+  ]
+}

@@ -55,7 +55,7 @@ O próprio item de licença no menu mostra o **status** atual (ex.: *License: ac
 
 A edição **Community** pode ser usada por empresas de qualquer porte, internamente,
 **sem cobrança por assento, sem limite de usuários e sem penalidade**. Os detalhes
-estão no [EULA](../../LICENSE) (veja também
+estão na [GNU GPL v3](../../LICENSE) (veja também
 [Privacidade e licença](12-privacidade-e-licenca.md)).
 
 ➡️ Próximo: [Solução de problemas](11-solucao-de-problemas.md)

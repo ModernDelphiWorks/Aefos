@@ -1,0 +1,44 @@
+﻿package Aefos.Tools;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Aefos Tools - pure Delphi file-editing engine (no IDE coupling)'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  Aefos.Tools.Text in '..\..\source\mcp\Tools\Aefos.Tools.Text.pas',
+  Aefos.Tools.Templates in '..\..\source\mcp\Tools\Aefos.Tools.Templates.pas',
+  Aefos.Tools.Files in '..\..\source\mcp\Tools\Aefos.Tools.Files.pas',
+  Aefos.Tools.Batch in '..\..\source\mcp\Tools\Aefos.Tools.Batch.pas',
+  Aefos.Tools.Project in '..\..\source\mcp\Tools\Aefos.Tools.Project.pas',
+  Aefos.Tools.Process in '..\..\source\mcp\Tools\Aefos.Tools.Process.pas',
+  Aefos.Tools.PyTool in '..\..\source\mcp\Tools\Aefos.Tools.PyTool.pas';
+
+end.

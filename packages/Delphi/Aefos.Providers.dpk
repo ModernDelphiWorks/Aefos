@@ -1,0 +1,53 @@
+package Aefos.Providers;
+
+// NOTE: the $R *.res resource directive is intentionally omitted so a fresh
+// command-line/group build never fails on a missing Aefos.Providers.res. Open
+// the project in the IDE later to add version info if wanted.
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Aefos Providers - AI executor profiles (Claude/Codex/Copilot/Gemini) + local Ollama transport'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  Aefos.Provider.Types in '..\..\source\providers\Aefos.Provider.Types.pas',
+  Aefos.Provider.Kinds in '..\..\source\providers\Aefos.Provider.Kinds.pas',
+  Aefos.Provider.Base in '..\..\source\providers\Aefos.Provider.Base.pas',
+  Aefos.Provider.Claude in '..\..\source\providers\Aefos.Provider.Claude.pas',
+  Aefos.Provider.Codex in '..\..\source\providers\Aefos.Provider.Codex.pas',
+  Aefos.Provider.Copilot in '..\..\source\providers\Aefos.Provider.Copilot.pas',
+  Aefos.Provider.Gemini in '..\..\source\providers\Aefos.Provider.Gemini.pas',
+  Aefos.Provider.Registry in '..\..\source\providers\Aefos.Provider.Registry.pas',
+  Aefos.Provider.Ollama.Core in '..\..\source\providers\Aefos.Provider.Ollama.Core.pas',
+  Aefos.Provider.Ollama in '..\..\source\providers\Aefos.Provider.Ollama.pas',
+  Aefos.Provider.Ollama.Profile in '..\..\source\providers\Aefos.Provider.Ollama.Profile.pas',
+  // The Ollama transport's HTTP edge (Phase D): Delphi -> System.Net.HttpClient,
+  // contained here (used only by this package's Ollama unit among the BPLs).
+  Aefos.Compat.Http in '..\..\source\compat\Aefos.Compat.Http.pas';
+
+end.

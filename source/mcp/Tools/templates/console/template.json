@@ -1,0 +1,8 @@
+{
+  "name": "Console Application",
+  "category": "Console",
+  "description": "A minimal Delphi console application (VCL-free), with a try/except skeleton.",
+  "vars": [
+    { "name": "Name", "label": "Project name", "description": "Pascal identifier, no extension.", "default": "MyConsoleApp" }
+  ]
+}

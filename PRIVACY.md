@@ -7,8 +7,11 @@
 This Privacy Policy explains how Aefos AI ("Aefos", "we", "us") processes personal
 data in connection with the Aefos AI software (the "Software"). It is written to be
 consistent with the Brazilian General Data Protection Law (Lei nº 13.709/2018 —
-"LGPD") and complements the Aefos AI End User License Agreement
-([`LICENSE`](LICENSE)).
+"LGPD"). The Software itself is free software under the GNU GPL v3
+([`LICENSE`](LICENSE), plus [`ADDITIONAL-PERMISSIONS.md`](ADDITIONAL-PERMISSIONS.md));
+this policy complements the separate terms that govern the hosted commercial
+services (licence-key backend, Pro/Enterprise subscriptions, paid support),
+which are provided with those services and are not part of this repository.
 
 > **Plain-language summary (non-binding).** Aefos is a local IDE plugin. It does
 > **not** run an AI model and does **not** collect your source code or prompts —
@@ -37,7 +40,7 @@ You may use the contact above to exercise any of the rights described in Section
 This Policy covers personal data processed by the Software itself and by the
 licensing backend it connects to. It does **not** cover third-party AI tools,
 models, APIs, or services you choose to use with the Software — those are governed
-by their own privacy policies (see Section 7 and Section 6 of the EULA).
+by their own privacy policies, published by each vendor.
 
 ## 3. What we process, why, and on what legal basis
 

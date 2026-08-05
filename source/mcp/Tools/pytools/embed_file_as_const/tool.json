@@ -1,0 +1,16 @@
+{
+  "name": "EmbedFileAsDelphiConst",
+  "description": "Reads a BINARY file and generates a Delphi const with the embedded content (array of Byte in hex, or Base64 string). The agent cannot read bytes; Python can. Returns {inject:at_cursor}.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "file_path":  { "type": "string", "description": "file to embed" },
+      "const_name": { "type": "string", "description": "const name (default cEmbedded)" },
+      "format":     { "type": "string", "enum": ["bytes", "base64"], "description": "bytes = array of Byte; base64 = string (default bytes)" }
+    },
+    "required": ["file_path"]
+  },
+  "entry": "main.py",
+  "python": "",
+  "timeoutMs": 15000
+}

@@ -1,0 +1,57 @@
+﻿package Aefos.Data;
+
+{
+  Aefos.Data — runtime BPL: shared SQLite persistence layer.
+
+  FireDAC/SQLite foundation (single connection, WAL, static-link, meta table for
+  migration flags) consumed by the hosts via `requires`. Today it serves the
+  Chat SessionStore; it is the shared home for the SQLite audit (Phase 2),
+  since MCP.Core is locked to `requires rtl` and cannot host FireDAC.
+
+  Invariants:
+    - runtime-only (RUNONLY) — does not register anything in the IDE.
+    - no `uses ToolsAPI` and no Vcl./FMX. — it is a pure data layer (RTL + FireDAC).
+}
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$RUNONLY}
+{$DESCRIPTION 'Aefos Data - shared SQLite/FireDAC persistence (static SQLite, WAL)'}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  dbrtl,
+  FireDAC,
+  FireDACCommon,
+  FireDACCommonDriver,
+  FireDACSqliteDriver,
+  Aefos.MCP.Core;
+
+contains
+  Aefos.Data.SQLite in '..\..\source\data\Aefos.Data.SQLite.pas';
+
+end.

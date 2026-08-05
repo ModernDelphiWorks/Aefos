@@ -1,0 +1,116 @@
+package Aefos.OTA.Chat;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Aefos AI - Chat (in-IDE AI chat/agent panel + in-process MCP server)'}
+{$IMPLICITBUILD ON}
+
+requires
+  vcl,
+  vclie,
+  rtl,
+  designide,
+  dbrtl,
+  FireDAC,
+  FireDACCommon,
+  FireDACCommonDriver,
+  FireDACSqliteDriver,
+  Aefos.Data,
+  Aefos.MCP.Core,
+  Aefos.MCP.Tools.OTA,
+  Aefos.License,
+  Aefos.Providers,
+  Aefos.WebView;
+
+contains
+  Aefos.OTA.Chat.Adapter.AgentSuggest in '..\..\source\chat\Adapter\Aefos.OTA.Chat.Adapter.AgentSuggest.pas',
+  Aefos.OTA.Chat.Adapter.IDENotifier in '..\..\source\chat\Adapter\Aefos.OTA.Chat.Adapter.IDENotifier.pas',
+  Aefos.OTA.Chat.Adapter.DebuggerNotifier in '..\..\source\chat\Adapter\Aefos.OTA.Chat.Adapter.DebuggerNotifier.pas',
+  Aefos.OTA.Chat.Adapter.MainMenu in '..\..\source\chat\Adapter\Aefos.OTA.Chat.Adapter.MainMenu.pas',
+  Aefos.OTA.Chat.Core.AgentSuggest in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.AgentSuggest.pas',
+  Aefos.OTA.Chat.Core.ChatCommand in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.ChatCommand.pas',
+  Aefos.OTA.Chat.Core.CLIBinaryResolver in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CLIBinaryResolver.pas',
+  Aefos.OTA.Chat.Core.OllamaDispatcher in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.OllamaDispatcher.pas',
+  Aefos.OTA.Chat.UnloadContract in '..\..\source\chat\Aefos.OTA.Chat.UnloadContract.pas',
+  Aefos.OTA.Chat.Core.CLIDispatcher in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CLIDispatcher.pas',
+  Aefos.OTA.Chat.Core.CommandPalette in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CommandPalette.pas',
+  Aefos.OTA.Chat.Core.CommandPalette.Actions in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CommandPalette.Actions.pas',
+  Aefos.OTA.Chat.Core.CommandPalette.Types in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CommandPalette.Types.pas',
+  Aefos.OTA.Chat.Core.Config in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.Config.pas',
+  Aefos.OTA.Chat.Core.Config.Types in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.Config.Types.pas',
+  Aefos.OTA.Chat.Core.ExecutorProbe in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.ExecutorProbe.pas',
+  Aefos.OTA.Chat.Core.Dispatcher.Types in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.Dispatcher.Types.pas',
+  Aefos.OTA.Chat.Core.Dispatcher.Decode in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.Dispatcher.Decode.pas',
+  Aefos.OTA.Chat.Core.Dispatcher.ProcessRunner in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.Dispatcher.ProcessRunner.pas',
+  Aefos.OTA.Chat.Core.MainMenu in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.MainMenu.pas',
+  Aefos.OTA.Chat.Core.ModelFallbackPolicy in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.ModelFallbackPolicy.pas',
+  // The shared (Delphi + Lazarus/FPC) per-executor models.json store. NOT named
+  // Aefos.OTA.Chat.* on purpose: it carries no OTA/Vcl coupling and is compiled
+  // into the Lazarus design package too. TExecutorModels (UI.Options.Binding) is
+  // now a 1:1 face over it.
+  Aefos.Executor.Models in '..\..\source\chat\Core\Aefos.Executor.Models.pas',
+  Aefos.OTA.Chat.Core.Onboarding in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.Onboarding.pas',
+  Aefos.OTA.Chat.Core.SupportInfo in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.SupportInfo.pas',
+  Aefos.OTA.Chat.Core.PaletteState in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.PaletteState.pas',
+  Aefos.OTA.Chat.Core.PaletteState.Types in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.PaletteState.Types.pas',
+  Aefos.OTA.Chat.Core.ProjectContextBuilder in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.ProjectContextBuilder.pas',
+  Aefos.OTA.Chat.Core.ProjectContextBuilder.Types in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.ProjectContextBuilder.Types.pas',
+  Aefos.OTA.Chat.Core.BuiltInCommands in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.BuiltInCommands.pas',
+  Aefos.OTA.Chat.Core.SessionStore in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.SessionStore.pas',
+  Aefos.OTA.Chat.Core.SessionStore.SQLite in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.SessionStore.SQLite.pas',
+  Aefos.OTA.Chat.Core.CommandAutoReplicate in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CommandAutoReplicate.pas',
+  Aefos.Chat.Core.CliHarness in '..\..\source\chat\Core\Aefos.Chat.Core.CliHarness.pas',
+  Aefos.Chat.Core.InlineCompletion in '..\..\source\chat\Core\Aefos.Chat.Core.InlineCompletion.pas',
+  Aefos.Chat.Core.VisualSession in '..\..\source\chat\Core\Aefos.Chat.Core.VisualSession.pas',
+  Aefos.Chat.Core.VisualBroadcast in '..\..\source\chat\Core\Aefos.Chat.Core.VisualBroadcast.pas',
+  Aefos.Chat.Core.VisualToolMap in '..\..\source\chat\Core\Aefos.Chat.Core.VisualToolMap.pas',
+  Aefos.Chat.Core.VisualReporter in '..\..\source\chat\Core\Aefos.Chat.Core.VisualReporter.pas',
+  Aefos.OTA.Chat.Core.CommandExecutor in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CommandExecutor.pas',
+  Aefos.OTA.Chat.Core.CommandRegistry in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CommandRegistry.pas',
+  Aefos.OTA.Chat.Core.CommandRegistry.Types in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CommandRegistry.Types.pas',
+  Aefos.OTA.Chat.Core.CommandReplicator in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CommandReplicator.pas',
+  Aefos.OTA.Chat.Core.CommandReplicator.Types in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.CommandReplicator.Types.pas',
+  Aefos.OTA.Chat.Core.OutputPanel.RenderProtocol in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.OutputPanel.RenderProtocol.pas',
+  Aefos.OTA.Chat.Register in '..\..\source\chat\Aefos.OTA.Chat.Register.pas',
+  Aefos.OTA.Chat.UI.OutputPanel.Assets in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.OutputPanel.Assets.pas',
+  Aefos.OTA.Chat.UI.OutputPanel.Edge in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.OutputPanel.Edge.pas',
+  Aefos.OTA.Chat.UI.OutputPanel.EdgeController in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.OutputPanel.EdgeController.pas',
+  Aefos.OTA.Chat.UI.ConsentWebForm in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.ConsentWebForm.pas',
+  Aefos.OTA.Chat.UI.ChatInspectorFacade in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.ChatInspectorFacade.pas',
+  Aefos.OTA.Chat.UI.ChatPanel in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.ChatPanel.pas' {AefosChatPanel},
+  Aefos.OTA.Chat.UI.ChatPanel.FocusLifecycle in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.ChatPanel.FocusLifecycle.pas',
+  Aefos.OTA.Chat.UI.Options.Binding in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.Options.Binding.pas',
+  Aefos.OTA.InlineGhost in '..\..\source\completion\Aefos.OTA.InlineGhost.pas',
+  Aefos.OTA.Chat.UI.Options.Registration in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.Options.Registration.pas',
+  Aefos.OTA.Chat.UI.Options.ChatFrame in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.Options.ChatFrame.pas' {AefosChatOptionsFrame: TFrame},
+  Aefos.OTA.Chat.UI.AboutForm in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.AboutForm.pas',
+  Aefos.OTA.UI.MCPToolInspector.Assets in '..\..\source\mcp\OTA\Aefos.OTA.UI.MCPToolInspector.Assets.pas',
+  Aefos.OTA.UI.MCPToolInspector in '..\..\source\mcp\OTA\Aefos.OTA.UI.MCPToolInspector.pas',
+  Aefos.OTA.Chat.UI.Branding in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.Branding.pas' {$IFDEF DEBUG},
+  Aefos.Test.Artifact in '..\..\meta\chat\tests\Aefos.Test.Artifact.pas',
+  Aefos.Smoke.Matcher in '..\..\meta\chat\tests\Smoke\Aefos.Smoke.Matcher.pas' {$ENDIF};
+
+end.

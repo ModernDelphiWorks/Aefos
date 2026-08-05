@@ -1,0 +1,94 @@
+package Aefos.MCP.Tools.OTA;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Aefos shared OTA MCP facade (Tools.OTA)'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  vclwinx,
+  vclimg,
+  designide,
+  Aefos.MCP.Core,
+  Aefos.Tools,
+  Aefos.License,
+  Aefos.Harness;
+
+contains
+  Aefos.MCP.OTA.MessageTextPolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.MessageTextPolicy.pas',
+  Aefos.MCP.OTA.ContentWritePolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ContentWritePolicy.pas',
+  Aefos.MCP.OTA.ConfigWritePolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ConfigWritePolicy.pas',
+  Aefos.MCP.OTA.UnitCreatePolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.UnitCreatePolicy.pas',
+  Aefos.MCP.OTA.StructuralWritePolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.StructuralWritePolicy.pas',
+  Aefos.MCP.OTA.FormUsesWritePolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.FormUsesWritePolicy.pas',
+  Aefos.MCP.OTA.BuildRunPolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.BuildRunPolicy.pas',
+  Aefos.MCP.OTA.DebugPolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.DebugPolicy.pas',
+  Aefos.MCP.OTA.DebugLocals in '..\..\source\mcp\OTA\Aefos.MCP.OTA.DebugLocals.pas',
+  Aefos.MCP.OTA.DebugService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.DebugService.pas',
+  Aefos.MCP.Tools.Debug in '..\..\source\mcp\OTA\Aefos.MCP.Tools.Debug.pas',
+  Aefos.MCP.OTA.DiffViewService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.DiffViewService.pas',
+  Aefos.MCP.Tools.VCS in '..\..\source\mcp\OTA\Aefos.MCP.Tools.VCS.pas',
+  Aefos.MCP.OTA.DProjParser in '..\..\source\mcp\OTA\Aefos.MCP.OTA.DProjParser.pas',
+  Aefos.MCP.OTA.RecentFilesPolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.RecentFilesPolicy.pas',
+  Aefos.MCP.OTA.ConsentPolicy in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ConsentPolicy.pas',
+  Aefos.OTA.UI.MCPConsentDialog in '..\..\source\mcp\OTA\Aefos.OTA.UI.MCPConsentDialog.pas' {TMCPConsentDialog},
+  Aefos.OTA.Options.AIFlow.Store in '..\..\source\mcp\OTA\Aefos.OTA.Options.AIFlow.Store.pas',
+  Aefos.OTA.Options.AIFlow in '..\..\source\mcp\OTA\Aefos.OTA.Options.AIFlow.pas' {AefosAIFlowOptionsFrame: TFrame},
+  Aefos.MCP.OTA.FacadeShared in '..\..\source\mcp\OTA\Aefos.MCP.OTA.FacadeShared.pas',
+  Aefos.MCP.OTA.ReviewGate in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ReviewGate.pas',
+  Aefos.MCP.OTA.IDEService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.IDEService.pas',
+  Aefos.MCP.OTA.ProjectGroupService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ProjectGroupService.pas',
+  Aefos.MCP.OTA.RunService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.RunService.pas',
+  Aefos.MCP.OTA.PackagesService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.PackagesService.pas',
+  Aefos.MCP.OTA.ResourcesService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ResourcesService.pas',
+  Aefos.MCP.OTA.BuildConfigService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.BuildConfigService.pas',
+  Aefos.MCP.OTA.ProjectWriteService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ProjectWriteService.pas',
+  Aefos.MCP.OTA.ProjectReadService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ProjectReadService.pas',
+  Aefos.MCP.OTA.LibraryPathService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.LibraryPathService.pas',
+  Aefos.MCP.OTA.EditorReadService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.EditorReadService.pas',
+  Aefos.MCP.OTA.UnitReadService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.UnitReadService.pas',
+  Aefos.MCP.OTA.BuildService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.BuildService.pas',
+  Aefos.MCP.OTA.ConsentService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ConsentService.pas',
+  Aefos.MCP.OTA.EditorWriteService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.EditorWriteService.pas',
+  Aefos.MCP.OTA.CodeInsightWriteService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.CodeInsightWriteService.pas',
+  Aefos.MCP.OTA.FormDesignerService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.FormDesignerService.pas',
+  Aefos.MCP.OTA.UsesWriteService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.UsesWriteService.pas',
+  Aefos.MCP.OTA.StructuralWriteService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.StructuralWriteService.pas',
+  Aefos.MCP.OTA.ProjectLifecycleService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ProjectLifecycleService.pas',
+  Aefos.MCP.OTA.CodeIntelReadService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.CodeIntelReadService.pas',
+  Aefos.MCP.OTA.ExternalToolService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.ExternalToolService.pas',
+  Aefos.MCP.OTA.DprService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.DprService.pas',
+  Aefos.MCP.OTA.IDEReadService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.IDEReadService.pas',
+  Aefos.MCP.OTA.WorkspaceOpsService in '..\..\source\mcp\OTA\Aefos.MCP.OTA.WorkspaceOpsService.pas',
+  Aefos.MCP.OTA.WorkspaceFacade in '..\..\source\mcp\OTA\Aefos.MCP.OTA.WorkspaceFacade.pas',
+  Aefos.OTA.UI.ThemeHelper in '..\..\source\chat\UI\Aefos.OTA.UI.ThemeHelper.pas',
+  Aefos.OTA.IDE.GutterReview in '..\..\source\mcp\OTA\Aefos.OTA.IDE.GutterReview.pas',
+  Aefos.OTA.MCP.IssueReport in '..\..\source\mcp\OTA\Aefos.OTA.MCP.IssueReport.pas',
+  Aefos.OTA.MCP.PyToolsManager in '..\..\source\mcp\OTA\Aefos.OTA.MCP.PyToolsManager.pas';
+
+end.

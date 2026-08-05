@@ -1,0 +1,11 @@
+package {{Name}};
+
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  {{Name}}Unit in '{{Name}}Unit.pas';
+
+end.

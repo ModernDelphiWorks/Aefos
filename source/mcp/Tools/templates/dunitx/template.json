@@ -1,0 +1,8 @@
+{
+  "name": "DUnitX Test Project",
+  "category": "Test",
+  "description": "A DUnitX console test runner with a sample [TestFixture] (Setup/TearDown/Test/TestCase). Requires DUnitX on the library path.",
+  "vars": [
+    { "name": "Name", "label": "Project name", "description": "Pascal identifier, no extension.", "default": "MyTests" }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "DbSchemaToDelphiClasses",
+  "description": "Connects to a SQLite database, introspects the tables and generates Delphi classes (one per table, with published properties mapped from the column types). A LIVE resource the agent cannot reach. Returns {inject:new_unit}.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "sqlite_path": { "type": "string", "description": "path to the .sqlite/.db file" },
+      "unit_name":   { "type": "string", "description": "name of the generated unit (default Domain.Entities)" },
+      "tables":      { "type": "array", "items": { "type": "string" }, "description": "subset of tables; empty = all" }
+    },
+    "required": ["sqlite_path"]
+  },
+  "entry": "main.py",
+  "python": "",
+  "timeoutMs": 20000
+}

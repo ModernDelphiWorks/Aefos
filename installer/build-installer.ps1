@@ -78,6 +78,34 @@ foreach ($v in $staged) {
   }
   Copy-Item $wv2 $dir -Force   # ensure the loader is present (VM build may lack it)
   Write-Host "  ok  Delphi $v  ($($Bpls.Count) BPLs + WebView2Loader.dll)" -ForegroundColor Green
+
+  # Delphi 13's 64-bit IDE, when its packages were built (-Platform Win64x). It is
+  # a separate set: a design-time BPL loads into the IDE PROCESS, so the Win32 ones
+  # above are invisible to bin64\bds.exe.
+  $x64Dir = Join-Path $dir 'Win64x'
+  if (Test-Path (Join-Path $x64Dir 'Aefos.OTA.Chat.bpl')) {
+    $missing64 = $Bpls | Where-Object { -not (Test-Path (Join-Path $x64Dir $_)) }
+    if ($missing64) {
+      throw "Delphi $v/Win64x: staged folder is missing $($missing64.Count) BPL(s): " +
+            "$($missing64 -join ', '). Re-run build-packages.ps1 -Version $v -Platform Win64x."
+    }
+    # A 64-bit IDE process cannot bind the 32-bit loader RAD Studio ships, and RAD
+    # Studio has no x64 one (verified: nothing under any bin64). It comes from the
+    # same place the Lazarus 64-bit payload gets it -- fetched from Microsoft's
+    # NuGet package, machine word verified. Without it the chat would silently fall
+    # back to plain text in the 64-bit IDE only.
+    $loader64 = Join-Path (Split-Path -Parent $here) 'installer\lazarus\redist\x86_64\WebView2Loader.dll'
+    if (-not (Test-Path $loader64)) {
+      & (Join-Path (Split-Path -Parent $here) 'scripts\fetch-webview2-loader.ps1') -Arch x86_64 | Out-Host
+    }
+    if (Test-Path $loader64) {
+      Copy-Item $loader64 $x64Dir -Force
+      Write-Host "  ok  Delphi $v/Win64x  ($($Bpls.Count) BPLs + x64 WebView2Loader.dll)" -ForegroundColor Green
+    } else {
+      throw "Delphi $v/Win64x: no x64 WebView2Loader.dll. See " +
+            "installer\lazarus\redist\x86_64\README.md."
+    }
+  }
 }
 
 # Bundled third-party AI CLIs. On release pass -FetchClis to stage the CURRENT

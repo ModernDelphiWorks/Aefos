@@ -39,7 +39,14 @@ interface
      runtime). The DLL bundles its own CRT, so the IDE link has ZERO C dependencies.
      It is produced by scripts\build-libvterm-fpc.ps1 and shipped beside lazarus.exe. *)
 {$IFNDEF FPC}
-  {$L '..\ThirdParty\libvterm\obj\libvterm_unity.obj'}
+  { bcc32c emits 32-bit OMF and bcc64x (bin64) emits COFF x64; the linker of
+    each platform rejects the other with E2045. Separate folders so a build
+    can never pick up the wrong one. }
+  {$IFDEF WIN64}
+    {$L '..\ThirdParty\libvterm\obj\Win64x\libvterm_unity.o'}
+  {$ELSE}
+    {$L '..\ThirdParty\libvterm\obj\libvterm_unity.obj'}
+  {$ENDIF}
 {$ENDIF}
 
 {$IFDEF FPC}
@@ -271,49 +278,58 @@ type
 
 { ---- libvterm lifecycle ---- }
 
-function  vterm_new(rows: Integer; cols: Integer): PVTerm; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_new';{$ELSE}external name '_vterm_new';{$ENDIF}
-procedure vterm_free(vt: PVTerm); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_free';{$ELSE}external name '_vterm_free';{$ENDIF}
-procedure vterm_get_size(vt: PVTerm; rowsp: PInteger; colsp: PInteger); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_get_size';{$ELSE}external name '_vterm_get_size';{$ENDIF}
-procedure vterm_set_size(vt: PVTerm; rows: Integer; cols: Integer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_set_size';{$ELSE}external name '_vterm_set_size';{$ENDIF}
-procedure vterm_set_utf8(vt: PVTerm; is_utf8: Integer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_set_utf8';{$ELSE}external name '_vterm_set_utf8';{$ENDIF}
+{ Win32 OMF carries a leading underscore on C symbols and Win64 COFF does not.
+  Verified against the built object: 92 vterm_* symbols, none prefixed. }
+const
+  {$IFDEF WIN64}
+  CPfx = '';
+  {$ELSE}
+  CPfx = '_';
+  {$ENDIF}
+
+function  vterm_new(rows: Integer; cols: Integer): PVTerm; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_new';{$ELSE}external name CPfx + 'vterm_new';{$ENDIF}
+procedure vterm_free(vt: PVTerm); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_free';{$ELSE}external name CPfx + 'vterm_free';{$ENDIF}
+procedure vterm_get_size(vt: PVTerm; rowsp: PInteger; colsp: PInteger); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_get_size';{$ELSE}external name CPfx + 'vterm_get_size';{$ENDIF}
+procedure vterm_set_size(vt: PVTerm; rows: Integer; cols: Integer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_set_size';{$ELSE}external name CPfx + 'vterm_set_size';{$ENDIF}
+procedure vterm_set_utf8(vt: PVTerm; is_utf8: Integer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_set_utf8';{$ELSE}external name CPfx + 'vterm_set_utf8';{$ENDIF}
 
 { ---- input ---- }
 
-function  vterm_input_write(vt: PVTerm; bytes: PAnsiChar; len: NativeUInt): NativeUInt; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_input_write';{$ELSE}external name '_vterm_input_write';{$ENDIF}
+function  vterm_input_write(vt: PVTerm; bytes: PAnsiChar; len: NativeUInt): NativeUInt; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_input_write';{$ELSE}external name CPfx + 'vterm_input_write';{$ENDIF}
 
 { ---- output callback ---- }
 
-procedure vterm_output_set_callback(vt: PVTerm; func: TVTermOutputCallback; user: Pointer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_output_set_callback';{$ELSE}external name '_vterm_output_set_callback';{$ENDIF}
+procedure vterm_output_set_callback(vt: PVTerm; func: TVTermOutputCallback; user: Pointer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_output_set_callback';{$ELSE}external name CPfx + 'vterm_output_set_callback';{$ENDIF}
 
 { ---- screen layer ---- }
 
-function  vterm_obtain_screen(vt: PVTerm): PVTermScreen; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_obtain_screen';{$ELSE}external name '_vterm_obtain_screen';{$ENDIF}
-procedure vterm_screen_reset(screen: PVTermScreen; hard: Integer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_reset';{$ELSE}external name '_vterm_screen_reset';{$ENDIF}
-procedure vterm_screen_enable_altscreen(screen: PVTermScreen; altscreen: Integer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_enable_altscreen';{$ELSE}external name '_vterm_screen_enable_altscreen';{$ENDIF}
-function  vterm_screen_get_cell(screen: PVTermScreen; pos: TVTermPos; cell: PVTermScreenCell): Integer; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_get_cell';{$ELSE}external name '_vterm_screen_get_cell';{$ENDIF}
-procedure vterm_screen_set_callbacks(screen: PVTermScreen; callbacks: PVTermScreenCallbacks; user: Pointer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_set_callbacks';{$ELSE}external name '_vterm_screen_set_callbacks';{$ENDIF}
-procedure vterm_screen_flush_damage(screen: PVTermScreen); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_flush_damage';{$ELSE}external name '_vterm_screen_flush_damage';{$ENDIF}
-procedure vterm_screen_set_damage_merge(screen: PVTermScreen; size: TVTermDamageSize); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_set_damage_merge';{$ELSE}external name '_vterm_screen_set_damage_merge';{$ENDIF}
-procedure vterm_screen_convert_color_to_rgb(screen: PVTermScreen; col: PVTermColor); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_convert_color_to_rgb';{$ELSE}external name '_vterm_screen_convert_color_to_rgb';{$ENDIF}
-procedure vterm_screen_set_unrecognised_fallbacks(screen: PVTermScreen; fallbacks: PVTermStateFallbacks; user: Pointer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_set_unrecognised_fallbacks';{$ELSE}external name '_vterm_screen_set_unrecognised_fallbacks';{$ENDIF}
+function  vterm_obtain_screen(vt: PVTerm): PVTermScreen; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_obtain_screen';{$ELSE}external name CPfx + 'vterm_obtain_screen';{$ENDIF}
+procedure vterm_screen_reset(screen: PVTermScreen; hard: Integer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_reset';{$ELSE}external name CPfx + 'vterm_screen_reset';{$ENDIF}
+procedure vterm_screen_enable_altscreen(screen: PVTermScreen; altscreen: Integer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_enable_altscreen';{$ELSE}external name CPfx + 'vterm_screen_enable_altscreen';{$ENDIF}
+function  vterm_screen_get_cell(screen: PVTermScreen; pos: TVTermPos; cell: PVTermScreenCell): Integer; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_get_cell';{$ELSE}external name CPfx + 'vterm_screen_get_cell';{$ENDIF}
+procedure vterm_screen_set_callbacks(screen: PVTermScreen; callbacks: PVTermScreenCallbacks; user: Pointer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_set_callbacks';{$ELSE}external name CPfx + 'vterm_screen_set_callbacks';{$ENDIF}
+procedure vterm_screen_flush_damage(screen: PVTermScreen); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_flush_damage';{$ELSE}external name CPfx + 'vterm_screen_flush_damage';{$ENDIF}
+procedure vterm_screen_set_damage_merge(screen: PVTermScreen; size: TVTermDamageSize); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_set_damage_merge';{$ELSE}external name CPfx + 'vterm_screen_set_damage_merge';{$ENDIF}
+procedure vterm_screen_convert_color_to_rgb(screen: PVTermScreen; col: PVTermColor); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_convert_color_to_rgb';{$ELSE}external name CPfx + 'vterm_screen_convert_color_to_rgb';{$ENDIF}
+procedure vterm_screen_set_unrecognised_fallbacks(screen: PVTermScreen; fallbacks: PVTermStateFallbacks; user: Pointer); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_set_unrecognised_fallbacks';{$ELSE}external name CPfx + 'vterm_screen_set_unrecognised_fallbacks';{$ENDIF}
 { Opt-in flag for v4 push-line dispatch. libvterm only dispatches sb_pushline4
   after this is called — vterm_screen_set_callbacks alone leaves it on v3.
   ESP-034 / ADR-034-01. }
-procedure vterm_screen_callbacks_has_pushline4(screen: PVTermScreen); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_callbacks_has_pushline4';{$ELSE}external name '_vterm_screen_callbacks_has_pushline4';{$ENDIF}
+procedure vterm_screen_callbacks_has_pushline4(screen: PVTermScreen); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_screen_callbacks_has_pushline4';{$ELSE}external name CPfx + 'vterm_screen_callbacks_has_pushline4';{$ENDIF}
 
 { ---- state layer ---- }
 
-function  vterm_obtain_state(vt: PVTerm): PVTermState; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_obtain_state';{$ELSE}external name '_vterm_obtain_state';{$ENDIF}
-procedure vterm_state_get_cursorpos(state: PVTermState; cursorpos: PVTermPos); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_state_get_cursorpos';{$ELSE}external name '_vterm_state_get_cursorpos';{$ENDIF}
+function  vterm_obtain_state(vt: PVTerm): PVTermState; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_obtain_state';{$ELSE}external name CPfx + 'vterm_obtain_state';{$ENDIF}
+procedure vterm_state_get_cursorpos(state: PVTermState; cursorpos: PVTermPos); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_state_get_cursorpos';{$ELSE}external name CPfx + 'vterm_state_get_cursorpos';{$ENDIF}
 { vterm_state_get_lineinfo: returns a pointer into state->lineinfos[0][row]
   for the currently-visible grid. The returned pointer stays valid until the
   next vterm_set_size / vterm_state_reset. ESP-034 / ADR-034-01. }
-function  vterm_state_get_lineinfo(state: PVTermState; row: Integer): PVTermLineInfo; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_state_get_lineinfo';{$ELSE}external name '_vterm_state_get_lineinfo';{$ENDIF}
+function  vterm_state_get_lineinfo(state: PVTermState; row: Integer): PVTermLineInfo; cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_state_get_lineinfo';{$ELSE}external name CPfx + 'vterm_state_get_lineinfo';{$ENDIF}
 
 { ---- keyboard input ---- }
 
-procedure vterm_keyboard_unichar(vt: PVTerm; c: LongWord; mod_: TVTermModifier); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_keyboard_unichar';{$ELSE}external name '_vterm_keyboard_unichar';{$ENDIF}
-procedure vterm_keyboard_key(vt: PVTerm; key: TVTermKey; mod_: TVTermModifier); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_keyboard_key';{$ELSE}external name '_vterm_keyboard_key';{$ENDIF}
+procedure vterm_keyboard_unichar(vt: PVTerm; c: LongWord; mod_: TVTermModifier); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_keyboard_unichar';{$ELSE}external name CPfx + 'vterm_keyboard_unichar';{$ENDIF}
+procedure vterm_keyboard_key(vt: PVTerm; key: TVTermKey; mod_: TVTermModifier); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_keyboard_key';{$ELSE}external name CPfx + 'vterm_keyboard_key';{$ENDIF}
 
 { ---- mouse input ----
   Declared for API completeness. ESP-032 / ADR-032-01 encodes mouse output in
@@ -321,8 +337,8 @@ procedure vterm_keyboard_key(vt: PVTerm; key: TVTermKey; mod_: TVTermModifier); 
   the DEC mode level. These bindings remain unused so a future demand (e.g.
   pixel-resolution `?1016`) can flip the architecture without rebinding. }
 
-procedure vterm_mouse_move(vt: PVTerm; row: Integer; col: Integer; mod_: TVTermModifier); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_mouse_move';{$ELSE}external name '_vterm_mouse_move';{$ENDIF}
-procedure vterm_mouse_button(vt: PVTerm; button: Integer; pressed: Integer; mod_: TVTermModifier); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_mouse_button';{$ELSE}external name '_vterm_mouse_button';{$ENDIF}
+procedure vterm_mouse_move(vt: PVTerm; row: Integer; col: Integer; mod_: TVTermModifier); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_mouse_move';{$ELSE}external name CPfx + 'vterm_mouse_move';{$ENDIF}
+procedure vterm_mouse_button(vt: PVTerm; button: Integer; pressed: Integer; mod_: TVTermModifier); cdecl; {$IFDEF FPC}external cLibVTerm name 'vterm_mouse_button';{$ELSE}external name CPfx + 'vterm_mouse_button';{$ENDIF}
 
 { ---- CRT shims (interface section) ----
   bcc32c emits EXTDEF records as '_name'. Delphi resolves these by looking
@@ -478,6 +494,91 @@ end;
   this is declared unconditionally rather than behind another version test. }
 var
   __streams: array[0..2] of Pointer;
+
+{$IFDEF WIN64}
+{ Win64 COFF carries no leading underscore, so the same stubs need a second set of
+  names. These are thin forwarders, not copies -- one implementation, two symbols
+  -- and they cost nothing: the linker discards whichever set the object did not
+  reference.
+
+  Two are Win64-only rather than renames:
+    * __acrt_iob_func is the UCRT's way of reaching stdout/stderr, replacing the
+      ___get_std_stream helper bcc32c emits.
+    * exit collides with Delphi's own Exit, which is why linking without it fails
+      with "Illegal reference to symbol 'Exit'" rather than an unsatisfied
+      external. Declaring it gives the linker a real symbol to bind, and it comes
+      LAST so nothing below can call it in place of System.Exit. }
+function malloc(ASize: NativeUInt): Pointer; cdecl;
+begin
+  Result := _malloc(ASize);
+end;
+
+procedure free(APtr: Pointer); cdecl;
+begin
+  _free(APtr);
+end;
+
+function memcpy(ADest, ASrc: Pointer; ACount: NativeUInt): Pointer; cdecl;
+begin
+  Result := _memcpy(ADest, ASrc, ACount);
+end;
+
+function memmove(ADest, ASrc: Pointer; ACount: NativeUInt): Pointer; cdecl;
+begin
+  Result := _memmove(ADest, ASrc, ACount);
+end;
+
+function memset(APtr: Pointer; AValue: Integer; ACount: NativeUInt): Pointer; cdecl;
+begin
+  Result := _memset(APtr, AValue, ACount);
+end;
+
+function strncmp(AS1, AS2: PAnsiChar; ACount: NativeUInt): Integer; cdecl;
+begin
+  Result := _strncmp(AS1, AS2, ACount);
+end;
+
+function strncpy(ADest, ASrc: PAnsiChar; ACount: NativeUInt): PAnsiChar; cdecl;
+begin
+  Result := _strncpy(ADest, ASrc, ACount);
+end;
+
+function abs(AValue: Integer): Integer; cdecl;
+begin
+  Result := _abs(AValue);
+end;
+
+procedure abort; cdecl;
+begin
+  _abort;
+end;
+
+function snprintf(AStr: PAnsiChar; ASize: NativeUInt; AFmt: PAnsiChar): Integer; cdecl;
+begin
+  Result := _snprintf(AStr, ASize, AFmt);
+end;
+
+function vsnprintf(AStr: PAnsiChar; ASize: NativeUInt; AFmt: PAnsiChar;
+  AArgs: Pointer): Integer; cdecl;
+begin
+  Result := _vsnprintf(AStr, ASize, AFmt, AArgs);
+end;
+
+function fprintf(AStream: Pointer; AFmt: PAnsiChar): Integer; cdecl;
+begin
+  Result := _fprintf(AStream, AFmt);
+end;
+
+function __acrt_iob_func(AIndex: Cardinal): Pointer; cdecl;
+begin
+  Result := nil;
+end;
+
+procedure exit(ACode: Integer); cdecl;
+begin
+  _exit(ACode);
+end;
+{$ENDIF}
 {$ENDIF}
 
 end.

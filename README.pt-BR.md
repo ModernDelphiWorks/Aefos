@@ -99,6 +99,15 @@ preso a uma máquina, então não há o que desativar ou transferir.
 
 Passo a passo completo no [Manual do Usuário](https://moderndelphiworks.github.io/Aefos/).
 
+## Apoiando o projeto
+
+O Aefos é software livre e continua assim — não existe versão paga para onde
+migrar. O que mantém ele andando são as assinaturas de IA que o próprio
+desenvolvimento consome, e elas saem do bolso de uma pessoa só.
+
+Se o Aefos te poupa tempo, o botão **Sponsor** no topo desta página é o caminho.
+Empresas: patrocínio é faturável; link de pagamento pessoal, em geral, não.
+
 ## Reportar bugs e pedidos
 
 - 🐛 **[Abrir uma issue](../../issues/new/choose)** — leia antes os

@@ -130,6 +130,16 @@ transfer.
 
 Full walkthrough in the [User Manual](https://moderndelphiworks.github.io/Aefos/).
 
+## Supporting the project
+
+Aefos is free software and stays that way — there is no paid tier to upgrade to.
+What keeps it moving is the AI subscriptions its own development runs on, and
+those are paid by one person.
+
+If Aefos saves you time, the **Sponsor** button at the top of this page is the way
+to help. Companies: sponsorship is invoiceable, a personal payment link usually is
+not.
+
 ## Reporting bugs & requests
 
 - 🐛 **[Open an issue](../../issues/new/choose)** — please read the

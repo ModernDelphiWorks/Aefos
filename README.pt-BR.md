@@ -6,11 +6,11 @@
 
 ***AEFOS** — **A**gent **E**xecution **F**low **O**rchestration **S**ystem.*
 
-**Chat** + **Terminal** de IA na IDE do RAD Studio — Delphi 13, 12 Athens e 11
-Alexandria — movidos pela CLI de IA que você já usa (Claude Code, Codex,
-GitHub Copilot CLI, Gemini).
+**Chat** + **Terminal** de IA na IDE do RAD Studio — Delphi 13 e 12 Athens —
+movidos pela CLI de IA que você já usa (Claude Code, Codex, GitHub Copilot
+CLI, Gemini).
 
-[![Versão](https://img.shields.io/badge/vers%C3%A3o-1.1.0-brightgreen)](CHANGELOG.md)
+[![Versão](https://img.shields.io/badge/vers%C3%A3o-1.2.0-brightgreen)](CHANGELOG.md)
 [![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6)](#requisitos)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL%20v3-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Pol%C3%ADtica%20de%20Seguran%C3%A7a-success)](https://www.pubpascal.dev/packages/aefos)
@@ -59,7 +59,7 @@ Tudo que o Aefos distribui está neste repositório, e builda sem nenhum caminho
 absoluto — os arquivos de pacote usam caminhos relativos ao repo.
 
 ```powershell
-scripts\build-packages.ps1 -Version all   # 22.0 = D11, 23.0 = D12, 37.0 = D13
+scripts\build-packages.ps1 -Version all   # 23.0 = D12, 37.0 = D13
 installer\build-installer.ps1
 ```
 
@@ -118,7 +118,7 @@ Passos completos no [manual](https://moderndelphiworks.github.io/Aefos/).
 
 | Item | Requisito |
 |------|-----------|
-| IDE | RAD Studio **Delphi 13** (BDS 37.0), **Delphi 12 Athens** (BDS 23.0) ou **Delphi 11 Alexandria** (BDS 22.0) |
+| IDE | RAD Studio **Delphi 13** (BDS 37.0) ou **Delphi 12 Athens** (BDS 23.0) |
 | SO | **Windows** |
 | CLI de IA | Pelo menos uma: Claude Code / Codex / GitHub Copilot CLI / Gemini (traga a sua) |
 | Markdown rico (opcional) | [Runtime do WebView2](https://aka.ms/webview2) |

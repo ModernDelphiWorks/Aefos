@@ -48,7 +48,7 @@
 ; ============================================================================
 
 #define AppName    "Aefos AI (Lazarus)"
-#define AppVer     "0.24.7-beta"
+#define AppVer     "0.25.0-beta"
 #define Publisher  "ModernDelphiWorks"
 ; The name of the IDE this setup produces, as the user will see it in the Start
 ; menu. This setup does NOT create that shortcut - the install engine does - so

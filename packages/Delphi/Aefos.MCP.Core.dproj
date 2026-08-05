@@ -80,7 +80,7 @@
         <SanitizedProjectName>Aefos_MCP_Core</SanitizedProjectName>
         <DCC_Description>Aefos MCP Core - RTL-only MCP engine (no ToolsAPI)</DCC_Description>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.1.0</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.2.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.2.0</VerInfo_Keys>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_iOSDevice64)'!=''">
@@ -107,7 +107,7 @@
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.1.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.1.0</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.2.0.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.2.0</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_UsePackage>rtl;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>

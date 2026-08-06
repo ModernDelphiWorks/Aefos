@@ -166,4 +166,23 @@ foreach ($v in $built) { Copy-Item $aefosExe (Join-Path $stage $v) -Force }
 Copy-Item $aefosExe $binDir -Force
 Write-Host "  OK  aefos.exe -> installer\bpl\<ver>\ + $binDir" -ForegroundColor Green
 
+# Build the out-of-process Desktop MCP server and pack it as the OFFLINE addon
+# dist the installer seeds from. This belongs in the standard build: it was not
+# here, and the consequence was silent - installer\Aefos.iss stages the dist with
+# skipifsourcedoesntexist, so a tree that never produced one shipped online-only
+# WITHOUT saying so, and the desktop tools were simply absent on a machine with
+# no network.
+#
+# One binary serves every IDE version (no ToolsAPI, no VCL, no designide), so it
+# is built once rather than per RAD Studio version like the BPLs.
+& (Join-Path $PSScriptRoot 'build-desktop-mcp.ps1') | Out-Host
+$desktopExe = Join-Path $root 'mcps\desktop\bin\AefosDesktopMcp.exe'
+if (-not (Test-Path $desktopExe)) { throw "Desktop MCP not produced: $desktopExe" }
+Write-Host "  OK  AefosDesktopMcp.exe" -ForegroundColor Green
+
+& (Join-Path $PSScriptRoot 'pack-desktop-addon.ps1') -CheckGallery | Out-Host
+$desktopRegistry = Join-Path $root 'mcps\desktop\dist\registry.json'
+if (-not (Test-Path $desktopRegistry)) { throw "Desktop MCP offline dist not produced: $desktopRegistry" }
+Write-Host "  OK  desktop addon offline dist -> mcps\desktop\dist" -ForegroundColor Green
+
 Write-Host "Next: installer\build-installer.ps1 (compiles the installer from installer\bpl\<ver>)." -ForegroundColor DarkGray

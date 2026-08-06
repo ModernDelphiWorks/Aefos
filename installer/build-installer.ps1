@@ -128,11 +128,25 @@ if ($cliStaged.Count -gt 0) {
   Write-Host "Bundled CLIs: none staged (installer ships without them). Pass -FetchClis to bundle." -ForegroundColor DarkYellow
 }
 
-# The Desktop MCP is an ADDON: it is published in the addons repository and
-# obtained with `aefos install desktop`, binary included. Only the source of its
-# server executable lives here (mcps\desktop), so this installer does not bundle
-# it offline. The .iss staging lines are skipifsourcedoesntexist, so a build
-# without a packed dist simply ships online-only.
+# The Desktop MCP is an ADDON: its binary travels INSIDE the addon zip, never as
+# a loose file of this installer, so it arrives only when the addon is installed.
+# scripts\pack-desktop-addon.ps1 packs the offline copy and build-packages.ps1
+# runs it, so a normal build has one staged and the installer seeds it with no
+# download.
+#
+# Report what is actually staged. The .iss lines are skipifsourcedoesntexist, so
+# a missing dist still builds - it just silently ships online-only, and "silently"
+# is exactly how this went unnoticed once. Say it out loud instead.
+$desktopDist = Join-Path (Split-Path -Parent $here) 'mcps\desktop\dist\registry.json'
+if (Test-Path $desktopDist) {
+  $desktopEntry = (Get-Content -LiteralPath $desktopDist -Raw | ConvertFrom-Json).addons |
+                  Where-Object { $_.slug -eq 'desktop' } | Select-Object -First 1
+  Write-Host "Bundled Desktop MCP addon: v$($desktopEntry.version) (installs offline)" -ForegroundColor Green
+} else {
+  Write-Host "Bundled Desktop MCP addon: NONE staged - the installer will ship ONLINE-ONLY," -ForegroundColor Yellow
+  Write-Host "  so a machine with no network gets no desktop tools. Run scripts\build-desktop-mcp.ps1" -ForegroundColor Yellow
+  Write-Host "  then scripts\pack-desktop-addon.ps1 (build-packages.ps1 does both)." -ForegroundColor Yellow
+}
 
 # Locate ISCC.
 if (-not $Iscc) {

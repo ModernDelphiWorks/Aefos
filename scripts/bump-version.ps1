@@ -73,6 +73,24 @@ Edit-File 'source/mcp/OTA/Aefos.OTA.MCP.IssueReport.pas' {
   param($t) $t -replace "(CPluginVersionFallback\s*=\s*')[0-9][0-9.]*(')", "`${1}$Version`${2}"
 } 'CPluginVersionFallback'
 
+# 3c) The addon manager's two version constants (cli/aefos.dpr).
+#
+#     CManagerVersion is what `aefos --version` prints - it read 1.0.0 on a 1.4.0
+#     product because this script only ever rewrote .dproj VerInfo, and these are
+#     plain Pascal consts no VerInfo touches.
+#
+#     CAefosBaseline is NOT cosmetic. It is the Aefos version the requirements
+#     gate compares an addon's `requirements.aefos_version` against (see
+#     AefosVersion in cli/aefos.dpr). %AEFOS_VERSION% overrides it, but nothing
+#     actually sets that variable, so the baseline IS the answer in practice: an
+#     addon requiring >=1.1.0 would be refused on a 1.4.0 install. Bumping it with
+#     the release keeps the gate honest.
+Edit-File 'cli/aefos.dpr' {
+  param($t)
+  ($t -replace "(CManagerVersion\s*=\s*')[0-9][0-9.]*(')", "`${1}$Version`${2}") `
+      -replace "(CAefosBaseline\s*=\s*')[0-9][0-9.]*(')", "`${1}$Version`${2}"
+} 'CManagerVersion + CAefosBaseline'
+
 # 4) Every Aefos .dproj VerInfo (ONLY lines tagged com.moderndelphiworks.aefos, so
 #    the generic 1.0.0.0 base-config VerInfo is left untouched).
 Get-ChildItem (Join-Path $root 'packages/Delphi') -Filter *.dproj | ForEach-Object {

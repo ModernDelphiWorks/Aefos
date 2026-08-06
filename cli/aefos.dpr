@@ -37,11 +37,17 @@ uses
   Aefos.Addons.Args in 'Aefos.Addons.Args.pas';
 
 const
-  // The manager's own version. The Aefos-plugin version used for the
-  // requirements gate is read from %AEFOS_VERSION% (the installer sets it), and
-  // falls back to this baseline so a fresh install is never wrongly blocked.
-  CManagerVersion = '1.0.0';
-  CAefosBaseline = '1.0.0';
+  // The manager's own version, printed by `aefos --version`.
+  //
+  // CAefosBaseline is the Aefos version an addon's requirements.aefos_version is
+  // gated against. %AEFOS_VERSION% overrides it when set, but no installer sets
+  // that variable today, so in practice the baseline IS the answer - which is
+  // why it has to move with the release: a stale baseline refuses addons that
+  // the running Aefos actually satisfies.
+  //
+  // Both are rewritten by scripts/bump-version.ps1. Do not edit by hand.
+  CManagerVersion = '1.4.0';
+  CAefosBaseline = '1.4.0';
 
 var
   GArgv: TArray<string>;

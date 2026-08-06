@@ -9,6 +9,7 @@
 ;  dir and registers the design packages under that version's Known Packages.
 ;
 ;  Supported design-time versions (the only IDEs that load a plugin):
+;    17.0 = Delphi 10 Seattle    18.0 = Delphi 10.1 Berlin
 ;    22.0 = Delphi 11 Alexandria  23.0 = Delphi 12 Athens  37.0 = Delphi 13
 ;
 ;  Delphi 13 counts as TWO targets, not one: it ships a second IDE executable
@@ -47,19 +48,27 @@
 #define BplSrc     "bpl"
 
 ; --- supported design-time IDE versions ------------------------------------
+; Kept in step with scripts\aefos-ide-versions.ps1, which is the one list the
+; BUILD reads. This file needs its own literals because Inno resolves them at
+; compile time; build-installer.ps1 warns when a version is staged that has no
+; payload block here, so the two cannot drift silently.
+#define VerD10S    "17.0"
+#define VerD10B    "18.0"
 #define VerD11     "22.0"
 #define VerD12     "23.0"
 #define VerD13     "37.0"
 
 ; A version's payload is emitted ONLY if its BPLs were staged, so building just
 ; one Delphi yields a single-version installer (FileExists is a compile-time check).
+#define HaveD10S FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10S + "\Aefos.OTA.Chat.bpl")
+#define HaveD10B FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10B + "\Aefos.OTA.Chat.bpl")
 #define HaveD11  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD11 + "\Aefos.OTA.Chat.bpl")
 #define HaveD12  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD12 + "\Aefos.OTA.Chat.bpl")
 #define HaveD13  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD13 + "\Aefos.OTA.Chat.bpl")
 ; The 64-bit IDE payload is independent: -Platform Win32 (the default) stages
 ; nothing under Win64 and the whole block below vanishes at compile time.
 #define HaveD13x FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD13 + "\Win64\Aefos.OTA.Chat.bpl")
-#if !HaveD11 && !HaveD12 && !HaveD13
+#if !HaveD10S && !HaveD10B && !HaveD11 && !HaveD12 && !HaveD13
   #error No staged BPLs found under .\bpl\<ver>. Run scripts\build-packages.ps1 then installer\build-installer.ps1.
 #endif
 
@@ -189,6 +198,35 @@ Source: "redist\cli\gemini.exe"; DestDir: "{userappdata}\Aefos\bin"; Flags: igno
 ; under Lazarus would be a compliance gap, not just clutter.
 Source: "redist\cli\THIRD-PARTY-LICENSES.txt"; DestDir: "{userappdata}\Aefos\bin"; Flags: ignoreversion skipifsourcedoesntexist uninsneveruninstall
 
+; --- Delphi 10 Seattle (BDS 17.0) payload - only if staged; installed if chosen -
+#if HaveD10S
+Source: "{#BplSrc}\{#VerD10S}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+#endif
+
+#if HaveD10B
+Source: "{#BplSrc}\{#VerD10B}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+#endif
+
 ; --- Delphi 11 (BDS 22.0) payload - only if staged; installed only if chosen ----
 #if HaveD11
 Source: "{#BplSrc}\{#VerD11}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
@@ -272,6 +310,24 @@ Source: "redist\MicrosoftEdgeWebView2RuntimeInstaller{#WV2Arch}.exe"; Flags: don
 ; Per version: purge stale Disabled/old-layout entries, then register the design
 ; packages in Known Packages. Each entry is gated by Check: WantVer(<ver>) so only
 ; the chosen versions are touched. (commondocs = C:\Users\Public\Documents.)
+
+#if HaveD10S
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Chat.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\dclAefosWebView.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Chat.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\dclAefosWebView.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10S}')
+#endif
+
+#if HaveD10B
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Chat.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\dclAefosWebView.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Chat.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\dclAefosWebView.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10B}')
+#endif
 
 #if HaveD11
 Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\Aefos.OTA.Chat.bpl";     Flags: deletevalue; Check: WantVer('{#VerD11}')
@@ -364,7 +420,9 @@ end;
 
 function VerLabel(const Ver: string): string;
 begin
-  if Ver = '{#VerD11}' then Result := 'Delphi 11 Alexandria (BDS {#VerD11})'
+  if Ver = '{#VerD10S}' then Result := 'Delphi 10 Seattle (BDS {#VerD10S})'
+  else if Ver = '{#VerD10B}' then Result := 'Delphi 10.1 Berlin (BDS {#VerD10B})'
+  else if Ver = '{#VerD11}' then Result := 'Delphi 11 Alexandria (BDS {#VerD11})'
   else if Ver = '{#VerD12}' then Result := 'Delphi 12 Athens (BDS {#VerD12})'
   else if Ver = '{#VerD13}' then Result := 'Delphi 13 (BDS {#VerD13})'
   else Result := 'RAD Studio (BDS ' + Ver + ')';
@@ -423,6 +481,12 @@ begin
       + 'set of BPLs (Delphi 12 and Delphi 13 do not share binaries).',
     False, False);
   SetArrayLength(GVer, 0);
+#if HaveD10S
+  AddVersion('{#VerD10S}');
+#endif
+#if HaveD10B
+  AddVersion('{#VerD10B}');
+#endif
 #if HaveD11
   AddVersion('{#VerD11}');
 #endif

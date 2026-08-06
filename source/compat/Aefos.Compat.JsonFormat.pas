@@ -35,7 +35,7 @@ unit Aefos.Compat.JsonFormat;
 interface
 
 {$IFNDEF FPC}
-{$IF CompilerVersion < 31}   // < 10.1 Berlin: System.JSON has no Format
+{$IF CompilerVersion < 35}   // below Delphi 11: see the boundary note above
 
 uses
   System.JSON;
@@ -54,7 +54,7 @@ type
 implementation
 
 {$IFNDEF FPC}
-{$IF CompilerVersion < 31}
+{$IF CompilerVersion < 35}
 
 uses
   System.SysUtils;

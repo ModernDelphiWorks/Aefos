@@ -162,9 +162,30 @@ foreach ($v in $targets) {
       Write-Host "  rsvars selects MSBuild <4.0 -- using $ms4 (AfterTargets needs 4.0)." -ForegroundColor DarkGray
       $msbuildPrefix = "set PATH=$ms4;%PATH% && "
     }
+    # Static SQLite: LOOK, do not guess.
+    #
+    # FireDAC.Phys.SQLiteWrapper.Stat is what links the SQLite engine into
+    # Aefos.Data instead of loading sqlite3.dll at run time, and it does not exist
+    # in every FireDAC. Measured: absent in 10 Seattle AND in 10.1 Berlin, present
+    # in Delphi 11. An earlier CompilerVersion guess put the boundary just above
+    # Seattle and Berlin proved it wrong the day it was installed - hence this.
+    #
+    # The define is NEGATIVE on purpose. Building from the IDE passes no defines at
+    # all, so the default (no symbol) has to be the CORRECT behaviour for every
+    # modern Delphi - static linkage. Only a command-line build that has looked at
+    # the lib folder and found nothing switches it off.
+    $sqliteDefine = ''
+    $needsSqliteDll = $false
+    $statDcu = Join-Path (Split-Path -Parent (Split-Path -Parent $rsvars)) `
+                         "lib\$($plat.ToLower())\release\FireDAC.Phys.SQLiteWrapper.Stat.dcu"
+    if (-not (Test-Path $statDcu)) {
+      Write-Host "  no static SQLite in this FireDAC -- Aefos.Data will load sqlite3.dll at run time." -ForegroundColor DarkYellow
+      $sqliteDefine = '/p:DCC_Define=AEFOS_NO_STATIC_SQLITE '
+      $needsSqliteDll = $true
+    }
     $cmd = "`"$rsvars`" && $msbuildPrefix" +
            "msbuild `"$grp`" /t:Build /p:Config=$Config /p:Platform=$plat " +
-           "/p:DCC_ForceExecute=true /v:minimal /nologo"
+           "$sqliteDefine/p:DCC_ForceExecute=true /v:minimal /nologo"
     cmd /c $cmd
     if ($LASTEXITCODE -ne 0) { throw "Build FAILED for Delphi $v/$plat (exit $LASTEXITCODE)." }
 
@@ -182,6 +203,25 @@ foreach ($v in $targets) {
     if ($missing.Count -gt 0) {
       throw "Delphi $v/${plat}: built but $($missing.Count) BPL(s) not found in $src : $($missing -join ', ')."
     }
+
+    # Whoever measured also provisions. A build without static SQLite produces a
+    # BPL that loads sqlite3.dll at RUN time, so shipping it without the DLL would
+    # install cleanly and then fail the first time the chat opens its database -
+    # the worst kind of failure, far from its cause. Staging it here means the
+    # installer just copies whatever this folder holds.
+    if ($needsSqliteDll) {
+      $dllSrc = Join-Path $root 'source\data\ThirdParty\sqlite\bin\sqlite3.dll'
+      if ($plat -ne 'Win32') {
+        $dllSrc = Join-Path $root 'source\data\ThirdParty\sqlite\bin\x86_64\sqlite3.dll'
+      }
+      if (-not (Test-Path $dllSrc)) {
+        throw ("Delphi $v/${plat} has no static SQLite, so it needs sqlite3.dll beside the BPLs, " +
+               "and none was found at $dllSrc.")
+      }
+      Copy-Item $dllSrc $dst -Force
+      Write-Host "  +   sqlite3.dll staged (this IDE has no static SQLite)" -ForegroundColor DarkYellow
+    }
+
     Write-Host "  OK  Delphi $v/$plat  ($($Bpls.Count) BPLs)" -ForegroundColor Green
     $built += "$v/$plat"
   }

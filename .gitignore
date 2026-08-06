@@ -157,3 +157,16 @@ Thumbs.db
 # beside them for where to fetch it.
 !installer/lazarus/redist/x86_64/libvterm.dll
 !installer/lazarus/redist/x86_64/sqlite3.dll
+
+# The 32-bit SQLite the OLDER Delphi IDEs need. Their FireDAC ships no
+# FireDAC.Phys.SQLiteWrapper.Stat - measured: 10 Seattle and 10.1 Berlin have
+# none - so Aefos.Data loads sqlite3.dll at run time there and both the build and
+# the installer have to carry it. Public domain, same as its x86_64 sibling
+# above. The C source it was built from is tracked beside it.
+#
+# TWO lines, and the order matters: git does not descend into an excluded
+# directory, so re-including a file inside one has no effect on its own. The
+# blanket "bin/" rule above hides this folder, so the folder has to be re-included
+# FIRST and the file second.
+!source/data/ThirdParty/sqlite/bin/
+!source/data/ThirdParty/sqlite/bin/sqlite3.dll

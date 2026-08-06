@@ -23,8 +23,11 @@
 ;  in per-version folders (Studio\<ver>\Bpl) and are registered under per-version
 ;  registry keys, so the two IDEs coexist with no clash.
 ;
-;  NOTE: there is NO sqlite3.dll. SQLite is STATICALLY linked into
-;  Aefos.Data.bpl (FireDAC.Phys.SQLiteWrapper.Stat) - nothing to bundle.
+;  SQLite is statically linked into Aefos.Data.bpl where the IDE's FireDAC ships
+;  FireDAC.Phys.SQLiteWrapper.Stat - which 10 Seattle and 10.1 Berlin do NOT.
+;  build-packages.ps1 measures that per version and stages sqlite3.dll beside the
+;  BPLs only where it is needed; the sqlite3.dll lines below are
+;  skipifsourcedoesntexist, so a version with static SQLite ships nothing extra.
 ;
 ;  PREREQUISITES (DEV machine, before building this installer):
 ;    1. Build the group for each version you want to ship:
@@ -208,6 +211,7 @@ Source: "{#BplSrc}\{#VerD10S}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\E
 Source: "{#BplSrc}\{#VerD10S}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
 Source: "{#BplSrc}\{#VerD10S}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
 Source: "{#BplSrc}\{#VerD10S}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD10S}')
 Source: "{#BplSrc}\{#VerD10S}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
 Source: "{#BplSrc}\{#VerD10S}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
 Source: "{#BplSrc}\{#VerD10S}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
@@ -222,6 +226,7 @@ Source: "{#BplSrc}\{#VerD10B}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\E
 Source: "{#BplSrc}\{#VerD10B}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
 Source: "{#BplSrc}\{#VerD10B}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
 Source: "{#BplSrc}\{#VerD10B}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD10B}')
 Source: "{#BplSrc}\{#VerD10B}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
 Source: "{#BplSrc}\{#VerD10B}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
 Source: "{#BplSrc}\{#VerD10B}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
@@ -237,6 +242,7 @@ Source: "{#BplSrc}\{#VerD11}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Em
 Source: "{#BplSrc}\{#VerD11}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
@@ -252,6 +258,7 @@ Source: "{#BplSrc}\{#VerD12}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Em
 Source: "{#BplSrc}\{#VerD12}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
@@ -267,6 +274,7 @@ Source: "{#BplSrc}\{#VerD13}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Em
 Source: "{#BplSrc}\{#VerD13}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
@@ -299,6 +307,7 @@ Source: "{#BplSrc}\{#VerD13}\Win64\dclAefosWebView.bpl";     DestDir: "{commondo
 ; 64-bit IDE only, which is exactly the kind of difference nobody would think to
 ; look for.
 Source: "{#BplSrc}\{#VerD13}\Win64\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD13}')
 #endif
 
 ; --- WebView2 Evergreen STANDALONE (offline) - OPTIONAL embed (-DBundleWebView2) -

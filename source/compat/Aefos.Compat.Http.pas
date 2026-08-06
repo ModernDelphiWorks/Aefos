@@ -115,6 +115,34 @@ uses
 
 {$IFNDEF FPC}
 
+// Applies whichever THTTPClient timeouts the compiler in hand actually has.
+//
+// ConnectionTimeout and ResponseTimeout arrived in 10.1 Berlin (CompilerVersion
+// 31); on 10 Seattle they do not exist, and naming them is a COMPILE error, not
+// a runtime no-op. SendTimeout came later, so it carries its own guard.
+//
+// Every call site funnels through here on purpose: the same properties were set
+// in three places, and three copies of a version guard is three chances to fix
+// one and forget the others. Degrading is safe - a client with no explicit
+// timeout uses the RTL default instead of hanging forever.
+//
+// A value <= 0 means "leave the default alone", which is what the call sites
+// already expressed with their own `if X > 0 then`.
+procedure _ApplyTimeouts(const AClient: THTTPClient;
+  const AConnectMs, ASendMs, AResponseMs: Integer);
+begin
+  {$IF CompilerVersion >= 31}   // 10.1 Berlin
+  if AConnectMs > 0 then
+    AClient.ConnectionTimeout := AConnectMs;
+  if AResponseMs > 0 then
+    AClient.ResponseTimeout := AResponseMs;
+  {$IFEND}
+  {$IF CompilerVersion >= 34}   // 10.4 Sydney
+  if ASendMs > 0 then
+    AClient.SendTimeout := ASendMs;
+  {$IFEND}
+end;
+
 class function TAefosHttp.TryGetToFile(const AUrl, ADestFile: string;
   out AStatusCode: Integer; out AError: string): Boolean;
 var
@@ -157,11 +185,7 @@ begin
   AError := '';
   LClient := THTTPClient.Create;
   try
-    if ATimeoutMs > 0 then
-    begin
-      LClient.ConnectionTimeout := ATimeoutMs;
-      LClient.ResponseTimeout := ATimeoutMs;
-    end;
+    _ApplyTimeouts(LClient, ATimeoutMs, 0, ATimeoutMs);
     try
       LResp := LClient.Get(AUrl);
       AStatusCode := LResp.StatusCode;
@@ -240,12 +264,7 @@ begin
   AError := '';
   LClient := THTTPClient.Create;
   try
-    if AConnectTimeoutMs > 0 then
-      LClient.ConnectionTimeout := AConnectTimeoutMs;
-    if ASendTimeoutMs > 0 then
-      LClient.SendTimeout := ASendTimeoutMs;
-    if AResponseTimeoutMs > 0 then
-      LClient.ResponseTimeout := AResponseTimeoutMs;
+    _ApplyTimeouts(LClient, AConnectTimeoutMs, ASendTimeoutMs, AResponseTimeoutMs);
     LClient.ContentType := AContentType;
     LClient.AcceptCharSet := 'utf-8';
     LSource := TStringStream.Create(ARequestBody, TEncoding.UTF8);
@@ -315,11 +334,7 @@ begin
   AError := '';
   LClient := THTTPClient.Create;
   try
-    if ATimeoutMs > 0 then
-    begin
-      LClient.ConnectionTimeout := ATimeoutMs;
-      LClient.ResponseTimeout := ATimeoutMs;
-    end;
+    _ApplyTimeouts(LClient, ATimeoutMs, 0, ATimeoutMs);
     LClient.ContentType := AContentType;
     if AExtraHeaders <> '' then
       _ApplyHeaders(LClient, AExtraHeaders);

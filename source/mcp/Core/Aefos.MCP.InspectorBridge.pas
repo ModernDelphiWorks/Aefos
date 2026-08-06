@@ -160,6 +160,8 @@ begin
 end;
 
 function TMCPInspectorBridge._AuditLogSize: Int64;
+var
+  LStream: TFileStream;
 begin
   // Missing file is the normal first-call state - return 0 so the delta
   // computation harvests the entire post-call body.
@@ -169,7 +171,16 @@ begin
   if not TFile.Exists(FAuditLogPath) then
     Exit;
   try
-    Result := TFile.GetSize(FAuditLogPath);
+    // Not TFile.GetSize: 10 Seattle's System.IOUtils has no such helper (it came
+    // later). Opening read-only and asking the stream is the portable route to
+    // the same number, with the same sharing mode - fmShareDenyNone matters,
+    // because the audit log is being appended to while we measure it.
+    LStream := TFileStream.Create(FAuditLogPath, fmOpenRead or fmShareDenyNone);
+    try
+      Result := LStream.Size;
+    finally
+      LStream.Free;
+    end;
   except
     on E: Exception do
       // BR-9 (mirrors AuditLog write policy): observability noise is never

@@ -44,6 +44,7 @@ implementation
 
 uses
   System.SysUtils,
+  System.Types,
   System.IOUtils,
   System.JSON,
   Aefos.Tools.Process,
@@ -266,7 +267,7 @@ end;
 
 function TMCPPyToolsRegistrar.RegisterAll(const AServer: IMCPServer): Integer;
 var
-  LDirs: TArray<string>;
+  LDirs: TStringDynArray;
   LDir, LManifest, LRaw: string;
   LJson: TJSONObject;
   LSpec: TPyToolSpec;

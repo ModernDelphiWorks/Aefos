@@ -67,12 +67,15 @@ type
 implementation
 
 uses
+  System.Types,      // TStringDynArray - what TDirectory.GetFiles actually returns
   System.IOUtils;
 
 class function TFileBatch.ListFiles(const ARoot, AMask: string;
   const ARecursive: Boolean): TArray<string>;
 var
   LOption: TSearchOption;
+  LFiles: TStringDynArray;
+  LIndex: Integer;
 begin
   SetLength(Result, 0);
   if not TDirectory.Exists(ARoot) then
@@ -81,7 +84,15 @@ begin
     LOption := TSearchOption.soAllDirectories
   else
     LOption := TSearchOption.soTopDirectoryOnly;
-  Result := TDirectory.GetFiles(ARoot, AMask, LOption);
+  // TDirectory.GetFiles returns TStringDynArray. Modern Delphi treats that as
+  // the same type as TArray<string> and lets the assignment through; 10 Seattle
+  // does not, and rejects it as incompatible. Copying element by element is
+  // understood by every version, so this needs no version guard at all - and it
+  // is a handful of file names, not a hot path.
+  LFiles := TDirectory.GetFiles(ARoot, AMask, LOption);
+  SetLength(Result, Length(LFiles));
+  for LIndex := 0 to High(LFiles) do
+    Result[LIndex] := LFiles[LIndex];
 end;
 
 // Tallies an item into a result accumulator.

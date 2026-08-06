@@ -106,6 +106,7 @@ implementation
 
 uses
   System.SysUtils,
+  System.Types,
   System.IOUtils,
   System.Generics.Collections;
 
@@ -257,7 +258,7 @@ class function TProjectOps.ScaffoldFolder(const ATemplateDir, ATargetDir: string
   const AVars: TArray<TToolTemplateVar>; const ABom: TToolFileBom;
   const AAllowOverwrite: Boolean): TToolScaffoldFolderResult;
 var
-  LFiles: TArray<string>;
+  LFiles: TStringDynArray;
   LSrc, LRel, LU, LDest, LDir: string;
   LNameR, LBodyR: TToolTemplateResult;
   LInfo: TToolFileInfo;

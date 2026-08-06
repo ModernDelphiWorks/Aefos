@@ -3538,6 +3538,25 @@ var
   GFontLoaded: Boolean = False;
   GFontFilePath: string = '';
 
+// Size of a file in bytes, or -1 when it cannot be read.
+//
+// Not TFile.GetSize: 10 Seattle's System.IOUtils has no such helper (it arrived
+// in a later release). FindFirst is understood by every supported version and
+// answers from the directory entry without opening a handle - which matters here,
+// because the caller is deciding whether to DELETE and re-extract this file.
+function _FileSizeBytes(const APath: string): Int64;
+var
+  LRec: TSearchRec;
+begin
+  Result := -1;
+  if FindFirst(APath, faAnyFile, LRec) = 0 then
+  try
+    Result := LRec.Size;
+  finally
+    FindClose(LRec);
+  end;
+end;
+
 procedure _LoadPrivateFont;
 var
   LResStream: TResourceStream;
@@ -3553,7 +3572,7 @@ begin
       
     GFontFilePath := TPath.Combine(LDir, 'CaskaydiaCoveNerdFontMono-Regular.ttf');
 
-    if not FileExists(GFontFilePath) or (TFile.GetSize(GFontFilePath) < 1000000) then
+    if not FileExists(GFontFilePath) or (_FileSizeBytes(GFontFilePath) < 1000000) then
     begin
       try
         if FileExists(GFontFilePath) then

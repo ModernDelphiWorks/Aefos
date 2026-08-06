@@ -30,6 +30,7 @@ implementation
 uses
   Winapi.Windows,
   System.SysUtils,
+  System.Types,
   System.IOUtils,
   System.JSON,
   System.DateUtils,
@@ -206,7 +207,7 @@ end;
 procedure TSQLiteSessionStore._ImportLegacy(const ADb: ISQLiteDatabase);
 var
   LDir, LPath: string;
-  LFiles: TArray<string>;
+  LFiles: TStringDynArray;
   LEntry: TSessionEntry;
 begin
   if ADb.MetaGet(CImportFlag, '') = '1' then

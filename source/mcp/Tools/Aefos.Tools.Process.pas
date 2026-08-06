@@ -58,6 +58,19 @@ uses
   System.Classes,
   Winapi.Windows;
 
+{$IF not Declared(GetTickCount64)}
+// GetTickCount64 is a Windows Vista API, but Winapi.Windows only began declaring
+// it in a Delphi later than 10 Seattle - so on Seattle the call is an undeclared
+// identifier even though the function sits in kernel32 on every machine able to
+// run the IDE at all.
+//
+// Declared(), not a CompilerVersion number, on purpose: this asks the compiler in
+// hand whether it already has the symbol, which is the actual question. A version
+// guard would encode a GUESS about which release added it, and would quietly do
+// the wrong thing on either side of a wrong guess.
+function GetTickCount64: UInt64; stdcall; external 'kernel32.dll' name 'GetTickCount64';
+{$IFEND}
+
 { TToolProcessResult }
 
 function TToolProcessResult.Ok: Boolean;

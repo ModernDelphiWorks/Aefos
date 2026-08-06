@@ -122,6 +122,14 @@ uses
   Winapi.Windows,
   System.IOUtils;
 
+{$IF not Declared(GetTickCount64)}
+// 10 Seattle's Winapi.Windows does not declare this Vista-era API yet.
+// Declared() rather than a CompilerVersion number: it asks the compiler in
+// hand whether the symbol exists, instead of encoding a guess about which
+// release added it.
+function GetTickCount64: UInt64; stdcall; external 'kernel32.dll' name 'GetTickCount64';
+{$IFEND}
+
 const
   GIT_DEFAULT_TIMEOUT_MS = 5000;
   GIT_MAX_OUTPUT_BYTES   = 8 * 1024 * 1024;

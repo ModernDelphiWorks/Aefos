@@ -177,6 +177,7 @@ implementation
 
 uses
   System.Classes,
+  System.Types,
   System.IOUtils;
 
 const
@@ -600,7 +601,7 @@ function TCommandRegistry._DiscoverReferences(
   const ACommandDir: string): TArray<TCommandReference>;
 var
   LRefDir: string;
-  LFiles: TArray<string>;
+  LFiles: TStringDynArray;
   LIndex: Integer;
   LRef: TCommandReference;
   LCollected: TList<TCommandReference>;
@@ -658,7 +659,7 @@ procedure TCommandRegistry._CollectFromRoot(const ARoot: string;
   const ASeen: TDictionary<string, Byte>);
 var
   LCommandsDir: string;
-  LDirs: TArray<string>;
+  LDirs: TStringDynArray;
   LDirIndex: Integer;
 begin
   if ARoot = '' then

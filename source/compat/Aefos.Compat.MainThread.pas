@@ -12,11 +12,27 @@ unit Aefos.Compat.MainThread;
   deferral exists to avoid - and the failure mode is an access violation inside
   the IDE, the exact class of bug this codebase has already paid for once.
 
-  10 Seattle has no ForceQueue, so this unit supplies the same guarantee the way
+  Older IDEs have no ForceQueue, so this unit supplies the same guarantee the way
   it was done before the RTL offered it: post a message to a hidden window and
   run the closure when the message loop gets to it. The current call stack is
   guaranteed to have unwound by then, because a posted message is not dispatched
   until the thread next pumps.
+
+  WHERE THE BOUNDARY SITS, AND WHY IT LEANS THIS WAY: measured absent in 10
+  Seattle and in 10.1 Berlin, measured present in Delphi 11. Nobody here has
+  10.2/10.3/10.4 to test, so the gate sits at the lowest PROVEN version instead of
+  at a guess - meaning those three take the fallback even if their RTL would have
+  served. That is the harmless direction: the fallback compiles and behaves
+  correctly everywhere, while a gate guessed too low breaks the build outright.
+  An earlier guess here said "anything above Seattle"; Berlin disproved it the day
+  it was installed.
+
+  A version number is a blunt instrument for this in the first place. The IDEs
+  being tested are BASE installs with no update packs, and an RTL addition that
+  arrived in an update is invisible to CompilerVersion - which does not move
+  between updates. Where the thing being detected is a FILE, prefer measuring it:
+  scripts\build-packages.ps1 does exactly that for static SQLite. A method on a
+  class has no such handle, which is the only reason this one is still a number.
 
   Everything here is ours - the Win32 message queue is the platform's, and the
   window/closure plumbing is written for this unit.
@@ -43,7 +59,7 @@ type
 implementation
 
 uses
-  {$IF CompilerVersion > 30}   // > 10 Seattle: the RTL has ForceQueue
+  {$IF CompilerVersion >= 35}  // Delphi 11+: the RTL has ForceQueue (see note above)
   System.Classes,
   {$ELSE}
   Winapi.Windows,
@@ -59,7 +75,7 @@ uses
   {$IFEND}
   System.SyncObjs;
 
-{$IF CompilerVersion > 30}
+{$IF CompilerVersion >= 35}
 
 class procedure TAefosMainThread.ForceQueue(const AProc: TAefosMainThreadProc);
 begin
@@ -146,13 +162,13 @@ end;
 {$IFEND}
 
 initialization
-{$IF CompilerVersion <= 30}
+{$IF CompilerVersion < 35}
   GLock := TCriticalSection.Create;
   GPending := TList<TAefosMainThreadProc>.Create;
 {$IFEND}
 
 finalization
-{$IF CompilerVersion <= 30}
+{$IF CompilerVersion < 35}
   // Order matters. Take the window down FIRST so nothing can be dispatched into
   // this package once the closures are gone, then release the queue. A closure
   // still pending at unload is DROPPED, not run: its captured state belongs to a

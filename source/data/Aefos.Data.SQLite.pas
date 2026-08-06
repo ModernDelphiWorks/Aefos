@@ -63,21 +63,23 @@ uses
   // Static SQLite: pulling this unit in is what links the engine into the BPL,
   // so no sqlite3.dll has to travel beside it.
   //
-  // It is not in every FireDAC. MEASURED, not assumed: absent from 10 Seattle
-  // (lib\win32\release carries FireDAC.Phys.SQLiteWrapper.dcu with no .Stat
-  // sibling), present in Delphi 11. The exact release that added it is NOT
-  // established - Embarcadero documents the unit without dating it - so this
-  // guard says "anything above Seattle", the simplest reading consistent with
-  // both measurements.
+  // It is not in every FireDAC - and the boundary is NOT a version number anyone
+  // should guess at. This started life as {$IF CompilerVersion > 30}, reasoning
+  // that everything above 10 Seattle had it. Installing 10.1 Berlin disproved
+  // that the same day: Berlin has no .Stat either.
   //
-  // If a 10.1/10.2/10.3 build ever fails on this line, that is this guard being
-  // wrong rather than the tree: raise the number to the first version that has
-  // the unit. Where it is absent FireDAC falls back to loading sqlite3.dll at
-  // run time, so the breakage moves from compile time to first database open -
-  // which is exactly why this note is here and not in a commit message.
-  {$IF CompilerVersion > 30}   // > 10 Seattle
+  // So the condition is now a MEASUREMENT. scripts\build-packages.ps1 looks for
+  // FireDAC.Phys.SQLiteWrapper.Stat.dcu in the target's lib folder and defines
+  // AEFOS_NO_STATIC_SQLITE only when it is genuinely missing.
+  //
+  // The symbol is negative deliberately: an IDE build passes no defines, so the
+  // no-symbol default must be the right answer for a modern Delphi - static
+  // linkage. Where the unit is absent, FireDAC falls back to loading sqlite3.dll
+  // at run time, which is a deployment requirement on those IDEs, not a silent
+  // downgrade - the build says so out loud.
+  {$IFNDEF AEFOS_NO_STATIC_SQLITE}
   , FireDAC.Phys.SQLiteWrapper.Stat
-  {$IFEND}
+  {$ENDIF}
   ;
 
 type

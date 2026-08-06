@@ -876,8 +876,8 @@ object AefosChatPanel: TAefosChatPanel
         Margins.Right = 16
         Align = alClient
         Caption =
-          #$2726' Workspace: -   '#$2022'   '#$2726' Approvals: Default   '#$2022' ' +
-          '  '#$2726' Model: -'
+          #10022' Workspace: -   '#8226'   '#10022' Approvals: Default   '#8226' ' +
+          '  '#10022' Model: -'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clGray
         Font.Height = -10

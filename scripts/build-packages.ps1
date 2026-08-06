@@ -113,6 +113,32 @@ function Ensure-LibVTerm([string]$Rsvars, [string]$Plat) {
   }
   if (Test-Path $unity) { return }
   Write-Host "  libvterm objects missing -- building them (fresh checkout)." -ForegroundColor Yellow
+
+  # libvterm is C, so this needs the C RUNTIME HEADERS, which arrive with the
+  # C++ Builder personality - not with Delphi. An IDE installed Delphi-only has
+  # bcc32c.exe on PATH (so nothing looks wrong up front) and no include\windows\
+  # crtl, and the build then dies with a wall of "'stdint.h' file not found" that
+  # says nothing about the actual cause. Measured on 10.2 Tokyo installed without
+  # C++: include\ holds Box2D, osx and windows, but no crtl and no dinkumware,
+  # while 10 Seattle and 10.1 Berlin have both.
+  #
+  # Checked here rather than left to the compiler because the fix is an IDE
+  # install option, and nobody guesses that from a missing standard header.
+  $bdsRoot = Split-Path -Parent (Split-Path -Parent $Rsvars)
+  $crtl = Join-Path $bdsRoot 'include\windows\crtl\stdint.h'
+  if (-not (Test-Path $crtl)) {
+    throw @"
+This RAD Studio has no C runtime headers, so the vendored libvterm (C) cannot be
+compiled: $crtl is missing.
+
+That means the C++ Builder personality was not installed for this version. Delphi
+alone ships bcc32c.exe but not its headers.
+
+Fix: re-run the RAD Studio installer for this version and add C++ Builder (the
+Windows 32-bit C++ target is enough). Then run this script again.
+"@
+  }
+
   $bat = Join-Path $vtermDir 'build-objs.bat'
   if (-not (Test-Path $bat)) { throw "libvterm build-objs.bat not found at $bat" }
   cmd /c "`"$Rsvars`" && pushd `"$vtermDir`" && call `"$bat`" $Plat && popd"

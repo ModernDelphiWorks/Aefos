@@ -70,7 +70,8 @@ implementation
 uses
   System.Classes,
   Winapi.Windows,
-  ToolsAPI;
+  ToolsAPI,
+  Aefos.Compat.MainThread;
 
 type
   // TNotifierObject supplies the empty IOTANotifier members; only the four
@@ -127,7 +128,7 @@ begin
   LReshow := GReshow; // local copy; the queued closure must not read the global
   if not Assigned(LReshow) then
     Exit;
-  TThread.ForceQueue(nil,
+  TAefosMainThread.ForceQueue(
     procedure
     begin
       try

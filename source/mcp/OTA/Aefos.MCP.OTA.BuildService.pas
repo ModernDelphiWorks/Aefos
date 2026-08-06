@@ -355,6 +355,14 @@ var
   LOk: Boolean;
 begin
   LOk := False;
+  // The clean compile mode is not offered by every ToolsAPI - 10 Seattle's has
+  // no such member. Declared() asks the ToolsAPI in hand.
+  //
+  // Where it is missing the answer is a plain False: the tool reports that it
+  // could not clean, which is TRUE, rather than pretending success or silently
+  // doing a normal build in its place. An agent told "cleaned" when nothing was
+  // cleaned would go on to trust stale output.
+  {$IF Declared(cmOTAClean)}
   try
     TThread.Synchronize(nil, procedure
     var
@@ -369,6 +377,7 @@ begin
   except
     LOk := False;
   end;
+  {$IFEND}
   Result := LOk;
 end;
 

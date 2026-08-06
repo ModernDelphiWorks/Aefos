@@ -491,13 +491,21 @@ begin
 end;
 
 procedure _ApplyMenuTheme(const AMenu: TPopupMenu);
+{$IF Declared(IOTAIDEThemingServices250)}
 var
   LThemeServices: IOTAIDEThemingServices250;
+{$IFEND}
 begin
+  // There is no theming service to ask on an older ToolsAPI - 10 Seattle's IDE
+  // had no themes - so the menu keeps its stock colours, like every other menu
+  // in that IDE. Declared() asks the ToolsAPI in hand instead of encoding which
+  // release introduced the service.
+  {$IF Declared(IOTAIDEThemingServices250)}
   if Assigned(BorlandIDEServices) and
      Supports(BorlandIDEServices, IOTAIDEThemingServices250, LThemeServices) and
      LThemeServices.IDEThemingEnabled then
     LThemeServices.ApplyTheme(AMenu);
+  {$IFEND}
 end;
 
 function AefosOTATerminalActiveTerminalInput: ITerminalInput;

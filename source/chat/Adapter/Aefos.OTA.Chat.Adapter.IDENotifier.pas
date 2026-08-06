@@ -55,7 +55,8 @@ implementation
 uses
   System.Classes,
   Winapi.Windows,
-  ToolsAPI;
+  ToolsAPI,
+  Aefos.Compat.MainThread;
 
 type
   // ADR-258/259: the real IDE notifier. TNotifierObject supplies the empty
@@ -89,7 +90,7 @@ begin
   // BR-2 / BR-3: run the re-resolve AFTER the IDE callback returns, on the main
   // thread (where menu/panel mutation is safe), and never let an exception
   // escape back into the IDE notification path.
-  TThread.ForceQueue(nil,
+  TAefosMainThread.ForceQueue(
     procedure
     begin
       try

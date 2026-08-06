@@ -118,7 +118,9 @@ class procedure TThemeHelper.ApplyPremiumTheme(AForm: TCustomForm);
 var
   LIsDark: Boolean;
   LBgColor, LTextColor, LSecondaryColor: TColor;
+  {$IF Declared(IOTAIDEThemingServices250)}
   LTheming: IOTAIDEThemingServices250;
+  {$IFEND}
   LStyle: TCustomStyleServices;
   LThemeName: string;
   LIndex: Integer;
@@ -134,6 +136,15 @@ begin
   LSecondaryColor := 0;
 
   // ── Step 1: try to get the native IDE StyleServices ─────────────────────
+  //
+  // IDE theming is not universal: IOTAIDEThemingServices250 does not exist in
+  // 10 Seattle's ToolsAPI, because that IDE had no themes to expose. Declared()
+  // asks the ToolsAPI in hand instead of encoding which release introduced it.
+  //
+  // Nothing is lost where it is absent - Step 2 below already derives dark/light
+  // from the form's own luminance, which is exactly the path taken today when
+  // the service exists but theming is switched off.
+  {$IF Declared(IOTAIDEThemingServices250)}
   if Assigned(BorlandIDEServices) and
      Supports(BorlandIDEServices, IOTAIDEThemingServices250, LTheming) then
   begin
@@ -146,6 +157,7 @@ begin
       LStyle := nil;
     end;
   end;
+  {$IFEND}
 
   // ── Step 2: derive luminance fallback when StyleServices unavailable ─────
   if (not Assigned(LStyle)) and (AForm.Color <> clNone) then

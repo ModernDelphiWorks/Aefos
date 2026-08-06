@@ -53,6 +53,19 @@ begin
   ACanvas.Brush.Style := bsSolid;
 end;
 
+(*
+  Everything from here down to ApplyAefosTerminalIDETheme depends on the IDE
+  theming service. 10 Seattle has no such service - that IDE had no themes at
+  all - so on it this block does not exist and the procedure below is a no-op:
+  the form keeps the stock VCL colours, which is what every other window in
+  that IDE looks like anyway.
+
+  Declared() asks the ToolsAPI in hand rather than encoding which release
+  introduced theming. DrawAefosTerminalFocusRing above is deliberately OUTSIDE
+  the guard: it paints with our own tokens and owes nothing to the IDE theme.
+*)
+{$IF Declared(IOTAIDEThemingServices250)}
+
 function _IsDark(const AColor: TColor): Boolean;
 var
   LRGB: TColor;
@@ -200,6 +213,17 @@ begin
   for LIndex := 0 to Pred(AForm.ComponentCount) do
     _PatchComponentForDark(AForm.Components[LIndex], LInputBg, LFormBg, LFgColor);
 end;
+
+{$ELSE}
+
+// No IDE theming service on this compiler (see the note above), so the form
+// keeps the stock VCL colours. An empty body rather than a guard at every call
+// site, so callers stay identical across versions.
+procedure ApplyAefosTerminalIDETheme(AForm: TCustomForm);
+begin
+end;
+
+{$IFEND}
 
 end.
 

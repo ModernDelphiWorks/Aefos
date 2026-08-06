@@ -50,6 +50,7 @@ implementation
 {$IFNDEF FPC}
 
 uses
+  System.Classes,
   System.Hash;
 
 class function TAefosSha256.HexDigest(const AText: string): string;
@@ -67,9 +68,31 @@ begin
 end;
 
 class function TAefosSha256.HexDigestFile(const APath: string): string;
+var
+  LHash: THashSHA2;
+  LStream: TFileStream;
+  LBuffer: TBytes;
+  LRead: Integer;
 begin
-  Result := LowerCase(THashSHA2.GetHashStringFromFile(APath,
-    THashSHA2.TSHA2Version.SHA256));
+  // Streamed rather than THashSHA2.GetHashStringFromFile, which 10 Seattle's
+  // System.Hash does not have (the unit arrived in XE8; that helper came later).
+  // Feeding the hash in blocks costs nothing and works on every version - and it
+  // is strictly better than reading the whole file into memory, which is what the
+  // obvious workaround (HexDigest of TFile.ReadAllBytes) would have done to a
+  // multi-megabyte addon zip.
+  LHash := THashSHA2.Create(THashSHA2.TSHA2Version.SHA256);
+  SetLength(LBuffer, 64 * 1024);
+  LStream := TFileStream.Create(APath, fmOpenRead or fmShareDenyWrite);
+  try
+    repeat
+      LRead := LStream.Read(LBuffer[0], Length(LBuffer));
+      if LRead > 0 then
+        LHash.Update(LBuffer[0], LRead);
+    until LRead <= 0;
+  finally
+    LStream.Free;
+  end;
+  Result := LowerCase(LHash.HashAsString);
 end;
 
 {$ELSE}

@@ -58,6 +58,7 @@ implementation
 uses
   System.SysUtils,
   System.JSON,
+  System.Types,
   System.IOUtils,
   System.Generics.Collections,
   System.Generics.Defaults,
@@ -318,7 +319,7 @@ procedure _ScanFile(const AFile: string; const AQuery: TAuditQuery;
   const AMatches: TList<TAuditMatch>; var AScanned, AMalformed: Integer);
 var
   LFileDate: string;
-  LLines: TArray<string>;
+  LLines: TStringDynArray;
   LFor: Integer;
 begin
   LFileDate := _FileDate(AFile);
@@ -486,7 +487,7 @@ var
   LMatches: TList<TAuditMatch>;
   LScanned, LMalformed, LFor: Integer;
   LDir: string;
-  LFiles: TArray<string>;
+  LFiles: TStringDynArray;
 begin
   LQuery := _ReadParams(AParams);            // raises -32602 on bad input
   LMatches := TList<TAuditMatch>.Create;

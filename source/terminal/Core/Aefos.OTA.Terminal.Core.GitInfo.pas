@@ -43,7 +43,7 @@ type
 implementation
 
 uses
-  System.SysUtils, System.IOUtils;
+  System.SysUtils, System.Types, System.IOUtils;   // Types: TStringDynArray
 
 const
   CHeadRefPrefix = 'ref:';
@@ -107,7 +107,7 @@ function _ResolveRef(const AGitDir, ARef: string): string;
 var
   LLoosePath: string;
   LPackedPath: string;
-  LLines: TArray<string>;
+  LLines: TStringDynArray;
   LLine: string;
   LTrimmed: string;
   LParts: TArray<string>;

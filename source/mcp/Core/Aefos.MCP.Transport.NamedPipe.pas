@@ -97,6 +97,23 @@ type
 
 implementation
 
+{$IF not Declared(GetTickCount64)}
+// 10 Seattle's Winapi.Windows does not declare this Vista-era API yet.
+// Declared() rather than a CompilerVersion number: it asks the compiler in
+// hand whether the symbol exists, instead of encoding a guess about which
+// release added it.
+function GetTickCount64: UInt64; stdcall; external 'kernel32.dll' name 'GetTickCount64';
+{$IFEND}
+
+{$IF not Declared(CancelIoEx)}
+// Same story as GetTickCount64: a Vista-era API 10 Seattle's Winapi.Windows
+// does not declare. This one cannot degrade - it is what unblocks a pending
+// overlapped read on a handle from another thread, so the shutdown path needs
+// it to exist at all.
+function CancelIoEx(hFile: THandle; lpOverlapped: POverlapped): BOOL; stdcall;
+  external 'kernel32.dll' name 'CancelIoEx';
+{$IFEND}
+
 // Thread-local routing slot — set by _RunAcceptLoop before every _DispatchFrame
 // so Send (called synchronously on the same worker thread by the dispatcher)
 // knows which client handle and send-synchronisation objects to use.

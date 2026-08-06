@@ -63,3 +63,22 @@ function Get-AefosRsVarsPath {
   param([Parameter(Mandatory = $true)][string] $Bds)
   Join-Path ${env:ProgramFiles(x86)} "Embarcadero\Studio\$Bds\bin\rsvars.bat"
 }
+
+function Get-AefosFrameworkVersion {
+  <#
+    .SYNOPSIS
+      The .NET framework version a given rsvars.bat puts on PATH, as a number.
+
+    .DESCRIPTION
+      This decides which MSBuild a command-line build gets, and the versions
+      disagree: 10 Seattle's rsvars sets v3.5, where the AfterTargets attribute
+      our .dproj staging target uses does not exist yet. Returns 0 when the file
+      cannot be read or declares nothing - callers should treat that as "old".
+  #>
+  param([Parameter(Mandatory = $true)][string] $RsVarsPath)
+  if (-not (Test-Path $RsVarsPath)) { return 0.0 }
+  $line = Select-String -Path $RsVarsPath -Pattern 'FrameworkVersion\s*=\s*v([\d.]+)' |
+          Select-Object -First 1
+  if (-not $line) { return 0.0 }
+  return [double] ($line.Matches[0].Groups[1].Value -replace '^(\d+\.\d+).*$', '$1')
+}

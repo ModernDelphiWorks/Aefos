@@ -40,6 +40,14 @@ uses
   System.StrUtils,
   System.Classes;
 
+{$IF not Declared(GetTickCount64)}
+// 10 Seattle's Winapi.Windows does not declare this Vista-era API yet.
+// Declared() rather than a CompilerVersion number: it asks the compiler in
+// hand whether the symbol exists, instead of encoding a guess about which
+// release added it.
+function GetTickCount64: UInt64; stdcall; external 'kernel32.dll' name 'GetTickCount64';
+{$IFEND}
+
 const
   CAPABILITY_ARG = '--help';
   MCP_CONFIG_FLAG = '--mcp-config';

@@ -138,7 +138,32 @@ foreach ($v in $targets) {
     }
     Ensure-LibVTerm $rsvars $plat
     Write-Host "=== Building Aefos group for Delphi $v ($Config/$plat) ===" -ForegroundColor Cyan
-    $cmd = "`"$rsvars`" && msbuild `"$grp`" /t:Build /p:Config=$Config /p:Platform=$plat " +
+    # Prepend MSBuild 4.0 when rsvars picked an older one.
+    #
+    # Seattle's rsvars.bat sets FrameworkDir to .NET v3.5, i.e. MSBuild 3.5 - and
+    # AfterTargets does not exist before MSBuild 4.0. Our .dproj files each carry
+    # an AfterTargets="Build" target (AefosStageBplForInstaller), so every package
+    # dies with MSB4066 "the attribute AfterTargets is unrecognized" before a line
+    # of Pascal is read. It reads like a broken project file; it is a build engine
+    # five years older than the attribute.
+    #
+    # Fixing it here rather than in the eight .dproj files is deliberate: those
+    # files are also opened by the IDE, and rewriting the target into a 3.5-era
+    # idiom would degrade every modern build to work around one old one. Proven on
+    # Seattle: same projects, same compiler (30.0), MSBuild 4.0 - builds and the
+    # staging target runs.
+    $msbuildPrefix = ''
+    $ms4 = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319'
+    if ((Get-AefosFrameworkVersion $rsvars) -lt 4.0) {
+      if (-not (Test-Path (Join-Path $ms4 'MSBuild.exe'))) {
+        throw ("Delphi $v's rsvars selects MSBuild <4.0, which cannot parse the AfterTargets " +
+               "staging target, and MSBuild 4.0 is not installed at $ms4.")
+      }
+      Write-Host "  rsvars selects MSBuild <4.0 -- using $ms4 (AfterTargets needs 4.0)." -ForegroundColor DarkGray
+      $msbuildPrefix = "set PATH=$ms4;%PATH% && "
+    }
+    $cmd = "`"$rsvars`" && $msbuildPrefix" +
+           "msbuild `"$grp`" /t:Build /p:Config=$Config /p:Platform=$plat " +
            "/p:DCC_ForceExecute=true /v:minimal /nologo"
     cmd /c $cmd
     if ($LASTEXITCODE -ne 0) { throw "Build FAILED for Delphi $v/$plat (exit $LASTEXITCODE)." }

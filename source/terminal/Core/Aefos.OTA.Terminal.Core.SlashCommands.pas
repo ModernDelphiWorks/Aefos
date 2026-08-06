@@ -73,6 +73,7 @@ uses
   Generics.Defaults;
   {$ELSE}
   System.Classes,
+  System.Types,
   System.IOUtils,
   System.Generics.Collections,
   System.Generics.Defaults;
@@ -217,7 +218,7 @@ end;
 procedure _CollectFrom(const ACommandsDir: string; const AScope: TSlashCommandScope;
   const ACollected: TList<TSlashCommand>; const ASeen: TDictionary<string, Byte>);
 var
-  LDirs: TArray<string>;
+  LDirs: TStringDynArray;
   LIndex: Integer;
   LFile, LName, LDesc, LBody, LKey: string;
   LCmd: TSlashCommand;

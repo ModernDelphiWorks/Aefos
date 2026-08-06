@@ -174,7 +174,11 @@ begin
   LList := TList<string>.Create;
   try
     for LIndex := 0 to LArray.Count - 1 do
-      LList.Add(LArray[LIndex].Value);
+      // .Items[] rather than a bare index: TJSONArray has always had Items, but
+      // only made it the DEFAULT property in a release after 10 Seattle, where
+      // the bare form reads as "class does not have a default property".
+      // Spelling it out works on every version and needs no guard.
+      LList.Add(LArray.Items[LIndex].Value);
     Result := LList.ToArray;
   finally
     LList.Free;
@@ -189,9 +193,9 @@ var
 begin
   for LIndex := 0 to AArray.Count - 1 do
   begin
-    if not (AArray[LIndex] is TJSONObject) then
+    if not (AArray.Items[LIndex] is TJSONObject) then
       Continue;
-    LObj := TJSONObject(AArray[LIndex]);
+    LObj := TJSONObject(AArray.Items[LIndex]);
     FSnippets.Add(TSnippet.Create(
       LObj.GetValue<string>('title', ''),
       LObj.GetValue<string>('command', ''),

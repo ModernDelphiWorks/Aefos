@@ -400,7 +400,9 @@ implementation
 
 procedure TAefosTerminalToolbarPanel.Paint;
 var
+  {$IF Declared(IOTAIDEThemingServices)}
   LTheming: IOTAIDEThemingServices;
+  {$IFEND}
   LStyle: TCustomStyleServices;
   LBg, LPill: TColor;
   LIndex: Integer;
@@ -409,10 +411,14 @@ var
   LRect: TRect;
 begin
   LStyle := nil;
+  // No theming service on an IDE without themes (10 Seattle): LStyle stays nil
+  // and ChromeBackground falls back to its own surface colour.
+  {$IF Declared(IOTAIDEThemingServices)}
   if Assigned(BorlandIDEServices) and
      Supports(BorlandIDEServices, IOTAIDEThemingServices, LTheming) and
      LTheming.IDEThemingEnabled then
     LStyle := LTheming.GetIDEStyleServices;
+  {$IFEND}
 
   // Base chrome surface comes from StyleServices (BR5) so the toolbar tracks
   // the locked "Delphi IDE" theme; accents come from VisualTokens.
@@ -1073,7 +1079,9 @@ var
   LBitmap: TBitmap;
   LPenColor: TColor;
   LUseIDETheme: Boolean;
+  {$IF Declared(IOTAIDEThemingServices)}
   LTheming: IOTAIDEThemingServices;
+  {$IFEND}
   LStyle: TCustomStyleServices;
 begin
   LBitmap := TBitmap.Create;
@@ -1100,6 +1108,8 @@ begin
       LUseIDETheme := SameText(FThemeManager.Themes[FThemeManager.ActiveThemeIndex].Name, 'Delphi IDE');
 
     LStyle := nil;
+    // Nothing to query on an IDE with no themes (10 Seattle) - the fallback below applies.
+    {$IF Declared(IOTAIDEThemingServices)}
     if LUseIDETheme and
        Assigned(BorlandIDEServices) and
        Supports(BorlandIDEServices, IOTAIDEThemingServices, LTheming) and
@@ -1107,6 +1117,7 @@ begin
     begin
       LStyle := LTheming.GetIDEStyleServices;
     end;
+    {$IFEND}
 
     if Assigned(LStyle) then
       LPenColor := LStyle.GetSystemColor(clWindowText)
@@ -1272,24 +1283,35 @@ end;
 
 function TAefosTerminalDockForm._IsIDEDarkTheme: Boolean;
 var
+  {$IF Declared(IOTAIDEThemingServices)}
   LThemeServices: IOTAIDEThemingServices;
+  {$IFEND}
   LThemeName: string;
   LColor: Longint;
   R, G, B: Byte;
   LInt: Double;
+  LAsked: Boolean;
 begin
   Result := True; // Default to dark theme
+  // The IDE theme is only ASKED where a theming service exists - 10 Seattle's
+  // IDE had none. The luminance fallback below is not an error path: it is what
+  // already runs outside the IDE and under the unit tests, so an IDE without
+  // themes simply lands there.
+  LAsked := False;
+  {$IF Declared(IOTAIDEThemingServices)}
   if Supports(BorlandIDEServices, IOTAIDEThemingServices, LThemeServices) and
      LThemeServices.IDEThemingEnabled then
   begin
+    LAsked := True;
     LThemeName := LowerCase(LThemeServices.ActiveTheme);
     if (Pos('light', LThemeName) > 0) or
        (Pos('mountain', LThemeName) > 0) or
        (LThemeName = 'windows') or
        (LThemeName = 'campbell') then
       Result := False;
-  end
-  else
+  end;
+  {$IFEND}
+  if not LAsked then
   begin
     // Fallback if not running inside the IDE (like in our unit tests)
     LColor := ColorToRGB(Self.Color);
@@ -2469,7 +2491,9 @@ procedure TAefosTerminalDockForm._ApplyActiveTheme;
 var
   LView: TAefosTerminalTerminalView;
   LUseIDETheme: Boolean;
+  {$IF Declared(IOTAIDEThemingServices)}
   LTheming: IOTAIDEThemingServices;
+  {$IFEND}
   LStyle: TCustomStyleServices;
 begin
   // First apply the custom VCL themes recursively to self and child controls
@@ -2490,6 +2514,8 @@ begin
       LUseIDETheme := SameText(FThemeManager.Themes[FThemeManager.ActiveThemeIndex].Name, 'Delphi IDE');
 
     LStyle := nil;
+    // Nothing to query on an IDE with no themes (10 Seattle) - the fallback below applies.
+    {$IF Declared(IOTAIDEThemingServices)}
     if LUseIDETheme and
        Assigned(BorlandIDEServices) and
        Supports(BorlandIDEServices, IOTAIDEThemingServices, LTheming) and
@@ -2497,6 +2523,7 @@ begin
     begin
       LStyle := LTheming.GetIDEStyleServices;
     end;
+    {$IFEND}
 
     if Assigned(LStyle) then
     begin
@@ -2591,7 +2618,9 @@ var
   LSelectedBgRGB: DWORD;
   LSelectedBgLuminance: Double;
   LUseIDETheme: Boolean;
+  {$IF Declared(IOTAIDEThemingServices)}
   LTheming: IOTAIDEThemingServices;
+  {$IFEND}
   LStyle: TCustomStyleServices;
   LDotMid, LSplitLeft, LSplitTop, LTrashLeft, LTrashTop: Integer;
 begin
@@ -2610,6 +2639,8 @@ begin
   // Resolve theme colors
   LUseIDETheme := SameText(LActiveTheme.Name, 'Delphi IDE');
   LStyle := nil;
+  // Nothing to query on an IDE with no themes (10 Seattle) - the fallback below applies.
+  {$IF Declared(IOTAIDEThemingServices)}
   if LUseIDETheme and
      Assigned(BorlandIDEServices) and
      Supports(BorlandIDEServices, IOTAIDEThemingServices, LTheming) and
@@ -2617,6 +2648,7 @@ begin
   begin
     LStyle := LTheming.GetIDEStyleServices;
   end;
+  {$IFEND}
 
   if Assigned(LStyle) then
   begin

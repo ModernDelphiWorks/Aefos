@@ -173,6 +173,7 @@ var
   LSettings: TOllamaDispatchSettings;
   LModel: string;
   LBody: string;
+  LMessages: TArray<TOllamaMessage>;
   LStart: Cardinal;
   LKeepAlive: IDispatcherRunHandle;
 begin
@@ -202,8 +203,15 @@ begin
     Exit;
   end;
 
-  LBody := OllamaBuildChatRequest(LModel,
-    [TOllamaMessage.New('user', ARequest.Prompt)], True);
+  // Built into a typed local first, rather than passed as an inline [ ... ]
+  // literal. OllamaBuildChatRequest is overloaded, and 10 Seattle's compiler
+  // will not pick an overload from an open-array literal plus defaulted
+  // parameters - it reports "no overloaded version can be called with these
+  // arguments". Naming the type removes the ambiguity, and reads the same on
+  // every version.
+  LMessages := TArray<TOllamaMessage>.Create(
+    TOllamaMessage.New('user', ARequest.Prompt));
+  LBody := OllamaBuildChatRequest(LModel, LMessages, True);
   LStart := TThread.GetTickCount;
   LState.Transport := FTransportFactory();
   LState.Transport.ChatStream(LSettings.BaseUrl, LBody,

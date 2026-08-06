@@ -27,6 +27,18 @@ unit Aefos.Compat.JsonFormat;
   point in the source, so another helper on TJSONAncestor in scope with this one
   would silently win. Nothing else in the tree helps that type today.
 
+  WHERE THE BOUNDARY SITS: 33, and it is measured, not reasoned. The gate was
+  moved down until a build broke, on every version available:
+
+    30  10 Seattle   absent      33  10.3 Rio     PRESENT
+    31  10.1 Berlin  absent      34  10.4 Sydney  PRESENT
+    32  10.2 Tokyo   absent      35  Delphi 11    PRESENT
+
+  Two earlier versions of this line were guesses. It first said "< 31", assuming
+  Berlin had Format; Berlin did not. It then sat at "< 35" - the lowest PROVEN
+  version, correct but coarse, handing Rio and Sydney this helper for nothing.
+  Now the number is known.
+
   (This header is a parenthesis-star comment on purpose: it needs to mention
   compiler directives, and a brace comment ends at the first closing brace -
   which a directive carries. That mistake cost a build round trip.)
@@ -35,7 +47,7 @@ unit Aefos.Compat.JsonFormat;
 interface
 
 {$IFNDEF FPC}
-{$IF CompilerVersion < 35}   // below Delphi 11: see the boundary note above
+{$IF CompilerVersion < 33}   // below 10.3 Rio: see the boundary note above
 
 uses
   System.JSON;
@@ -54,7 +66,7 @@ type
 implementation
 
 {$IFNDEF FPC}
-{$IF CompilerVersion < 35}
+{$IF CompilerVersion < 33}
 
 uses
   System.SysUtils;

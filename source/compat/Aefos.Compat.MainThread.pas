@@ -18,14 +18,18 @@ unit Aefos.Compat.MainThread;
   guaranteed to have unwound by then, because a posted message is not dispatched
   until the thread next pumps.
 
-  WHERE THE BOUNDARY SITS, AND WHY IT LEANS THIS WAY: measured absent in 10
-  Seattle and in 10.1 Berlin, measured present in Delphi 11. Nobody here has
-  10.2/10.3/10.4 to test, so the gate sits at the lowest PROVEN version instead of
-  at a guess - meaning those three take the fallback even if their RTL would have
-  served. That is the harmless direction: the fallback compiles and behaves
-  correctly everywhere, while a gate guessed too low breaks the build outright.
-  An earlier guess here said "anything above Seattle"; Berlin disproved it the day
-  it was installed.
+  WHERE THE BOUNDARY SITS: 33, and it is measured rather than reasoned. Every
+  version was built with the gate moved until it broke:
+
+    30  10 Seattle   absent      33  10.3 Rio     PRESENT
+    31  10.1 Berlin  absent      34  10.4 Sydney  PRESENT
+    32  10.2 Tokyo   absent      35  Delphi 11    PRESENT
+
+  It got here the slow way. The first guess said "anything above Seattle" and
+  Berlin disproved it the day it was installed; the gate then sat at 35 - the
+  lowest PROVEN version - which was correct but coarse, costing Rio and Sydney
+  the RTL implementation for no reason. With those IDEs installed the boundary
+  could finally be found instead of bounded.
 
   A version number is a blunt instrument for this in the first place. The IDEs
   being tested are BASE installs with no update packs, and an RTL addition that
@@ -59,7 +63,7 @@ type
 implementation
 
 uses
-  {$IF CompilerVersion >= 35}  // Delphi 11+: the RTL has ForceQueue (see note above)
+  {$IF CompilerVersion >= 33}  // 10.3 Rio+: the RTL has ForceQueue (see the table above)
   System.Classes,
   {$ELSE}
   Winapi.Windows,
@@ -75,7 +79,7 @@ uses
   {$IFEND}
   System.SyncObjs;
 
-{$IF CompilerVersion >= 35}
+{$IF CompilerVersion >= 33}
 
 class procedure TAefosMainThread.ForceQueue(const AProc: TAefosMainThreadProc);
 begin
@@ -162,13 +166,13 @@ end;
 {$IFEND}
 
 initialization
-{$IF CompilerVersion < 35}
+{$IF CompilerVersion < 33}
   GLock := TCriticalSection.Create;
   GPending := TList<TAefosMainThreadProc>.Create;
 {$IFEND}
 
 finalization
-{$IF CompilerVersion < 35}
+{$IF CompilerVersion < 33}
   // Order matters. Take the window down FIRST so nothing can be dispatched into
   // this package once the closures are gone, then release the queue. A closure
   // still pending at unload is DROPPED, not run: its captured state belongs to a

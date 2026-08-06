@@ -101,7 +101,8 @@ uses
   Aefos.Provider.Types,
   Aefos.Provider.Kinds,
   Aefos.OTA.Chat.Core.Dispatcher.Types,
-  Aefos.OTA.Chat.Core.Dispatcher.Decode;
+  Aefos.OTA.Chat.Core.Dispatcher.Decode,
+  Aefos.Compat.JsonFormat;
 
 const
   CONFIG_DIR_REL = '.aefos';

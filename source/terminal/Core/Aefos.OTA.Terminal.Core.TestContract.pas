@@ -94,7 +94,8 @@ type
 implementation
 
 uses
-  System.JSON;
+  System.JSON,
+  Aefos.Compat.JsonFormat;
 
 { TTestSummary }
 

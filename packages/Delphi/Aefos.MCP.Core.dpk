@@ -54,6 +54,7 @@ requires
 
 contains
   Aefos.Compat.Json in '..\..\source\compat\Aefos.Compat.Json.pas',
+  Aefos.Compat.JsonFormat in '..\..\source\compat\Aefos.Compat.JsonFormat.pas',
   Aefos.Compat.Sha256 in '..\..\source\compat\Aefos.Compat.Sha256.pas',
   Aefos.Compat.IO in '..\..\source\compat\Aefos.Compat.IO.pas',
   Aefos.MCP.Server in '..\..\source\mcp\Core\Aefos.MCP.Server.pas',

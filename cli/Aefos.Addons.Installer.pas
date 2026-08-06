@@ -93,7 +93,8 @@ uses
   Aefos.Addons.Manifest,
   Aefos.Addons.Ledger,
   Aefos.Addons.McpRewrite,
-  Aefos.Addons.Net;
+  Aefos.Addons.Net,
+  Aefos.Compat.JsonFormat;
 
 // Classic-RTL string helpers (FPC 3.2.2 has no TStringHelper): kept
 // unit-private, byte-identical to the Delphi string methods they replace.

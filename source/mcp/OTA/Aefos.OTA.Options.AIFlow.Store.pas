@@ -151,7 +151,8 @@ type
 implementation
 
 uses
-  Winapi.Windows;
+  Winapi.Windows,
+  Aefos.Compat.JsonFormat;
 
 const
   CONFIG_DIR_REL = '.aefos';

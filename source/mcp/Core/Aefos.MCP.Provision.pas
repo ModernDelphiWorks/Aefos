@@ -101,7 +101,8 @@ uses
   System.Classes,
   System.IOUtils,
   System.JSON,
-  Aefos.MCP.ServerMerge;
+  Aefos.MCP.ServerMerge,
+  Aefos.Compat.JsonFormat;
 
 {$R 'Aefos.MCP.Provision.res'}
 

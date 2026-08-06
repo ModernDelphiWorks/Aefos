@@ -7,10 +7,18 @@
   (the design-time BPLs load into the 32-bit IDE) and stage the built BPLs into
   installer\bpl\<ver>\ so installer\build-installer.ps1 can package them.
 
-  Supported design-time versions (the only ones that ship a plugin):
-    22.0 = Delphi 11 Alexandria (compiler 35.0)
-    23.0 = Delphi 12 Athens     (compiler 36.0)
-    37.0 = Delphi 13            (compiler 37.0)
+  Supported design-time versions (the only ones that ship a plugin) live in ONE
+  place -- scripts\aefos-ide-versions.ps1 -- which this script dot-sources. Adding
+  a Delphi is a row there, not an edit here. Today: 10 Seattle (17.0) through 13
+  (37.0).
+
+  Reaching back to Seattle is deliberate and cheap: nothing in the RTL Aefos uses
+  is newer than 2015 (System.Net.HttpClient and System.Hash arrived in XE8, which
+  Seattle ships), the WebView2 layer is our own COM import rather than Vcl.Edge
+  (which only exists from 10.4), and the source is free of inline var by house
+  rule. The one unit that is newer -- ToolsAPI.Editor, Delphi 12 -- is gated by
+  {$IF CompilerVersion >= 36} around the WHOLE unit, because gating just the call
+  is not enough when the .dpk still lists it in `contains`.
 
   Cross-machine note: a version builds only where its RAD Studio is installed AND
   registered (command-line dcc needs the per-user product registry). Build each
@@ -29,7 +37,10 @@
 #>
 [CmdletBinding()]
 param(
-  [ValidateSet('22.0', '23.0', '37.0', 'all')]
+  # Keep in step with scripts\aefos-ide-versions.ps1 -- ValidateSet needs literals
+  # (it is evaluated at parse time), so this is the one list that cannot be
+  # computed. The check right after the dot-source fails loudly if the two drift.
+  [ValidateSet('17.0', '18.0', '19.0', '20.0', '21.0', '22.0', '23.0', '37.0', 'all')]
   [string]$Version = 'all',
   [ValidateSet('Release', 'Debug')]
   [string]$Config = 'Release',
@@ -42,11 +53,23 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $root  = Split-Path -Parent $PSScriptRoot
-$grp   = Join-Path $root 'Packages\Delphi\AefosGroup.groupproj'
+# Lower-case 'packages': the tree was renamed and git tracks it that way. Windows
+# would not care; a case-sensitive checkout would fail to find the group project.
+$grp   = Join-Path $root 'packages\Delphi\AefosGroup.groupproj'
 $stage = Join-Path $root 'installer\bpl'
 if (-not (Test-Path $grp)) { throw "Group project not found: $grp" }
 
-$Supported = @('22.0', '23.0', '37.0')   # 22.0 = D11, 23.0 = D12, 37.0 = D13
+. (Join-Path $PSScriptRoot 'aefos-ide-versions.ps1')
+$Supported = $script:AefosIdeSupported
+
+# The ValidateSet above is literal by necessity. Prove it still matches the one
+# list, so a version added there can never be silently rejected here.
+$declared = @('17.0', '18.0', '19.0', '20.0', '21.0', '22.0', '23.0', '37.0')
+$drift = @(Compare-Object -ReferenceObject $declared -DifferenceObject $Supported)
+if ($drift.Count -gt 0) {
+  throw ("-Version's ValidateSet and aefos-ide-versions.ps1 disagree: {0}. Update the ValidateSet literal." -f
+         (($drift | ForEach-Object { "$($_.InputObject) ($($_.SideIndicator))" }) -join ', '))
+}
 $Bpls = @(
   'Aefos.Harness.bpl', 'Aefos.Providers.bpl',
   'Aefos.WebView.bpl', 'Aefos.Tools.bpl', 'Aefos.MCP.Core.bpl',
@@ -62,10 +85,9 @@ function Get-PublicBplDir([string]$Ver, [string]$Plat) {
 # Resolve the version list. 'all' = every supported version installed on THIS
 # machine (rsvars present); explicit version is taken as-is.
 if ($Version -eq 'all') {
-  $targets = $Supported | Where-Object {
-    Test-Path "C:\Program Files (x86)\Embarcadero\Studio\$_\bin\rsvars.bat"
-  }
+  $targets = Get-AefosInstalledIdeVersions
   if (-not $targets) { throw "No supported RAD Studio version is installed on this machine." }
+  Write-Host ("Installed: " + (($targets | ForEach-Object { "$_ ($(Get-AefosIdeProductName $_))" }) -join ', ')) -ForegroundColor DarkGray
 } else {
   $targets = @($Version)
 }
@@ -103,7 +125,7 @@ $plats = if ($Platform -eq 'all') { @('Win32', 'Win64') } else { @($Platform) }
 
 $built = @()
 foreach ($v in $targets) {
-  $rsvars = "C:\Program Files (x86)\Embarcadero\Studio\$v\bin\rsvars.bat"
+  $rsvars = Get-AefosRsVarsPath $v
   if (-not (Test-Path $rsvars)) {
     Write-Warning "Delphi $v not installed (no rsvars at $rsvars) -- skipping."
     continue

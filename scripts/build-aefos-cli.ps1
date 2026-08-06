@@ -6,7 +6,7 @@
   A plain Win32 console EXE (RTL + the Aefos.Compat.* shims in source\compat for
   HTTP/SHA-256/ZIP/JSON/IO - no ToolsAPI, no VCL). ONE binary serves every IDE
   version; compiled once with whichever RAD Studio command line is installed
-  (D13/37.0 preferred, then D12/23.0, then D11/22.0). No IDE needs to be open. The same sources
+  (newest installed first, back to 10 Seattle/17.0). No IDE needs to be open. The same sources
   build under FPC 3.2.2 (see scripts\build-fpc.ps1 -Clis).
 
 .EXAMPLE
@@ -14,7 +14,7 @@
 #>
 [CmdletBinding()]
 param(
-  [string] $Version  # optional: '37.0' or '23.0'; auto-detected when omitted
+  [string] $Version  # optional: any supported BDS, e.g. '37.0' or '17.0'; auto-detected when omitted
 )
 
 $ErrorActionPreference = 'Stop'
@@ -25,10 +25,13 @@ $dcu  = Join-Path $repo 'cli\.build-aefos'
 
 if (-not (Test-Path $dpr)) { throw "CLI program not found: $dpr" }
 
-$candidates = if ($Version) { @($Version) } else { @('37.0', '23.0', '22.0') }
+# One binary serves every IDE version, so ANY installed RAD Studio can build it -
+# newest first. The list is scripts\aefos-ide-versions.ps1; never a copy.
+. (Join-Path $PSScriptRoot 'aefos-ide-versions.ps1')
+$candidates = if ($Version) { @($Version) } else { $script:AefosIdeVersionsNewestFirst }
 $rsvars = $null
 foreach ($v in $candidates) {
-  $p = "C:\Program Files (x86)\Embarcadero\Studio\$v\bin\rsvars.bat"
+  $p = Get-AefosRsVarsPath $v
   if (Test-Path $p) { $rsvars = $p; break }
 }
 if (-not $rsvars) { throw "No installed RAD Studio (looked for: $($candidates -join ', '))." }

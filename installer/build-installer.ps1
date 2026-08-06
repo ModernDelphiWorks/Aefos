@@ -10,7 +10,9 @@
   drops the WebView2 loader beside each version's BPLs, and runs ISCC.
 
   Supported design-time versions:
-    22.0 = Delphi 11 Alexandria   23.0 = Delphi 12 Athens   37.0 = Delphi 13
+    17.0 = 10 Seattle  18.0 = 10.1 Berlin  19.0 = 10.2 Tokyo  20.0 = 10.3 Rio
+    21.0 = 10.4 Sydney  22.0 = Delphi 11    23.0 = Delphi 12    37.0 = Delphi 13
+    (the one list: scripts\aefos-ide-versions.ps1)
 
   Usage:
     pwsh -File build-installer.ps1
@@ -30,7 +32,8 @@ $here  = Split-Path -Parent $MyInvocation.MyCommand.Path
 $stage = Join-Path $here 'bpl'
 $iss   = Join-Path $here 'Aefos.iss'
 
-$Supported = @('22.0', '23.0', '37.0')
+. (Join-Path (Split-Path -Parent $here) 'scripts\aefos-ide-versions.ps1')
+$Supported = $script:AefosIdeSupported
 $Bpls = @(
   'Aefos.Harness.bpl', 'Aefos.Providers.bpl',
   'Aefos.WebView.bpl', 'Aefos.Tools.bpl', 'Aefos.MCP.Core.bpl',
@@ -42,8 +45,8 @@ $Bpls = @(
 # it beside our BPLs and point the RTL at it by full path (SetWebView2Path). Source
 # it from any installed RAD Studio bin (Delphi 12's bin lacks it; Delphi 13 has it).
 function Get-WebView2Loader {
-  foreach ($v in @('37.0', '23.0', '22.0')) {
-    $p = "C:\Program Files (x86)\Embarcadero\Studio\$v\bin\WebView2Loader.dll"
+  foreach ($v in $script:AefosIdeVersionsNewestFirst) {
+    $p = Join-Path ${env:ProgramFiles(x86)} "Embarcadero\Studio\$v\bin\WebView2Loader.dll"
     if (Test-Path $p) { return $p }
   }
   if ($env:BDS) {
@@ -63,7 +66,29 @@ $staged = $Supported | Where-Object {
 }
 if (-not $staged) {
   throw "No version is staged under $stage. Run scripts\build-packages.ps1 (and, for " +
-        "Delphi 11, copy the VM's installer\bpl\22.0 folder here)."
+        "an IDE that lives in a VM, copy that machine's installer\bpl\<ver> folder here)."
+}
+
+# The build scripts accept every version in aefos-ide-versions.ps1, but Aefos.iss
+# carries a hand-written payload block per version (#define Ver...). So a version
+# can be built and staged while the .iss knows nothing about it - and the
+# installer would compile happily, just without those BPLs. Refuse to be quiet
+# about it: that is the same shape of silence that lost the Desktop MCP.
+$issText  = Get-Content -LiteralPath $iss -Raw
+$issKnows = @([regex]::Matches($issText, '(?m)^#define\s+Ver\w+\s+"([\d.]+)"') |
+              ForEach-Object { $_.Groups[1].Value })
+$orphans  = @($staged | Where-Object { $issKnows -notcontains $_ })
+if ($orphans.Count -gt 0) {
+  Write-Host ""
+  Write-Host "STAGED BUT NOT PACKAGED: $($orphans -join ', ')" -ForegroundColor Yellow
+  foreach ($o in $orphans) {
+    Write-Host "  $o ($(Get-AefosIdeProductName $o)) has BPLs in installer\bpl\$o, but Aefos.iss" -ForegroundColor Yellow
+    Write-Host "  has no payload block for it - those BPLs will NOT ship." -ForegroundColor Yellow
+  }
+  Write-Host "  Add a #define Ver.. plus its [Files]/[Components] block to Aefos.iss." -ForegroundColor Yellow
+  Write-Host ""
+  $staged = @($staged | Where-Object { $issKnows -contains $_ })
+  if (-not $staged) { throw "Nothing left to package: every staged version is unknown to Aefos.iss." }
 }
 
 $wv2 = Get-WebView2Loader

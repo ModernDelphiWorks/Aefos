@@ -381,7 +381,9 @@ end;
 
 procedure TFindBar.ApplyTheme;
 var
+  {$IF Declared(IOTAIDEThemingServices)}
   LTheming: IOTAIDEThemingServices;
+  {$IFEND}
   LStyle: TCustomStyleServices;
   LSurface, LText, LField: TColor;
 begin
@@ -391,10 +393,13 @@ begin
   // Surface tracks the IDE chrome (BR2/BR5); the accent stays reserved for the
   // active-pane outline and focus cues, so the overlay does not compete with it.
   LStyle := nil;
+  // No theming service on an IDE without themes (10 Seattle): LStyle stays nil and the designed colours are used.
+  {$IF Declared(IOTAIDEThemingServices)}
   if Assigned(BorlandIDEServices) and
      Supports(BorlandIDEServices, IOTAIDEThemingServices, LTheming) and
      LTheming.IDEThemingEnabled then
     LStyle := LTheming.GetIDEStyleServices;
+  {$IFEND}
 
   LSurface := TVisualSurfaces.ChromeBackground(LStyle);
   if Assigned(LStyle) then

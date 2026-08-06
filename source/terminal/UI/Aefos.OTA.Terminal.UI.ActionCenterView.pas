@@ -715,7 +715,9 @@ end;
 
 procedure TActionCenterView.SetParent(AParent: TWinControl);
 var
+  {$IF Declared(IOTAIDEThemingServices)}
   LThemeServices: IOTAIDEThemingServices;
+  {$IFEND}
   LParentForm: TCustomForm;
 begin
   inherited SetParent(AParent);
@@ -727,6 +729,9 @@ begin
     if SameText(AParent.ClassName, 'TFloatDockForm') or
        SameText(AParent.ClassName, 'TFloatWindow') then
     begin
+      // Nothing to mirror on an IDE with no themes (10 Seattle): the float host
+      // keeps its own colours.
+      {$IF Declared(IOTAIDEThemingServices)}
       if Supports(BorlandIDEServices, IOTAIDEThemingServices, LThemeServices) and
          LThemeServices.IDEThemingEnabled then
       begin
@@ -734,6 +739,7 @@ begin
         if Assigned(LParentForm) then
           LThemeServices.ApplyTheme(LParentForm);
       end;
+      {$IFEND}
     end;
   end;
 end;
@@ -759,11 +765,19 @@ begin
 end;
 
 function TActionCenterView._IsIDEDarkTheme: Boolean;
+// The var section itself is inside the guard: these are the ONLY locals, and a
+// `var` with nothing under it is a syntax error, not an empty block.
+{$IF Declared(IOTAIDEThemingServices)}
 var
   LThemeServices: IOTAIDEThemingServices;
   LThemeName: string;
+{$IFEND}
 begin
   Result := True; // Default to dark theme
+  // An IDE with no theming service (10 Seattle) has no theme name to inspect,
+  // so the default above stands - the same answer this gives today when theming
+  // is switched off.
+  {$IF Declared(IOTAIDEThemingServices)}
   if Supports(BorlandIDEServices, IOTAIDEThemingServices, LThemeServices) and
      LThemeServices.IDEThemingEnabled then
   begin
@@ -774,6 +788,7 @@ begin
        (LThemeName = 'campbell') then
       Result := False;
   end;
+  {$IFEND}
 end;
 
 procedure TActionCenterView._CreateButtonGlyph(AButton: TSpeedButton; const AIconType: string);

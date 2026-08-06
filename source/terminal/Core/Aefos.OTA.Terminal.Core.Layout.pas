@@ -201,7 +201,14 @@ begin
     Result.AddPair('type', 'view');
     Result.AddPair('profile', FProfile);
     Result.AddPair('dir', FDir);
-    Result.AddPair('isFocused', FIsFocused);
+    // TJSONTrue/TJSONFalse, not AddPair(name, Boolean): that overload - and
+    // TJSONBool - arrived after 10 Seattle, whose System.JSON takes only a
+    // string or a TJSONValue here. These two classes exist in every version and
+    // emit the same JSON, so this needs no version guard.
+    if FIsFocused then
+      Result.AddPair('isFocused', TJSONTrue.Create)
+    else
+      Result.AddPair('isFocused', TJSONFalse.Create);
   end
   else
   begin

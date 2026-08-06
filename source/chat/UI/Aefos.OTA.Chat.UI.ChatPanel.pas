@@ -1501,13 +1501,19 @@ begin
 end;
 
 procedure TAefosChatPanel._ApplyThemeTo(const AComponent: TComponent);
+{$IF Declared(IOTAIDEThemingServices)}
 var
   LThemeServices: IOTAIDEThemingServices;
+{$IFEND}
 begin
   // Older IOTAIDEThemingServices (NOT the 250 variant). The 250 variant
   // triggers RecreateWnd inside ApplyTheme(Self), which re-enters CreateWnd
   // → _ApplyTheme → infinite loop on this form's layout. The older surface
   // applies theme in-place and is what the panel has shipped with.
+  //
+  // Neither surface exists on an IDE that had no themes (10 Seattle), so there
+  // the component simply keeps its own colours.
+  {$IF Declared(IOTAIDEThemingServices)}
   if Assigned(BorlandIDEServices) and
     Supports(BorlandIDEServices, IOTAIDEThemingServices, LThemeServices) then
   try
@@ -1517,8 +1523,10 @@ begin
       _DbgLog('[Aefos] ApplyThemeTo: '
         + E.ClassName + ' - ' + E.Message);
   end;
+  {$IFEND}
 end;
 
+{$IF Declared(IOTAIDEThemingServices)}
 procedure TAefosChatPanel._ApplyTheme;
 var
   LThemeServices: IOTAIDEThemingServices;
@@ -1772,6 +1780,17 @@ begin
     FOutput.Font.Color := ChooseColor(LIsDark, clWhite, clBlack);
   end;
 end;
+{$ELSE}
+
+// No IDE theming service on this ToolsAPI (10 Seattle had no IDE themes), so
+// there is no theme to read and nothing to mirror: the panel keeps the colours
+// it was designed with. Guarding the whole body rather than each use keeps the
+// themed version readable - it is the one that actually does something.
+procedure TAefosChatPanel._ApplyTheme;
+begin
+end;
+
+{$IFEND}
 
 procedure TAefosChatPanel._OnFormShow(Sender: TObject);
 var

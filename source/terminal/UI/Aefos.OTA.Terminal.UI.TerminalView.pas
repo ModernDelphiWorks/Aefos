@@ -411,7 +411,9 @@ var
   LPalette: TBasePalette;
   LFontName: string;
   LFontSize: Integer;
+  {$IF Declared(IOTAIDEThemingServices)}
   LTheming: IOTAIDEThemingServices;
+  {$IFEND}
   LStyle: TCustomStyleServices;
   LIndex: Integer;
 begin
@@ -423,6 +425,10 @@ begin
   begin
     LTheme := FThemeManager.Themes[FThemeManager.ActiveThemeIndex];
     
+    // The IDE style services do not exist on an IDE with no themes
+    // (10 Seattle), so the "Delphi IDE" theme keeps its designed colours there
+    // instead of mirroring the host.
+    {$IF Declared(IOTAIDEThemingServices)}
     // If the active theme is "Delphi IDE" and we are running inside the IDE,
     // dynamically resolve colors from Embarcadero's style services!
     if SameText(LTheme.Name, 'Delphi IDE') and
@@ -442,6 +448,7 @@ begin
           LTheme.ANSIColors[LIndex] := TVisualTokens.AnsiColor(LIndex);
       end;
     end;
+    {$IFEND}
 
     // Orange Embarcadero accent cursor with a dark/light legibility fallback
     // resolved from the final (StyleServices-adjusted) background (ADR-057-03 /

@@ -67,13 +67,11 @@ function Get-AefosRsVarsPath {
 function Get-AefosFrameworkVersion {
   <#
     .SYNOPSIS
-      The .NET framework version a given rsvars.bat puts on PATH, as a number.
+      The .NET framework version a given rsvars.bat DECLARES, as a number.
 
     .DESCRIPTION
-      This decides which MSBuild a command-line build gets, and the versions
-      disagree: 10 Seattle's rsvars sets v3.5, where the AfterTargets attribute
-      our .dproj staging target uses does not exist yet. Returns 0 when the file
-      cannot be read or declares nothing - callers should treat that as "old".
+      Informational only - see Get-AefosMSBuildOverrideDir for the decision.
+      Returns 0 when the file cannot be read or declares nothing.
   #>
   param([Parameter(Mandatory = $true)][string] $RsVarsPath)
   if (-not (Test-Path $RsVarsPath)) { return 0.0 }
@@ -81,4 +79,46 @@ function Get-AefosFrameworkVersion {
           Select-Object -First 1
   if (-not $line) { return 0.0 }
   return [double] ($line.Matches[0].Groups[1].Value -replace '^(\d+\.\d+).*$', '$1')
+}
+
+function Get-AefosMSBuildOverrideDir {
+  <#
+    .SYNOPSIS
+      Directory to prepend to PATH so msbuild is both PRESENT and new enough.
+      Empty string when the IDE's own rsvars already gives a usable one.
+
+    .DESCRIPTION
+      Two separate ways a RAD Studio rsvars.bat leaves a build without a working
+      msbuild, and BOTH were met in the wild:
+
+      1. It points at a real MSBuild that is too OLD. 10 Seattle and 10.1 Berlin
+         set FrameworkVersion=v3.5, and MSBuild 3.5 cannot parse the AfterTargets
+         attribute our .dproj staging target uses (MSB4066).
+
+      2. It points at a directory that DOES NOT EXIST. 10.3 Rio sets v4.5 - but
+         .NET 4.5 is an in-place update of 4.0 and never had its own folder, so
+         FrameworkDir resolves to nothing and the build dies with "'msbuild' is
+         not recognized". A version check alone reads 4.5, concludes "new enough"
+         and walks straight into it.
+
+      Hence this looks at what is actually THERE rather than at what the file
+      claims: does that directory hold MSBuild.exe, and is it 4.0 or newer? Only
+      then is it left alone.
+  #>
+  param([Parameter(Mandatory = $true)][string] $RsVarsPath)
+
+  $fallback = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319'
+
+  $declared = 0.0
+  $dir = $null
+  if (Test-Path $RsVarsPath) {
+    $declared = Get-AefosFrameworkVersion $RsVarsPath
+    $line = Select-String -Path $RsVarsPath -Pattern 'FrameworkDir\s*=\s*(.+)$' |
+            Select-Object -First 1
+    if ($line) { $dir = $line.Matches[0].Groups[1].Value.Trim() }
+  }
+
+  $usable = $dir -and (Test-Path (Join-Path $dir 'MSBuild.exe')) -and ($declared -ge 4.0)
+  if ($usable) { return '' }
+  return $fallback
 }

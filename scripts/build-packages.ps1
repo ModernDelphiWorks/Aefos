@@ -179,15 +179,29 @@ foreach ($v in $targets) {
     # Seattle: same projects, same compiler (30.0), MSBuild 4.0 - builds and the
     # staging target runs.
     $msbuildPrefix = ''
-    $ms4 = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319'
-    if ((Get-AefosFrameworkVersion $rsvars) -lt 4.0) {
-      if (-not (Test-Path (Join-Path $ms4 'MSBuild.exe'))) {
-        throw ("Delphi $v's rsvars selects MSBuild <4.0, which cannot parse the AfterTargets " +
-               "staging target, and MSBuild 4.0 is not installed at $ms4.")
+    $msOverride = Get-AefosMSBuildOverrideDir $rsvars
+    if ($msOverride -ne '') {
+      if (-not (Test-Path (Join-Path $msOverride 'MSBuild.exe'))) {
+        throw ("Delphi $v's rsvars does not provide a usable msbuild (declared " +
+               "$(Get-AefosFrameworkVersion $rsvars)), and there is none at $msOverride either.")
       }
-      Write-Host "  rsvars selects MSBuild <4.0 -- using $ms4 (AfterTargets needs 4.0)." -ForegroundColor DarkGray
-      $msbuildPrefix = "set PATH=$ms4;%PATH% && "
+      Write-Host "  rsvars msbuild unusable -- using $msOverride." -ForegroundColor DarkGray
+      $msbuildPrefix = "set PATH=$msOverride;%PATH% && "
     }
+    # C++ header output directory.
+    #
+    # With the C++ Builder personality installed, the Delphi compiler also emits a
+    # .hpp per unit so C++ code could consume it, and it will NOT create the
+    # output folder itself: 10.3 Rio failed with
+    #   F2039: Could not create output file '..\..\Bin\Win32\Release\<unit>.hpp'
+    # which reads like a locked or missing BPL and is really a missing directory.
+    #
+    # Created rather than switched off on purpose: those headers are exactly what
+    # a future C++Builder edition needs (issue #26), so suppressing them now would
+    # be work to undo later. Empty directories cost nothing.
+    $hppOut = Join-Path $root "Bin\$plat\$Config"
+    New-Item -ItemType Directory -Force $hppOut | Out-Null
+
     # Static SQLite: LOOK, do not guess.
     #
     # FireDAC.Phys.SQLiteWrapper.Stat is what links the SQLite engine into
@@ -209,8 +223,23 @@ foreach ($v in $targets) {
       $sqliteDefine = '/p:DCC_Define=AEFOS_NO_STATIC_SQLITE '
       $needsSqliteDll = $true
     }
+    # Say WHERE the BPLs go, rather than trusting the IDE's per-user state.
+    #
+    # A .dproj resolves its output folder through EnvOptions.proj, which the IDE
+    # writes the first time it is RUN. On a machine where a version was installed
+    # but never opened - exactly the case while walking old IDEs - msbuild warns
+    # "Expected configuration file missing" and then quietly writes the BPLs next
+    # to the .dproj instead. The build looks perfect: every unit compiles, no
+    # error, and the staging step then reports ten missing BPLs.
+    #
+    # Passing DCC_BplOutput makes the destination a fact of the build instead of a
+    # property of whoever's profile ran it.
+    $bplOut = Get-PublicBplDir $v $plat
+    New-Item -ItemType Directory -Force $bplOut | Out-Null
+
     $cmd = "`"$rsvars`" && $msbuildPrefix" +
            "msbuild `"$grp`" /t:Build /p:Config=$Config /p:Platform=$plat " +
+           "/p:DCC_BplOutput=`"$bplOut`" " +
            "$sqliteDefine/p:DCC_ForceExecute=true /v:minimal /nologo"
     cmd /c $cmd
     if ($LASTEXITCODE -ne 0) { throw "Build FAILED for Delphi $v/$plat (exit $LASTEXITCODE)." }

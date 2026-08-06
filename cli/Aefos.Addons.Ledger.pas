@@ -51,7 +51,8 @@ uses
   Aefos.Compat.IO,
   Aefos.Compat.Json,
   Generics.Collections,
-  Aefos.Addons.Paths;
+  Aefos.Addons.Paths,
+  Aefos.Compat.JsonFormat;
 
 function _ArtifactsToJson(const A: TAddonArtifacts): TJSONObject;
 begin

@@ -44,7 +44,8 @@ uses
   Vcl.Menus,
   ToolsAPI,
   Aefos.MCP.Provision,
-  Aefos.OTA.UI.ThemeHelper;
+  Aefos.OTA.UI.ThemeHelper,
+  Aefos.Compat.JsonFormat;
 
 const
   CEntryDefault = 'main.py';

@@ -59,8 +59,26 @@ uses
   FireDAC.DApt,
   FireDAC.Phys,
   FireDAC.Phys.SQLite,
-  FireDAC.Phys.SQLiteDef,
-  FireDAC.Phys.SQLiteWrapper.Stat;
+  FireDAC.Phys.SQLiteDef
+  // Static SQLite: pulling this unit in is what links the engine into the BPL,
+  // so no sqlite3.dll has to travel beside it.
+  //
+  // It is not in every FireDAC. MEASURED, not assumed: absent from 10 Seattle
+  // (lib\win32\release carries FireDAC.Phys.SQLiteWrapper.dcu with no .Stat
+  // sibling), present in Delphi 11. The exact release that added it is NOT
+  // established - Embarcadero documents the unit without dating it - so this
+  // guard says "anything above Seattle", the simplest reading consistent with
+  // both measurements.
+  //
+  // If a 10.1/10.2/10.3 build ever fails on this line, that is this guard being
+  // wrong rather than the tree: raise the number to the first version that has
+  // the unit. Where it is absent FireDAC falls back to loading sqlite3.dll at
+  // run time, so the breakage moves from compile time to first database open -
+  // which is exactly why this note is here and not in a commit message.
+  {$IF CompilerVersion > 30}   // > 10 Seattle
+  , FireDAC.Phys.SQLiteWrapper.Stat
+  {$IFEND}
+  ;
 
 type
   TSQLiteDatabase = class(TInterfacedObject, ISQLiteDatabase)

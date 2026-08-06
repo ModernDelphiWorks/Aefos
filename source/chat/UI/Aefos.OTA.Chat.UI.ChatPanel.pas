@@ -540,6 +540,7 @@ uses
   System.UITypes,
   Vcl.Clipbrd,
   System.JSON,
+  Aefos.Compat.MainThread,
   System.DateUtils,
   System.IOUtils,
   System.NetEncoding,
@@ -2470,10 +2471,10 @@ begin
     // while output is actively flowing, so the panel cannot be freed in between.
     LController := FController;
     LTheme := _BuildPanelTheme;
-    TThread.ForceQueue(nil, TThreadProcedure(procedure
+    TAefosMainThread.ForceQueue(procedure
       begin
         LController.Navigate(LTheme);
-      end));
+      end);
   end;
 end;
 
@@ -3025,7 +3026,9 @@ end;
 
 function TAefosChatPanel._BuildPanelTheme: TPanelTheme;
 var
+  {$IF Declared(IOTAIDEThemingServices250)}
   LTheming: IOTAIDEThemingServices250;
+  {$IFEND}
   LStyle: TCustomStyleServices;
   LThemeName: string;
   LIsDark: Boolean;
@@ -3033,6 +3036,11 @@ begin
   LStyle := nil;
   LIsDark := False;
   LThemeName := '';
+  // 10 Seattle's ToolsAPI has no theming service - that IDE had no themes - so
+  // LStyle stays nil there and the luminance fallback right below decides
+  // dark/light. That is the same path taken today when the service exists but
+  // the user has theming switched off, so nothing new is being exercised.
+  {$IF Declared(IOTAIDEThemingServices250)}
   if Assigned(BorlandIDEServices) and
      Supports(BorlandIDEServices, IOTAIDEThemingServices250, LTheming) then
   begin
@@ -3045,6 +3053,7 @@ begin
       LStyle := nil;
     end;
   end;
+  {$IFEND}
   if (not Assigned(LStyle)) and (Self.Color <> clNone) then
     LIsDark := ((0.299 * GetRValue(ColorToRGB(Self.Color))) +
                 (0.587 * GetGValue(ColorToRGB(Self.Color))) +

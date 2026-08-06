@@ -113,10 +113,16 @@ begin
   try
     TThread.Synchronize(nil, procedure
     var
+      {$IF Declared(IOTAIDEThemingServices250)}
       LTheming: IOTAIDEThemingServices250;
+      {$IFEND}
       LName: string;
     begin
       if not Assigned(BorlandIDEServices) then Exit;
+      // An IDE with no theming service (10 Seattle) answers 'system', which is
+      // the honest answer: it has no theme to report. Declared() asks the
+      // ToolsAPI in hand rather than encoding which release added the service.
+      {$IF Declared(IOTAIDEThemingServices250)}
       if not Supports(BorlandIDEServices, IOTAIDEThemingServices250, LTheming) then Exit;
       try
         LName := LTheming.GetActiveThemeName;
@@ -127,6 +133,7 @@ begin
       except
         LResult := 'system';
       end;
+      {$IFEND}
     end);
   except
     LResult := 'system';

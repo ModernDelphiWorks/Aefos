@@ -107,6 +107,7 @@ uses
   Aefos.MCP.Types,
   Aefos.OTA.Options.AIFlow,
   Aefos.OTA.UI.ThemeHelper,
+  Aefos.Compat.MainThread,  // deferred main-thread run (see the ForceQueue calls)
   Aefos.MCP.OTA.ReviewGate; // review seams hoisted out of the facade (SOLID split)
 
 type
@@ -1681,7 +1682,7 @@ begin
     LUnits.Free;
   end;
   // Defer notifier/hook teardown to the next main-loop turn (out of any save callback).
-  TThread.ForceQueue(nil,
+  TAefosMainThread.ForceQueue(
     procedure
     begin
       _CleanupResolvedModuleNotifiers;
@@ -1723,7 +1724,7 @@ begin
     end;
   if Assigned(LView) then
     _ForceFullRepaint(LView); // repaint so stripped red / dropped markers refresh
-  TThread.ForceQueue(nil,
+  TAefosMainThread.ForceQueue(
     procedure
     begin
       _CleanupResolvedModuleNotifiers;
@@ -1829,7 +1830,7 @@ end;
 // the agent when the change is later approved or rejected.
 procedure _DeferNoteDialog(AChangeId: Integer);
 begin
-  TThread.ForceQueue(nil,
+  TAefosMainThread.ForceQueue(
     procedure
     var
       LChange: TReviewChange;

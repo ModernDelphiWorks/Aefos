@@ -228,6 +228,20 @@ type
     procedure EvaluateComplete(const ExprStr, ResultStr: string;
       CanModify: Boolean; ResultAddress, ResultSize: LongWord;
       ReturnCode: Integer); overload;
+    // "Evalute" is not our typo - it is Embarcadero's, and it is IN the
+    // interface: 10 Seattle's ToolsAPI.pas declares
+    // IOTAThreadNotifier.EvaluteComplete, while IOTAThreadNotifier160 right
+    // below it spells EvaluateComplete correctly. The name was fixed in a later
+    // release, so WHICH spelling satisfies the interface depends on the IDE
+    // being compiled against.
+    //
+    // Both are declared, unconditionally, instead of guessing which release
+    // corrected it: on an IDE that wants the misspelling this satisfies the
+    // interface; on one that does not, it is an extra protected method nobody
+    // calls. A version guard here would encode a guess - this does not.
+    procedure EvaluteComplete(const ExprStr, ResultStr: string;
+      CanModify: Boolean; ResultAddress, ResultSize: LongWord;
+      ReturnCode: Integer);
     procedure ModifyComplete(const ExprStr, ResultStr: string;
       ReturnCode: Integer);
     { IOTAThreadNotifier160 }
@@ -291,6 +305,16 @@ begin
   // Legacy 32-bit shape: upcast the address and forward (CnPack idiom).
   EvaluateComplete(ExprStr, ResultStr, CanModify, TOTAAddress(ResultAddress),
     ResultSize, ReturnCode);
+end;
+
+procedure TDebugEvalNotifier.EvaluteComplete(const ExprStr,
+  ResultStr: string; CanModify: Boolean; ResultAddress, ResultSize: LongWord;
+  ReturnCode: Integer);
+begin
+  // Embarcadero's spelling (see the declaration): forward to the real one so
+  // the completion path is identical whichever name the IDE calls.
+  EvaluateComplete(ExprStr, ResultStr, CanModify, ResultAddress, ResultSize,
+    ReturnCode);
 end;
 
 procedure TDebugEvalNotifier.ModifyComplete(const ExprStr, ResultStr: string;

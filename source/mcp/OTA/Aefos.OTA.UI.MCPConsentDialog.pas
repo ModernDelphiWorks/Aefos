@@ -81,7 +81,9 @@ class function TMCPConsentDialog.Execute(const AToolName, ASummary,
   ADetail: string): TMCPConsentDecision;
 var
   LForm: TMCPConsentDialog;
+  {$IF Declared(IOTAIDEThemingServices)}
   LTheming: IOTAIDEThemingServices;
+  {$IFEND}
   LView: TAefosConsentView;
   LDrop: Integer;
 begin
@@ -133,9 +135,14 @@ begin
     // the user works in the external terminal. Keep the prompt above the IDE
     // windows so an alt-tab back lands on a visible, answerable modal.
     LForm.FormStyle := fsStayOnTop;
+    // No theming service to ask on an older ToolsAPI (10 Seattle's IDE had no
+    // themes): the dialog keeps stock VCL colours, which is what the rest of
+    // that IDE looks like. The dark-form patching below still runs.
+    {$IF Declared(IOTAIDEThemingServices)}
     if Assigned(BorlandIDEServices) and
        Supports(BorlandIDEServices, IOTAIDEThemingServices, LTheming) then
       LTheming.ApplyTheme(LForm);
+    {$IFEND}
     // The IDE's own ApplyTheme leaves a bsDialog form light even on a dark
     // theme -- which is why this dialog stayed grey next to a dark chat card,
     // the single biggest thing making the two read as different products. The

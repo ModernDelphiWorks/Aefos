@@ -147,13 +147,19 @@ Source: "..\cli\bin\AefosAgent.exe"; DestDir: "{userappdata}\Aefos\bin"; Flags: 
 ; aefos.exe: the shared state outlives either edition's uninstall.
 Source: "..\cli\bin\aefos.exe"; DestDir: "{userappdata}\Aefos\bin"; Flags: ignoreversion skipifsourcedoesntexist uninsneveruninstall
 
-; Bundled Desktop MCP addon (offline), when a packed dist is present. The Desktop
-; MCP is an ADDON: it is published in the addons repository and normally obtained
-; with `aefos install desktop` (binary included). Only the source of its server
-; executable lives in this repo, so nothing here produces the dist.
-; If a dist IS staged under mcps\desktop\dist, it rides along verbatim into
-; {app}\addons and the [Run] step seeds it with no download.
-; skipifsourcedoesntexist: without it, the installer simply ships online-only.
+; Bundled Desktop MCP addon (offline). The Desktop MCP is an ADDON: it is
+; published in the addons repository and updated with `aefos update desktop`.
+; The copy bundled here is what a machine with NO network gets - the [Run] step
+; below seeds it with no download.
+;
+; scripts\pack-desktop-addon.ps1 produces this dist (from the exe THIS tree
+; built), and build-packages.ps1 runs it as part of the standard build. That
+; wiring was missing once and the failure was silent: skipifsourcedoesntexist
+; means a tree with no dist ships online-only WITHOUT complaining, so the desktop
+; tools were simply absent offline and nothing said why. The flags stay - an
+; installer must still build when the dist was deliberately not staged - but the
+; dist is now produced by default, so the quiet path is the exception, not the
+; norm.
 Source: "..\mcps\desktop\dist\registry.json"; DestDir: "{app}\addons"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "..\mcps\desktop\dist\addons\*"; DestDir: "{app}\addons\addons"; Flags: recursesubdirs createallsubdirs ignoreversion skipifsourcedoesntexist
 

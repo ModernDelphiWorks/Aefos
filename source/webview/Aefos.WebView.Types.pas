@@ -58,20 +58,23 @@ type
     DefaultBackgroundColorBGRA: Cardinal; // $AARRGGBB packed as the WV2 color
     class function Default: TWebViewConfig; static;
 
-    { The config every Aefos WebView in ONE PROCESS has to use.
+    { Default plus a user-data folder of this pane's OWN, named after it:
+      %TEMP%\Aefos_WebView2_<APane>.
 
-      Default leaves UserDataFolder empty, and empty is not neutral: WebView2
+      SEPARATE, never shared, and that is not a preference. WebView2 demands
+      the SAME AdditionalBrowserArguments from every environment that shares a
+      user-data folder; two panes that share a folder and differ by one browser
+      argument make the second environment creation FAIL. Separate folders are
+      fully independent, which is why the terminal, its composer and the tool
+      inspector each already have one.
+
+      What Default leaves is EMPTY, and empty is not neutral either: WebView2
       then keeps its user data beside the HOST EXE, which for a design-time
-      package is bds.exe under Program Files - not writable. And WebView2 will
-      not create two environments with DIFFERENT user-data folders in the same
-      process, so with the chat panel already open, a second panel that asked
-      for its own folder would simply never become ready.
+      package is bds.exe under Program Files, and that is not writable.
 
-      Neither failure announces itself. The window sits on "Loading Aefos..."
-      forever - which is exactly how the addon store presented it the first
-      time it opened. So the folder is decided HERE, once, and callers ask for
-      it instead of spelling it out again. }
-    class function Shared: TWebViewConfig; static;
+      Neither failure announces itself - the window just sits on
+      "Loading Aefos..." forever. Wire OnFailed. }
+    class function ForPane(const APane: string): TWebViewConfig; static;
   end;
 
 implementation
@@ -85,7 +88,7 @@ begin
   Result.DefaultBackgroundColorBGRA := $FF1E1E1E; // opaque #1e1e1e dark shell bg
 end;
 
-class function TWebViewConfig.Shared: TWebViewConfig;
+class function TWebViewConfig.ForPane(const APane: string): TWebViewConfig;
 var
   LBuf: array[0..MAX_PATH] of Char;
   LLen: Cardinal;
@@ -102,11 +105,10 @@ begin
     LTemp := '';
   if (LTemp <> '') and (LTemp[Length(LTemp)] <> '\') then
     LTemp := LTemp + '\';
-  Result.UserDataFolder := LTemp + 'Aefos_WebView2';
-  // Moot for a composition-hosted view, kept for parity with what the chat has
-  // been shipping - the point of one shared config is that it is the SAME one.
-  Result.AdditionalBrowserArguments :=
-    '--disable-features=CalculateNativeWinOcclusion';
+  // Browser arguments are left as Default's (none) on purpose: they are the
+  // thing that must not be inherited by accident, since a folder shared with a
+  // pane that sets them differently is the failure this exists to avoid.
+  Result.UserDataFolder := LTemp + 'Aefos_WebView2_' + APane;
 end;
 
 end.

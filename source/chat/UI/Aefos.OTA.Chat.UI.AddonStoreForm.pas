@@ -129,10 +129,11 @@ begin
   try
     TThemeHelper.ApplyPremiumTheme(GStoreForm);
     // BEFORE the handle exists - the host bakes the config in when it is
-    // created, and creation happens on the first show. Shared, never Default:
-    // an empty user-data folder sends WebView2 to write beside bds.exe, and a
-    // folder different from the chat's cannot coexist in one process.
-    GStoreForm.AefosWebView1.Configure(TWebViewConfig.Shared);
+    // created, and creation happens on the first show. Its OWN folder, like
+    // every other pane here: Default leaves it empty, which sends WebView2 to
+    // write beside bds.exe, and sharing the chat's would couple this window to
+    // the chat's browser arguments.
+    GStoreForm.AefosWebView1.Configure(TWebViewConfig.ForPane('AddonStore'));
     GStoreForm.AefosWebView1.OnReady := GStoreForm._WebViewReady;
     GStoreForm.AefosWebView1.OnMessageReceived := GStoreForm._WebViewMessage;
     GStoreForm.AefosWebView1.OnFailed := GStoreForm._WebViewFailed;

@@ -17,7 +17,7 @@
   it was built against and reads as belonging to it.
 
   ---------------------------------------------------------------------------
-  🩸 WHY {$IFDEF VERxxx} AND NOT {$IF CompilerVersion = nn}
+  WHY {$IFDEF VERxxx} AND NOT {$IF CompilerVersion = nn}
 
   Because CompilerVersion DOES NOT EXIST in a .dpk, and the way it fails is the
   dangerous kind. Measured on Delphi 12 (compiler 36.0):

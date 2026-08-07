@@ -80,6 +80,7 @@ begin
   Writeln('Options:');
   Writeln('  -y, --yes            consent to third-party code (mcp/tools) up front');
   Writeln('  --check              dry-run: report what would update, install nothing');
+  Writeln('  --source <name>      take the addon from THAT store (see: aefos sources)');
   Writeln('  --registry <url>     override the registry URL');
   Writeln('  -h, --help           this help');
   Writeln('  -v, --version        version');
@@ -179,7 +180,7 @@ begin
       SetEnvironmentVariable('AEFOS_ADDONS_REGISTRY', PChar(GArgs.Registry));
       {$ENDIF}
 
-    GOpts := TInstallOptions.Create(GArgs.Yes, AefosVersion);
+    GOpts := TInstallOptions.Create(GArgs.Yes, AefosVersion, GArgs.Source);
 
     case GArgs.Command of
       acInstall: TAddonInstaller.Install(GArgs.Slug, GOpts, Log);

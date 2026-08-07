@@ -51,6 +51,24 @@ type
       the same document so the UI can show a store as unreachable instead of
       quietly listing fewer addons than exist. }
     class function ToJson(const AResults: TArray<TAddonCatalogResult>): string; static;
+
+    { Finds ASlug across AResults. APreferSource, when non-empty, restricts the
+      search to that store - which is how `--source` and the ledger's recorded
+      source both say "this one, not the same name somewhere else".
+
+      Raises rather than picking for you when the slug is in more than one
+      store: with two stores a bare name is not an identity, and quietly
+      choosing would install a stranger's addon under the name of the one the
+      user meant. The message names the candidates so the fix is one flag away.
+
+      A store that FAILED is reported inside the not-found message. "addon not
+      found" while the store holding it was unreachable is a lie the user would
+      act on. }
+    class function Resolve(const AResults: TArray<TAddonCatalogResult>;
+      const ASlug, APreferSource: string): TAddonCatalogRow; static;
+
+    { Resolve over a freshly read catalogue - the single-shot form. }
+    class function ResolveOne(const ASlug, APreferSource: string): TAddonCatalogRow; static;
   end;
 
 implementation
@@ -123,6 +141,18 @@ begin
     end;
   end;
   Result := True;
+end;
+
+// A store that could not be read may be the store that HAS the slug, so the
+// not-found message has to carry it. Silence here would send the user hunting
+// for a typo in a name that is perfectly correct.
+function _ErrSuffix(const AErrors: string): string;
+begin
+  if AErrors = '' then
+    Result := ''
+  else
+    Result := ' (a store could not be read, and may be the one that has it - ' +
+      AErrors + ')';
 end;
 
 class function TAddonCatalog.ReadSource(
@@ -202,6 +232,63 @@ begin
     Inc(LCount);
   end;
   SetLength(Result, LCount);
+end;
+
+class function TAddonCatalog.Resolve(
+  const AResults: TArray<TAddonCatalogResult>;
+  const ASlug, APreferSource: string): TAddonCatalogRow;
+var
+  LI, LJ, LFound: Integer;
+  LCandidates, LErrors: string;
+begin
+  Result := Default(TAddonCatalogRow);
+  LFound := 0;
+  LCandidates := '';
+  LErrors := '';
+  for LI := 0 to High(AResults) do
+  begin
+    if AResults[LI].Error <> '' then
+    begin
+      if LErrors <> '' then
+        LErrors := LErrors + '; ';
+      LErrors := LErrors + AResults[LI].Source.Name + ': ' + AResults[LI].Error;
+      Continue;
+    end;
+    if (APreferSource <> '') and
+       not SameText(AResults[LI].Source.Name, APreferSource) then
+      Continue;
+    for LJ := 0 to High(AResults[LI].Rows) do
+    begin
+      if not SameText(AResults[LI].Rows[LJ].Entry.Slug, ASlug) then
+        Continue;
+      if LFound = 0 then
+        Result := AResults[LI].Rows[LJ];
+      Inc(LFound);
+      if LCandidates <> '' then
+        LCandidates := LCandidates + ', ';
+      LCandidates := LCandidates + AResults[LI].Rows[LJ].Source;
+    end;
+  end;
+
+  if LFound > 1 then
+    raise EAddonError.CreateFmt(
+      '"%s" exists in more than one store (%s). Say which one with ' +
+      '--source <name>.', [ASlug, LCandidates]);
+
+  if LFound = 0 then
+  begin
+    if APreferSource <> '' then
+      raise EAddonNotFound.CreateFmt('addon "%s" is not in store "%s".%s',
+        [ASlug, APreferSource, _ErrSuffix(LErrors)]);
+    raise EAddonNotFound.CreateFmt('addon "%s" is not in any configured store.%s',
+      [ASlug, _ErrSuffix(LErrors)]);
+  end;
+end;
+
+class function TAddonCatalog.ResolveOne(
+  const ASlug, APreferSource: string): TAddonCatalogRow;
+begin
+  Result := Resolve(ReadAll, ASlug, APreferSource);
 end;
 
 class function TAddonCatalog.ToJson(

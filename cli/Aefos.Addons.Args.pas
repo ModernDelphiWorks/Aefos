@@ -12,6 +12,8 @@
     options:  --yes | -y            pre-consent third-party (mcp/tools) code
               --check                dry-run: report what would update, install nothing
                                      (valid on update, with or without a slug)
+              --source <name>        take the slug from THAT configured store
+                                     (required when two stores publish the name)
               --registry <url>       override the registry URL (also AEFOS_ADDONS_REGISTRY)
               -h | --help | -v | --version
 
@@ -33,6 +35,7 @@ type
     Yes: Boolean;
     Check: Boolean;     // --check: dry-run, report without installing
     Json: Boolean;      // --json: machine-readable output (the IDE dialog reads it)
+    Source: string;     // --source: which configured store to use ('' = any)
     Registry: string;   // '' = default/env
     Error: string;      // non-empty => parse failed (user-facing one-liner)
     { Parses the argv tail into this record. Never raises; a bad input lands in
@@ -89,6 +92,16 @@ begin
       Result.Check := True
     else if SameText(LArg, '--json') then
       Result.Json := True
+    else if SameText(LArg, '--source') then
+    begin
+      if LIndex >= High(AArgv) then
+      begin
+        Result.Error := 'Missing store name after --source.';
+        Exit;
+      end;
+      Inc(LIndex);
+      Result.Source := AArgv[LIndex];
+    end
     else if LArg = '--registry' then
     begin
       if LIndex >= High(AArgv) then

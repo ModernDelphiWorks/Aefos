@@ -37,10 +37,11 @@ type
   TInstallOptions = record
     Yes: Boolean;       // --yes: pre-consent third-party (mcp/tools) code
     AefosVersion: string; // installed Aefos version for the requirement gate
+    Source: string;     // --source: which store to take the slug from ('' = any)
     { Factory: one named owner for building the options record instead of a
       Default() + field-by-field fill at the call site. }
     class function Create(AYes: Boolean;
-      const AAefosVersion: string): TInstallOptions; static;
+      const AAefosVersion: string; const ASource: string = ''): TInstallOptions; static;
   end;
 
   { Static, sealed namespace for install/uninstall/update/list orchestration.
@@ -92,6 +93,8 @@ uses
   Aefos.Addons.Paths,
   Aefos.Addons.Manifest,
   Aefos.Addons.PluginFormat,
+  Aefos.Addons.Sources,
+  Aefos.Addons.Catalog,
   Aefos.Addons.Ledger,
   Aefos.Addons.McpRewrite,
   Aefos.Addons.Net,
@@ -191,11 +194,12 @@ end;
 { TInstallOptions }
 
 class function TInstallOptions.Create(AYes: Boolean;
-  const AAefosVersion: string): TInstallOptions;
+  const AAefosVersion: string; const ASource: string): TInstallOptions;
 begin
   Result := Default(TInstallOptions);
   Result.Yes := AYes;
   Result.AefosVersion := AAefosVersion;
+  Result.Source := ASource;
 end;
 
 { TAddonInstaller }
@@ -223,22 +227,26 @@ begin
     Result := 'v' + Trim(AVersion);
 end;
 
-// Non-raising registry lookup (TAddonManifestParser.FindEntry raises). Used by
-// the "all" / dry-run paths so a slug no longer in the registry can be reported
-// and skipped rather than aborting the whole run.
-function _TryFindEntry(const AEntries: TArray<TAddonRegistryEntry>;
-  const ASlug: string; out AEntry: TAddonRegistryEntry): Boolean;
-var
-  LIndex: Integer;
+// Which store an update should look in: an explicit --source wins, otherwise
+// the store this addon was installed FROM. Falling back to "any store" only
+// happens for a ledger written before sources existed.
+function _PreferredSource(const AOptions: TInstallOptions;
+  const AItem: TInstalledAddon): string;
 begin
-  for LIndex := 0 to High(AEntries) do
-    if SameText(AEntries[LIndex].Slug, ASlug) then
-    begin
-      AEntry := AEntries[LIndex];
-      Exit(True);
-    end;
-  AEntry := Default(TAddonRegistryEntry);
-  Result := False;
+  if Trim(AOptions.Source) <> '' then
+    Result := AOptions.Source
+  else
+    Result := AItem.Source;
+end;
+
+// A folder bundle publishes no sha - it is a directory, not a release - so one
+// is MEASURED before any comparison. Without this every update run would find
+// an empty sha against a recorded one, call it "changed", and reinstall an
+// addon that has not moved.
+procedure _EnsureIdentity(var AEntry: TAddonRegistryEntry);
+begin
+  if (Trim(AEntry.Sha256) = '') and TDirectory.Exists(AEntry.Url) then
+    AEntry.Sha256 := TAddonNet.Sha256OfTree(AEntry.Url);
 end;
 
 // Recursively copies ASrcDir into ADstDir, appending every written file to
@@ -471,49 +479,104 @@ end;
 class procedure TAddonInstaller.Install(const ASlug: string;
   const AOptions: TInstallOptions; const ALog: TAddonLog);
 var
-  LRegistry: TArray<TAddonRegistryEntry>;
+  LRow: TAddonCatalogRow;
   LEntry: TAddonRegistryEntry;
   LManifest: TAddonManifest;
-  LTempZip, LTempDir, LBundleDir, LManifestPath, LShortSha: string;
+  LTempZip, LTempDir, LBundleDir, LStoreDir, LManifestPath, LShortSha: string;
   LFormat: TPluginFormat;
-  LFiles, LRoots: TList<string>;
+  LFiles, LRoots, LScratch: TList<string>;
   LArts: TAddonArtifacts;
   LItem: TInstalledAddon;
 begin
   if not TAddonPaths.IsValidSlug(ASlug) then
     raise EAddonError.CreateFmt('invalid addon slug "%s".', [ASlug]);
 
+  // Resolution goes through the CATALOGUE, not a compiled-in gallery URL: with
+  // stores configured, "install <slug>" has to be able to mean the company's
+  // store. Ambiguity raises inside Resolve rather than being guessed here.
   ALog(Format('Resolving %s ...', [ASlug]));
-  LRegistry := TAddonManifestParser.ParseRegistry(TAddonNet.DownloadText(TAddonNet.RegistryUrl));
-  LEntry := TAddonManifestParser.FindEntry(LRegistry, ASlug); // raises EAddonNotFound
+  LRow := TAddonCatalog.ResolveOne(ASlug, AOptions.Source);
+  LEntry := LRow.Entry;
+  ALog(Format('  found in %s', [LRow.Source]));
 
   if not TAddonVersion.Satisfies(AOptions.AefosVersion, LEntry.RequiresAefos) then
     raise EAddonRequirement.CreateFmt(
       'addon "%s" requires Aefos %s but this is %s.',
       [ASlug, LEntry.RequiresAefos, AOptions.AefosVersion]);
 
-  // The temp discriminator must not depend on a version that may be empty
-  // (evergreen). The sha256 is always present and IS the identity, so a short
-  // prefix of it is the stable temp key.
-  LShortSha := Copy(LEntry.Sha256, 1, 12);
-  LTempDir := TPath.Combine(TPath.GetTempPath,
-    'aefos-addon-' + ASlug + '-' + LShortSha);
-  LTempZip := LTempDir + '.zip';
+  // A store may hand us a bundle already unpacked - that is what a path store
+  // (a folder, a company share) IS. Measured, never declared: a URL that names
+  // an existing directory is a folder bundle, everything else is an archive.
+  // Same instinct as the SQLite gate - where the thing is a FILE, measure it.
+  LStoreDir := '';
+  if TDirectory.Exists(LEntry.Url) then
+    LStoreDir := TPath.GetFullPath(LEntry.Url);
+
+  LTempZip := '';
+  LTempDir := '';
+  LBundleDir := '';
   try
-    ALog(Format('Downloading %s %s ...', [ASlug, _VerLabel(LEntry.Version)]));
-    TAddonNet.DownloadFile(LEntry.Url, LTempZip);
-    ALog('Verifying integrity (sha256) ...');
-    TAddonNet.VerifySha256(LTempZip, LEntry.Sha256);
+    if LStoreDir <> '' then
+    begin
+      ALog(Format('Reading %s from %s ...', [ASlug, LStoreDir]));
+      // The folder has no published sha, so it gets a MEASURED one - the same
+      // identity the rest of the system compares, computed over the tree.
+      // Without it every `update` would see "changed" and reinstall forever.
+      // Measured on the ORIGINAL, before the copy, because the store's content
+      // is what the identity is OF.
+      LEntry.Sha256 := TAddonNet.Sha256OfTree(LStoreDir);
 
-    if TDirectory.Exists(LTempDir) then
-      TDirectory.Delete(LTempDir, True);
-    TAddonNet.ExtractZip(LTempZip, LTempDir);
+      // Then COPY it, and read the copy. Reading a store in place looks free
+      // and is not: adopting a foreign bundle STAGES normalised artifacts into
+      // <bundle>\_aefos\, so working in place would write into somebody else's
+      // store - which fails outright on a read-only share, and otherwise
+      // changes the very tree we just measured, so every later run would report
+      // an update that nobody made. Every other path already owned its tree;
+      // this restores that invariant instead of making the writer conditional.
+      LTempDir := TPath.Combine(TPath.GetTempPath,
+        'aefos-addon-' + ASlug + '-' + Copy(LEntry.Sha256, 1, 12));
+      if TDirectory.Exists(LTempDir) then
+        TDirectory.Delete(LTempDir, True);
+      LBundleDir := TPath.Combine(LTempDir, ASlug);
+      LScratch := TList<string>.Create;
+      try
+        _CopyTree(LStoreDir, LBundleDir, LScratch);
+      finally
+        LScratch.Free;
+      end;
+    end
+    else
+    begin
+      // Over the network the sha is the only thing between the user and
+      // whatever answered the request, so an entry without one is refused
+      // rather than installed unverified.
+      if Trim(LEntry.Sha256) = '' then
+        raise EAddonIntegrity.CreateFmt(
+          'store "%s" published no sha256 for "%s", so the download cannot be ' +
+          'verified.', [LRow.Source, ASlug]);
+      // The temp discriminator must not depend on a version that may be empty
+      // (evergreen). The sha256 is always present and IS the identity, so a
+      // short prefix of it is the stable temp key.
+      LShortSha := Copy(LEntry.Sha256, 1, 12);
+      LTempDir := TPath.Combine(TPath.GetTempPath,
+        'aefos-addon-' + ASlug + '-' + LShortSha);
+      LTempZip := LTempDir + '.zip';
 
-    // The archive must carry exactly one top-level <slug>\ folder.
-    LBundleDir := TPath.Combine(LTempDir, ASlug);
-    if not TDirectory.Exists(LBundleDir) then
-      raise EAddonIntegrity.CreateFmt(
-        'archive for "%s" has no top-level "%s\" folder.', [ASlug, ASlug]);
+      ALog(Format('Downloading %s %s ...', [ASlug, _VerLabel(LEntry.Version)]));
+      TAddonNet.DownloadFile(LEntry.Url, LTempZip);
+      ALog('Verifying integrity (sha256) ...');
+      TAddonNet.VerifySha256(LTempZip, LEntry.Sha256);
+
+      if TDirectory.Exists(LTempDir) then
+        TDirectory.Delete(LTempDir, True);
+      TAddonNet.ExtractZip(LTempZip, LTempDir);
+
+      // The archive must carry exactly one top-level <slug>\ folder.
+      LBundleDir := TPath.Combine(LTempDir, ASlug);
+      if not TDirectory.Exists(LBundleDir) then
+        raise EAddonIntegrity.CreateFmt(
+          'archive for "%s" has no top-level "%s\" folder.', [ASlug, ASlug]);
+    end;
     // An addon is a directory under a JSON manifest, and Aefos is not the only
     // one packaging that shape. addon.json stays native and keeps priority;
     // when it is absent the bundle may still be a perfectly good agent plugin -
@@ -627,6 +690,9 @@ begin
       LItem.Version := LEntry.Version;
       LItem.Trust := LEntry.Trust;
       LItem.Sha256 := LEntry.Sha256;
+      // Which store it came from, so update returns to the SAME one instead of
+      // whichever store happens to publish the name next time.
+      LItem.Source := LRow.Source;
       LItem.InstalledAt := _NowUtcIso;
       LItem.Artifacts := LArts;
       LItem.Files := LFiles.ToArray;
@@ -648,9 +714,12 @@ begin
       ALog(Format('  /%s is now available in Aefos chat.', [ASlug]));
   finally
     try
-      if TFile.Exists(LTempZip) then
+      // LTempDir is always OURS - a folder bundle was copied into it, never
+      // read in place - so this never reaches into a store. LStoreDir is not
+      // touched here, and must not be.
+      if (LTempZip <> '') and TFile.Exists(LTempZip) then
         TFile.Delete(LTempZip);
-      if TDirectory.Exists(LTempDir) then
+      if (LTempDir <> '') and TDirectory.Exists(LTempDir) then
         TDirectory.Delete(LTempDir, True);
     except
       // best-effort temp cleanup
@@ -691,22 +760,28 @@ class procedure TAddonInstaller.Update(const ASlug: string;
 var
   LItems: TArray<TInstalledAddon>;
   LItem: TInstalledAddon;
-  LRegistry: TArray<TAddonRegistryEntry>;
+  LRow: TAddonCatalogRow;
   LEntry: TAddonRegistryEntry;
+  LOpts: TInstallOptions;
 begin
   LItems := TAddonLedger.Load;
   if not TAddonLedger.TryFind(LItems, ASlug, LItem) then
     raise EAddonNotFound.CreateFmt('addon "%s" is not installed.', [ASlug]);
-  LRegistry := TAddonManifestParser.ParseRegistry(TAddonNet.DownloadText(TAddonNet.RegistryUrl));
-  LEntry := TAddonManifestParser.FindEntry(LRegistry, ASlug); // raises EAddonNotFound
+  LRow := TAddonCatalog.ResolveOne(ASlug, _PreferredSource(AOptions, LItem));
+  LEntry := LRow.Entry;
+  _EnsureIdentity(LEntry);
   case LItem.DecideUpdate(LEntry) of
     uaUpToDate:
       ALog(Format('%s is already current.', [ASlug]));
     uaUpdate:
       begin
         ALog(Format('Updating %s ...', [ASlug]));
-        // Clean-replace at the registry's current build (install re-verifies sha).
-        TAddonInstaller.Install(ASlug, AOptions, ALog);
+        // Clean-replace at the store's current build (install re-verifies sha).
+        // The store is PINNED to the one just resolved: re-resolving inside
+        // Install could land on a different store between the two calls.
+        LOpts := AOptions;
+        LOpts.Source := LRow.Source;
+        TAddonInstaller.Install(ASlug, LOpts, ALog);
       end;
   end;
 end;
@@ -715,10 +790,13 @@ class procedure TAddonInstaller.UpdateAll(const AOptions: TInstallOptions;
   const ALog: TAddonLog);
 var
   LItems: TArray<TInstalledAddon>;
-  LRegistry: TArray<TAddonRegistryEntry>;
+  LResults: TArray<TAddonCatalogResult>;
+  LRow: TAddonCatalogRow;
   LEntry: TAddonRegistryEntry;
+  LOpts: TInstallOptions;
   LIndex, LUpdated, LCurrent: Integer;
   LSlug: string;
+  LResolved: Boolean;
 begin
   LItems := TAddonLedger.Load;
   if Length(LItems) = 0 then
@@ -726,17 +804,29 @@ begin
     ALog('No addons installed.');
     Exit;
   end;
-  LRegistry := TAddonManifestParser.ParseRegistry(TAddonNet.DownloadText(TAddonNet.RegistryUrl));
+  // Every store is read ONCE for the whole run, not once per installed addon.
+  LResults := TAddonCatalog.ReadAll;
   LUpdated := 0;
   LCurrent := 0;
   for LIndex := 0 to High(LItems) do
   begin
     LSlug := LItems[LIndex].Slug;
-    if not _TryFindEntry(LRegistry, LSlug, LEntry) then
-    begin
-      ALog(Format('  ! %s is no longer in the registry - skipped.', [LSlug]));
-      Continue;
+    // One addon that cannot be resolved (store removed, name now ambiguous)
+    // must not take the other twenty with it.
+    LResolved := False;
+    LRow := Default(TAddonCatalogRow);
+    try
+      LRow := TAddonCatalog.Resolve(LResults, LSlug,
+        _PreferredSource(AOptions, LItems[LIndex]));
+      LResolved := True;
+    except
+      on E: EAddonError do
+        ALog(Format('  ! %s: %s - skipped.', [LSlug, E.Message]));
     end;
+    if not LResolved then
+      Continue;
+    LEntry := LRow.Entry;
+    _EnsureIdentity(LEntry);
     case LItems[LIndex].DecideUpdate(LEntry) of
       uaUpToDate:
         begin
@@ -746,7 +836,9 @@ begin
       uaUpdate:
         begin
           ALog(Format('Updating %s ...', [LSlug]));
-          TAddonInstaller.Install(LSlug, AOptions, ALog);
+          LOpts := AOptions;
+          LOpts.Source := LRow.Source;
+          TAddonInstaller.Install(LSlug, LOpts, ALog);
           Inc(LUpdated);
         end;
     end;
@@ -758,17 +850,29 @@ class procedure TAddonInstaller.CheckUpdates(const ASlug: string;
   const ALog: TAddonLog);
 var
   LItems: TArray<TInstalledAddon>;
-  LRegistry: TArray<TAddonRegistryEntry>;
+  LResults: TArray<TAddonCatalogResult>;
   LItem: TInstalledAddon;
   LIndex: Integer;
 
   procedure ReportOne(const AItem: TInstalledAddon);
   var
+    LRow: TAddonCatalogRow;
     LFound: TAddonRegistryEntry;
   begin
-    if not _TryFindEntry(LRegistry, AItem.Slug, LFound) then
-      ALog(Format('%s: no longer in the registry', [AItem.Slug]))
-    else if AItem.DecideUpdate(LFound) = uaUpToDate then
+    // A dry-run reports; it never fails the run. An unresolvable slug is a
+    // finding to print, exactly like "update available" is.
+    try
+      LRow := TAddonCatalog.Resolve(LResults, AItem.Slug, AItem.Source);
+    except
+      on E: EAddonError do
+      begin
+        ALog(Format('%s: %s', [AItem.Slug, E.Message]));
+        Exit;
+      end;
+    end;
+    LFound := LRow.Entry;
+    _EnsureIdentity(LFound);
+    if AItem.DecideUpdate(LFound) = uaUpToDate then
       ALog(Format('%s: current', [AItem.Slug]))
     else
       ALog(Format('%s: update available', [AItem.Slug]));
@@ -776,7 +880,7 @@ var
 
 begin
   LItems := TAddonLedger.Load;
-  LRegistry := TAddonManifestParser.ParseRegistry(TAddonNet.DownloadText(TAddonNet.RegistryUrl));
+  LResults := TAddonCatalog.ReadAll;
   if ASlug <> '' then
   begin
     if not TAddonLedger.TryFind(LItems, ASlug, LItem) then
@@ -814,10 +918,11 @@ begin
     if LItems[LIndex].Artifacts.HasMcp then LKinds := LKinds + 'mcp ';
     if LItems[LIndex].Artifacts.HasTools then LKinds := LKinds + 'tools ';
     // _VerLabel prints "current" for an evergreen (versionless) entry, never a
-    // bare "v".
-    ALog(Format('  %-28s %-11s [%s] %s',
+    // bare "v". The store is shown because with more than one configured, "which
+    // review is this?" is a real question the list has to answer.
+    ALog(Format('  %-28s %-11s [%s] %-10s %s',
       [LItems[LIndex].Slug, _VerLabel(LItems[LIndex].Version),
-       LItems[LIndex].Trust.ToStr, Trim(LKinds)]));
+       LItems[LIndex].Trust.ToStr, LItems[LIndex].Source, Trim(LKinds)]));
   end;
 end;
 

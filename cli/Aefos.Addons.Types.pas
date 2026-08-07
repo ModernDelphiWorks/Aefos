@@ -98,6 +98,12 @@ type
     Trust: TAddonTrust;
     Sha256: string;
     InstalledAt: string;    // ISO-8601 UTC
+    { Which configured store this came from. Recorded so update goes back to the
+      SAME store: with two stores a bare slug stops being an identity, and an
+      update that silently switched a company addon for a same-named gallery one
+      would be a supply-chain swap performed by us. Empty on a ledger written
+      before sources existed, which reads as "wherever it can be found". }
+    Source: string;
     Artifacts: TAddonArtifacts;
     Files: TArray<string>;
     Roots: TArray<string>;  // absolute ~/.aefos target dirs to remove on uninstall

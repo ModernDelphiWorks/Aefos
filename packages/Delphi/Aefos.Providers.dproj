@@ -75,6 +75,10 @@
         <DCC_K>false</DCC_K>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
+        <!-- Runs AefosStageBplForInstaller after the compile. _PostCompileTargets
+             is an unassigned extension point in CodeGear.Delphi.Targets and works
+             on every MSBuild back to 3.5, which is the engine the old IDEs host. -->
+        <_PostCompileTargets>AefosStageBplForInstaller</_PostCompileTargets>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>Aefos_Providers</SanitizedProjectName>
@@ -197,26 +201,6 @@
     </ProjectExtensions>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
-    <!-- Staging the BPL: hooked through BuildDependsOn, not AfterTargets.
-
-         AfterTargets arrived in MSBuild 4.0. The IDE of 10 Seattle hosts the 3.5
-         engine, so it rejects the ATTRIBUTE while LOADING the project - "[Fatal
-         Error] The attribute AfterTargets in element <Target> is unrecognized" -
-         before a line of Pascal is read. It reads like a corrupt .dproj and is a
-         build engine five years older than the attribute.
-
-         The command line already worked around this by putting MSBuild 4.0 on the
-         PATH (scripts\build-packages.ps1), but nothing can do that for a build
-         started from inside the old IDE. Appending to $(BuildDependsOn) is the
-         MSBuild 2.0 idiom for the same thing and every version from 3.5 to today
-         understands it, so both paths run the same target. It must come AFTER the
-         CodeGear.Delphi.Targets import, which is where the property is defined.
-
-         Build is declared as <Target Name="Build" DependsOnTargets="$(BuildDependsOn)"/>
-         with an empty body, so last in the list still means after the compile. -->
-    <PropertyGroup>
-        <BuildDependsOn>$(BuildDependsOn);AefosStageBplForInstaller</BuildDependsOn>
-    </PropertyGroup>
     <Target Name="AefosStageBplForInstaller" Condition="'$(Config)'=='Release' and '$(Platform)'=='Win32'">
         <PropertyGroup>
             <AefosBpl>$(BDSCOMMONDIR)\Bpl\$(MSBuildProjectName).bpl</AefosBpl>

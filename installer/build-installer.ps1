@@ -59,11 +59,16 @@ function Get-StagedSuffix {
       the caller must refuse rather than ship.
   #>
   param([Parameter(Mandatory = $true)][string] $Dir)
-  $f = Get-ChildItem $Dir -Filter 'Aefos.OTA.Chat*.bpl' -ErrorAction SilentlyContinue |
+  $all = @(Get-ChildItem $Dir -Filter 'Aefos.OTA.Chat*.bpl' -ErrorAction SilentlyContinue)
+  if (-not $all) { return $null }
+  # A suffixed file wins over an unsuffixed one when both are present. Sorting by
+  # name would pick 'Aefos.OTA.Chat.bpl' first and call a good payload obsolete;
+  # build-packages.ps1 sweeps the stale copy, but a folder carried over by hand
+  # from another machine has not been through it.
+  $f = $all | Where-Object { $_.Name -match '^Aefos\.OTA\.Chat(\d+)\.bpl$' } |
        Select-Object -First 1
-  if (-not $f) { return $null }
-  if ($f.Name -match '^Aefos\.OTA\.Chat(\d*)\.bpl$') { return $Matches[1] }
-  return $null
+  if ($f) { return [regex]::Match($f.Name, '^Aefos\.OTA\.Chat(\d+)\.bpl$').Groups[1].Value }
+  return ''
 }
 
 # WebView2Loader.dll is a Microsoft component (version-independent, x86). We ship

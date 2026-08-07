@@ -75,15 +75,22 @@ a monorepo-wide build script lands. Each package's Release/Win32 build auto-stag
 1. **Make the runtime BPLs reachable.** Put the built BPLs in a fixed folder (e.g.
    `C:\Aefos\bpl`) and add it to the Windows **PATH**, or to the IDE library
    path under **Tools → Options → Language → Delphi → Library → Library path**
-   (Win32). This ensures the runtime BPLs (`Aefos.WebView.bpl`,
-   `Aefos.Harness.bpl`, `Aefos.Providers.bpl`,
-   `Aefos.Tools.bpl`, `Aefos.MCP.Core.bpl`, `Aefos.MCP.Tools.OTA.bpl`,
-   `Aefos.Data.bpl`) are found at load time.
+   (Win32). This ensures the runtime BPLs (`Aefos.WebView`, `Aefos.Harness`,
+   `Aefos.Providers`, `Aefos.Tools`, `Aefos.MCP.Core`, `Aefos.MCP.Tools.OTA`,
+   `Aefos.Data`) are found at load time.
+
+   > **Every file name carries the IDE's package suffix** — the same one
+   > Embarcadero puts on theirs: `Aefos.MCP.Core230.bpl` on 10 Seattle, `...270`
+   > on Sydney, `...290` on Delphi 12, `...370` on Delphi 13. That is what lets
+   > two RAD Studios share a machine. Without it every version ships the same
+   > file name, the first `Bpl` folder on `PATH` answers for all of them, and a
+   > Seattle IDE ends up loading a Sydney package.
 2. **Register the design-time package(s).** Go to **Components → Install Packages… →
-   Add…** and select the design-time BPL(s) you want:
-   - `Aefos.OTA.Chat.bpl` — the AI chat panel
-   - `Aefos.OTA.Terminal.bpl` — the docked terminal
-   - `dclAefosWebView.bpl` — (optional) the `TAefosWebView` palette component
+   Add…** and select the design-time BPL(s) you want (`<sfx>` is your IDE's
+   suffix — `290` on Delphi 12):
+   - `Aefos.OTA.Chat<sfx>.bpl` — the AI chat panel
+   - `Aefos.OTA.Terminal<sfx>.bpl` — the docked terminal
+   - `dclAefosWebView<sfx>.bpl` — (optional) the `TAefosWebView` palette component
 
    The IDE loads the design-time package and, through its `requires` chain, the
    runtime core. You do **not** install the runtime packages separately — they only

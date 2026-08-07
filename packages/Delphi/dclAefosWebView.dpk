@@ -28,6 +28,7 @@ package dclAefosWebView;
 {$DESCRIPTION 'Aefos AI - WebView2 component (design-time)'}
 {$DESIGNONLY}
 {$IMPLICITBUILD ON}
+{$I Aefos.LibSuffix.inc}   // one BPL name per IDE version - see the file
 
 requires
   rtl,

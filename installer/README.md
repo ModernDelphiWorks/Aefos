@@ -12,12 +12,20 @@ show up **already installed** in the IDE.
 
 | File | Where it goes | Kind |
 |------|---------------|------|
-| `Aefos.Tools.bpl` | `{app}\Bpl` | runtime |
-| `Aefos.MCP.Core.bpl` | `{app}\Bpl` | runtime |
-| `Aefos.MCP.Tools.OTA.bpl` | `{app}\Bpl` | runtime |
-| `Aefos.Data.bpl` | `{app}\Bpl` | runtime (static SQLite) |
-| `Aefos.OTA.Chat.bpl` | `{app}\Bpl` | **design-time** (registered) |
-| `Aefos.OTA.Terminal.bpl` | `{app}\Bpl` | **design-time** (registered) |
+Every BPL below carries the IDE's own package suffix — `Aefos.MCP.Core230.bpl`
+on 10 Seattle, `...290` on Delphi 12, `...370` on Delphi 13 — exactly as
+Embarcadero suffixes `rtl230`/`rtl290`/`rtl370`. That is what keeps two RAD
+Studios on one machine from answering for each other's packages, since the IDE
+finds a required BPL through `PATH` and every version's `Bpl` folder is on it.
+
+| File | Where it goes | Kind |
+|------|---------------|------|
+| `Aefos.Tools<sfx>.bpl` | `{app}\Bpl` | runtime |
+| `Aefos.MCP.Core<sfx>.bpl` | `{app}\Bpl` | runtime |
+| `Aefos.MCP.Tools.OTA<sfx>.bpl` | `{app}\Bpl` | runtime |
+| `Aefos.Data<sfx>.bpl` | `{app}\Bpl` | runtime (static SQLite) |
+| `Aefos.OTA.Chat<sfx>.bpl` | `{app}\Bpl` | **design-time** (registered) |
+| `Aefos.OTA.Terminal<sfx>.bpl` | `{app}\Bpl` | **design-time** (registered) |
 | `mcp-bridge.ps1` | `{app}` | Terminal MCP relay (one fixed copy) |
 | `pytools\*` (5 default tools) | `{userappdata}\Aefos\pytools` | drop-a-folder Python MCP tools |
 

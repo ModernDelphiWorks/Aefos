@@ -70,11 +70,15 @@ if ($drift.Count -gt 0) {
   throw ("-Version's ValidateSet and aefos-ide-versions.ps1 disagree: {0}. Update the ValidateSet literal." -f
          (($drift | ForEach-Object { "$($_.InputObject) ($($_.SideIndicator))" }) -join ', '))
 }
-$Bpls = @(
-  'Aefos.Harness.bpl', 'Aefos.Providers.bpl',
-  'Aefos.WebView.bpl', 'Aefos.Tools.bpl', 'Aefos.MCP.Core.bpl',
-  'Aefos.MCP.Tools.OTA.bpl', 'Aefos.Data.bpl', 'Aefos.OTA.Chat.bpl',
-  'Aefos.OTA.Terminal.bpl', 'dclAefosWebView.bpl'
+# Base names only. The file on disk carries the IDE's package suffix
+# (Aefos.LibSuffix.inc gives it to the compiler; Get-AefosIdePackageSuffix reads
+# the same number back off the target IDE), so Seattle produces
+# Aefos.MCP.Core230.bpl and Athens Aefos.MCP.Core290.bpl.
+$BplNames = @(
+  'Aefos.Harness', 'Aefos.Providers',
+  'Aefos.WebView', 'Aefos.Tools', 'Aefos.MCP.Core',
+  'Aefos.MCP.Tools.OTA', 'Aefos.Data', 'Aefos.OTA.Chat',
+  'Aefos.OTA.Terminal', 'dclAefosWebView'
 )
 
 function Get-PublicBplDir([string]$Ver, [string]$Plat) {
@@ -264,13 +268,34 @@ foreach ($v in $targets) {
     $dst = Join-Path $stage $v
     if ($plat -ne 'Win32') { $dst = Join-Path $dst $plat }
     New-Item -ItemType Directory -Force $dst | Out-Null
+
+    # This is where a lost LIBSUFFIX has to become audible. If the include ever
+    # stops reaching the compiler - the IDE rewrites a .dpk when files are added
+    # or removed through the Project Manager, and can drop a directive it does not
+    # recognise - the BPL quietly goes back to its unsuffixed name and the whole
+    # collision returns. Asking for the SUFFIXED name means that failure stops the
+    # build here instead of shipping.
+    $suffix = Get-AefosIdePackageSuffix $v
     $missing = @()
-    foreach ($b in $Bpls) {
-      $f = Join-Path $src $b
-      if (Test-Path $f) { Copy-Item $f $dst -Force } else { $missing += $b }
+    foreach ($b in $BplNames) {
+      $f = Join-Path $src "$b$suffix.bpl"
+      if (Test-Path $f) { Copy-Item $f $dst -Force } else { $missing += "$b$suffix.bpl" }
     }
     if ($missing.Count -gt 0) {
-      throw "Delphi $v/${plat}: built but $($missing.Count) BPL(s) not found in $src : $($missing -join ', ')."
+      throw ("Delphi $v/${plat}: built but $($missing.Count) BPL(s) not found in $src : " +
+             "$($missing -join ', '). If the unsuffixed names are there instead, a .dpk " +
+             "lost its {`$I Aefos.LibSuffix.inc} line.")
+    }
+
+    # An unsuffixed BPL left over from a build before this change is not inert:
+    # it sits in the folder the IDE searches, under the very name that used to
+    # collide across versions. Sweeping it is the point of the rename.
+    foreach ($b in $BplNames) {
+      $legacy = Join-Path $src "$b.bpl"
+      if (Test-Path $legacy) {
+        Remove-Item $legacy -Force
+        Write-Host "  -   removed pre-suffix $b.bpl from $src" -ForegroundColor DarkYellow
+      }
     }
 
     # Whoever measured also provisions. A build without static SQLite produces a
@@ -291,7 +316,7 @@ foreach ($v in $targets) {
       Write-Host "  +   sqlite3.dll staged (this IDE has no static SQLite)" -ForegroundColor DarkYellow
     }
 
-    Write-Host "  OK  Delphi $v/$plat  ($($Bpls.Count) BPLs)" -ForegroundColor Green
+    Write-Host "  OK  Delphi $v/$plat  ($($BplNames.Count) BPLs, suffix $suffix)" -ForegroundColor Green
     $built += "$v/$plat"
   }
 }

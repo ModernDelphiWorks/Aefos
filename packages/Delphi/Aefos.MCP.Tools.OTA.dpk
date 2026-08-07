@@ -27,6 +27,7 @@ package Aefos.MCP.Tools.OTA;
 {$DESCRIPTION 'Aefos shared OTA MCP facade (Tools.OTA)'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
+{$I Aefos.LibSuffix.inc}   // one BPL name per IDE version - see the file
 
 requires
   rtl,

@@ -28,6 +28,7 @@
 {$DESCRIPTION 'Aefos Tools - pure Delphi file-editing engine (no IDE coupling)'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
+{$I Aefos.LibSuffix.inc}   // one BPL name per IDE version - see the file
 
 requires
   rtl;

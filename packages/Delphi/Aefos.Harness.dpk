@@ -30,6 +30,7 @@ package Aefos.Harness;
 {$DESCRIPTION 'Aefos Harness - IDE Design/Code view duality + backstage helpers'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
+{$I Aefos.LibSuffix.inc}   // one BPL name per IDE version - see the file
 
 requires
   rtl,

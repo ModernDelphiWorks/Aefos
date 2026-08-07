@@ -34,12 +34,37 @@ $iss   = Join-Path $here 'Aefos.iss'
 
 . (Join-Path (Split-Path -Parent $here) 'scripts\aefos-ide-versions.ps1')
 $Supported = $script:AefosIdeSupported
-$Bpls = @(
-  'Aefos.Harness.bpl', 'Aefos.Providers.bpl',
-  'Aefos.WebView.bpl', 'Aefos.Tools.bpl', 'Aefos.MCP.Core.bpl',
-  'Aefos.MCP.Tools.OTA.bpl', 'Aefos.Data.bpl', 'Aefos.OTA.Chat.bpl',
-  'Aefos.OTA.Terminal.bpl', 'dclAefosWebView.bpl'
+# Base names. Each staged file carries the IDE's package suffix
+# (Aefos.MCP.Core230.bpl for Seattle, ...290 for Athens) so that two RAD Studios
+# on one machine can no longer answer for each other's packages.
+$BplNames = @(
+  'Aefos.Harness', 'Aefos.Providers',
+  'Aefos.WebView', 'Aefos.Tools', 'Aefos.MCP.Core',
+  'Aefos.MCP.Tools.OTA', 'Aefos.Data', 'Aefos.OTA.Chat',
+  'Aefos.OTA.Terminal', 'dclAefosWebView'
 )
+
+function Get-StagedSuffix {
+  <#
+    .SYNOPSIS
+      The package suffix of an already-staged payload folder, read from the files.
+
+    .DESCRIPTION
+      Deliberately NOT Get-AefosIdePackageSuffix: that one asks the IDE, and the
+      IDE whose payload this is may not exist on this machine at all - old-version
+      payloads are built in a VM and the folder copied over. What is on disk is
+      the only thing true here.
+
+      Returns an empty string for a payload built before the suffix existed, which
+      the caller must refuse rather than ship.
+  #>
+  param([Parameter(Mandatory = $true)][string] $Dir)
+  $f = Get-ChildItem $Dir -Filter 'Aefos.OTA.Chat*.bpl' -ErrorAction SilentlyContinue |
+       Select-Object -First 1
+  if (-not $f) { return $null }
+  if ($f.Name -match '^Aefos\.OTA\.Chat(\d*)\.bpl$') { return $Matches[1] }
+  return $null
+}
 
 # WebView2Loader.dll is a Microsoft component (version-independent, x86). We ship
 # it beside our BPLs and point the RTL at it by full path (SetWebView2Path). Source
@@ -60,9 +85,11 @@ if (-not (Test-Path $stage)) {
   throw "No staged BPLs at $stage. Run scripts\build-packages.ps1 first."
 }
 
-# Discover which versions are staged (folder holds the design package).
+# Discover which versions are staged (folder holds the design package, under
+# whatever suffix that IDE gives it).
 $staged = $Supported | Where-Object {
-  Test-Path (Join-Path (Join-Path $stage $_) 'Aefos.OTA.Chat.bpl')
+  $d = Join-Path $stage $_
+  (Test-Path $d) -and (Get-ChildItem $d -Filter 'Aefos.OTA.Chat*.bpl' -ErrorAction SilentlyContinue)
 }
 if (-not $staged) {
   throw "No version is staged under $stage. Run scripts\build-packages.ps1 (and, for " +
@@ -91,28 +118,53 @@ if ($orphans.Count -gt 0) {
   if (-not $staged) { throw "Nothing left to package: every staged version is unknown to Aefos.iss." }
 }
 
+# Aefos.iss names every payload file literally, suffix included, through a
+# per-version #define. That is a second copy of a number the compiler already
+# decided - so rather than trust the two to stay in step, read both and refuse to
+# build when they disagree. A wrong suffix here does not fail loudly on its own:
+# the [Files] entry would simply point at a name nothing produced.
+$issSuffixes = @{}
+foreach ($m in [regex]::Matches($issText, '(?m)^#define\s+Ver(\w+)\s+"([\d.]+)"')) {
+  $key = $m.Groups[1].Value
+  $s = [regex]::Match($issText, "(?m)^#define\s+Suf$key\s+`"(\d+)`"")
+  if ($s.Success) { $issSuffixes[$m.Groups[2].Value] = $s.Groups[1].Value }
+}
+
 $wv2 = Get-WebView2Loader
 Write-Host "WebView2Loader.dll: $wv2" -ForegroundColor DarkGray
 
 foreach ($v in $staged) {
   $dir = Join-Path $stage $v
-  $missing = $Bpls | Where-Object { -not (Test-Path (Join-Path $dir $_)) }
+  $suffix = Get-StagedSuffix $dir
+  if ([string]::IsNullOrEmpty($suffix)) {
+    throw ("Delphi ${v}: the staged BPLs have no version suffix, so this payload predates " +
+           "Aefos.LibSuffix.inc. Re-run scripts\build-packages.ps1 -Version $v on the machine " +
+           "that has that IDE; shipping unsuffixed BPLs puts the cross-version collision back.")
+  }
+  if ($issSuffixes.ContainsKey($v) -and $issSuffixes[$v] -ne $suffix) {
+    throw ("Delphi ${v}: staged BPLs carry suffix $suffix but Aefos.iss declares " +
+           "$($issSuffixes[$v]). One of the two is wrong - the installer would package file " +
+           "names that do not exist.")
+  }
+  $missing = $BplNames | Where-Object { -not (Test-Path (Join-Path $dir "$_$suffix.bpl")) }
   if ($missing) {
-    throw "Delphi ${v}: staged folder is missing $($missing.Count) BPL(s): $($missing -join ', '). " +
+    throw "Delphi ${v}: staged folder is missing $($missing.Count) BPL(s): $(($missing | ForEach-Object { "$_$suffix.bpl" }) -join ', '). " +
           "Re-run scripts\build-packages.ps1 -Version $v on the machine that has it."
   }
   Copy-Item $wv2 $dir -Force   # ensure the loader is present (VM build may lack it)
-  Write-Host "  ok  Delphi $v  ($($Bpls.Count) BPLs + WebView2Loader.dll)" -ForegroundColor Green
+  Write-Host "  ok  Delphi $v  ($($BplNames.Count) BPLs, suffix $suffix + WebView2Loader.dll)" -ForegroundColor Green
 
   # Delphi 13's 64-bit IDE, when its packages were built (-Platform Win64). It is
   # a separate set: a design-time BPL loads into the IDE PROCESS, so the Win32 ones
   # above are invisible to bin64\bds.exe.
   $x64Dir = Join-Path $dir 'Win64'
-  if (Test-Path (Join-Path $x64Dir 'Aefos.OTA.Chat.bpl')) {
-    $missing64 = $Bpls | Where-Object { -not (Test-Path (Join-Path $x64Dir $_)) }
+  if ((Test-Path $x64Dir) -and (Get-ChildItem $x64Dir -Filter 'Aefos.OTA.Chat*.bpl' -ErrorAction SilentlyContinue)) {
+    # Same suffix as Win32 on purpose: Embarcadero ships rtl290.bpl in both bin and
+    # bin64, telling the two bitnesses apart by FOLDER rather than by name.
+    $missing64 = $BplNames | Where-Object { -not (Test-Path (Join-Path $x64Dir "$_$suffix.bpl")) }
     if ($missing64) {
       throw "Delphi $v/Win64: staged folder is missing $($missing64.Count) BPL(s): " +
-            "$($missing64 -join ', '). Re-run build-packages.ps1 -Version $v -Platform Win64."
+            "$(($missing64 | ForEach-Object { "$_$suffix.bpl" }) -join ', '). Re-run build-packages.ps1 -Version $v -Platform Win64."
     }
     # A 64-bit IDE process cannot bind the 32-bit loader RAD Studio ships, and RAD
     # Studio has no x64 one (verified: nothing under any bin64). It comes from the
@@ -125,7 +177,7 @@ foreach ($v in $staged) {
     }
     if (Test-Path $loader64) {
       Copy-Item $loader64 $x64Dir -Force
-      Write-Host "  ok  Delphi $v/Win64  ($($Bpls.Count) BPLs + x64 WebView2Loader.dll)" -ForegroundColor Green
+      Write-Host "  ok  Delphi $v/Win64  ($($BplNames.Count) BPLs, suffix $suffix + x64 WebView2Loader.dll)" -ForegroundColor Green
     } else {
       throw "Delphi $v/Win64: no x64 WebView2Loader.dll. See " +
             "installer\lazarus\redist\x86_64\README.md."

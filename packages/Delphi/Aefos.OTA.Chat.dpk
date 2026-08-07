@@ -27,6 +27,7 @@ package Aefos.OTA.Chat;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Aefos AI - Chat (in-IDE AI chat/agent panel + in-process MCP server)'}
 {$IMPLICITBUILD ON}
+{$I Aefos.LibSuffix.inc}   // one BPL name per IDE version - see the file
 
 requires
   vcl,

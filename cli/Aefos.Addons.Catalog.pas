@@ -164,6 +164,55 @@ begin
   Result := True;
 end;
 
+function _IsHttp(const ARef: string): Boolean;
+begin
+  Result := SameText(Copy(ARef, 1, 7), 'http://') or
+            SameText(Copy(ARef, 1, 8), 'https://');
+end;
+
+// A registry may publish a RELATIVE url ("addons/x/x-1.0.0.zip"), and relative
+// to WHAT was never asked while there was only one registry. With stores it has
+// to be asked, and there is only one defensible answer: relative to the store
+// that published it. Anchoring on the built-in gallery instead - which is what
+// happened before this - pointed a company store's bundle at our download
+// directory, and the error it produced named a path that never existed
+// anywhere ("D:\repo\https:\raw.githubusercontent.com\...").
+function _AbsolutizeUrl(const ABase, AUrl: string): string;
+var
+  LCut: Integer;
+begin
+  Result := AUrl;
+  if (Result = '') or _IsHttp(Result) or
+     SameText(Copy(Result, 1, 7), 'file://') then
+    Exit;
+  if TPath.IsPathRooted(Result) then
+    Exit;
+  if _IsHttp(ABase) then
+  begin
+    LCut := LastDelimiter('/', ABase);
+    if LCut > 0 then
+      Result := Copy(ABase, 1, LCut) + Result;
+    Exit;
+  end;
+  if ABase <> '' then
+    Result := TPath.GetFullPath(TPath.Combine(ExtractFileDir(ABase), Result));
+end;
+
+// "Official" is a fact about WHERE an addon came from, and until now it was a
+// word the publisher wrote about itself. That mattered beyond the badge: the
+// install consent gate skips the prompt for official-trust bundles, so any
+// store whose registry.json said "trust": "official" could install an MCP
+// server or a tools folder - code that then runs on the machine - without ever
+// asking. So trust is clamped at the door: only the official store may hand
+// out atOfficial, and every other store's rows are community whatever they
+// claim. A store can still be trusted by the user; it just cannot self-declare.
+procedure _ClampTrust(var AEntry: TAddonRegistryEntry;
+  const ASource: TAddonSource);
+begin
+  if not ASource.Builtin then
+    AEntry.Trust := atCommunity;
+end;
+
 // A store that could not be read may be the store that HAS the slug, so the
 // not-found message has to carry it. Silence here would send the user hunting
 // for a typo in a name that is perfectly correct.
@@ -201,6 +250,9 @@ begin
           begin
             Result.Rows[LIndex].Source := ASource.Name;
             Result.Rows[LIndex].Entry := LEntries[LIndex];
+            Result.Rows[LIndex].Entry.Url :=
+              _AbsolutizeUrl(LUrl, Result.Rows[LIndex].Entry.Url);
+            _ClampTrust(Result.Rows[LIndex].Entry, ASource);
           end;
         end;
       askPath:
@@ -386,6 +438,10 @@ begin
       begin
         LObj := TJSONObject.Create;
         LObj.AddPair('source', AResults[LI].Source.Name);
+        if AResults[LI].Source.Builtin then
+          LObj.AddPair('origin', 'official')
+        else
+          LObj.AddPair('origin', 'custom');
         LObj.AddPair('message', AResults[LI].Error);
         LErrors.AddElement(LObj);
         Continue;
@@ -395,6 +451,13 @@ begin
         LEntry := AResults[LI].Rows[LJ].Entry;
         LObj := TJSONObject.Create;
         LObj.AddPair('source', AResults[LI].Rows[LJ].Source);
+        // Where it came from, as a fact rather than a claim: the dialog splits
+        // Official from Custom on this, and only the official store can be on
+        // the left of that line.
+        if AResults[LI].Source.Builtin then
+          LObj.AddPair('origin', 'official')
+        else
+          LObj.AddPair('origin', 'custom');
         LObj.AddPair('slug', LEntry.Slug);
         LObj.AddPair('name', LEntry.Name);
         LObj.AddPair('version', LEntry.Version);

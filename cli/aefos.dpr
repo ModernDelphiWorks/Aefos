@@ -88,6 +88,14 @@ begin
   Writeln('Addons install under ~/.aefos (commands, skills, addons).');
 end;
 
+function _OriginOf(const ASource: TAddonSource): string;
+begin
+  if ASource.Builtin then
+    Result := 'official'
+  else
+    Result := 'custom';
+end;
+
 procedure PrintSources;
 var
   LSources: TArray<TAddonSource>;
@@ -95,15 +103,16 @@ var
   LWhere: string;
 begin
   LSources := TAddonSources.Load;
-  Writeln('Sources (', TAddonSources.ConfigPath, '):');
+  Writeln('Sources (custom ones live in ', TAddonSources.ConfigPath, '):');
   for LIndex := 0 to High(LSources) do
   begin
     LWhere := LSources[LIndex].Location;
-    if Trim(LWhere) = '' then
-      LWhere := '(built-in gallery)';
+    if LSources[LIndex].Builtin then
+      LWhere := '(official gallery - not configurable)';
     if not LSources[LIndex].Enabled then
       LWhere := LWhere + '   (disabled)';
-    Writeln(Format('  %-12s %-6s %s', [LSources[LIndex].Name,
+    Writeln(Format('  %-12s %-8s %-6s %s', [LSources[LIndex].Name,
+      _OriginOf(LSources[LIndex]),
       TAddonSources.KindToStr(LSources[LIndex].Kind), LWhere]));
   end;
 end;

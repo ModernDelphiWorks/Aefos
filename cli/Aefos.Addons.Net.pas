@@ -43,6 +43,19 @@ type
     { Lowercase hex SHA-256 of a file's bytes. }
     class function Sha256OfFile(const APath: string): string; static;
 
+    { Lowercase hex SHA-256 of a whole DIRECTORY, so a bundle that arrives as a
+      folder (a path store - a company share) still has the one identity the
+      rest of the system is built on: sha256 is what DecideUpdate compares, and
+      a folder with no sha would read as "changed" on every single run.
+
+      The digest is over a sorted "<relative path> <file sha>" listing, not over
+      concatenated bytes: that way a file MOVED between folders changes the
+      identity, which byte concatenation would miss. Paths are lowercased and
+      slash-normalised (Windows treats those as the same file), and the sort is
+      ORDINAL on purpose - a locale-aware collation would order the listing
+      differently on two machines and invent a difference that is not there. }
+    class function Sha256OfTree(const ADir: string): string; static;
+
     { Verifies AFile's SHA-256 equals AExpected (case-insensitive). Raises
       EAddonIntegrity on mismatch. }
     class procedure VerifySha256(const AFile, AExpected: string); static;
@@ -56,6 +69,7 @@ implementation
 
 uses
   SysUtils,
+  Classes,
   Aefos.Compat.IO,
   Aefos.Compat.Http,
   Aefos.Compat.Sha256,
@@ -167,6 +181,41 @@ end;
 class function TAddonNet.Sha256OfFile(const APath: string): string;
 begin
   Result := TAefosSha256.HexDigestFile(APath);
+end;
+
+// Ordinal comparison, deliberately NOT the locale-aware default: the digest
+// below depends on the ORDER, so two machines with different locales must not
+// sort the same listing differently.
+function _CompareOrdinal(AList: TStringList;
+  AIndex1, AIndex2: Integer): Integer;
+begin
+  Result := CompareStr(AList[AIndex1], AList[AIndex2]);
+end;
+
+class function TAddonNet.Sha256OfTree(const ADir: string): string;
+var
+  LFiles: TArray<string>;
+  LList: TStringList;
+  LIndex, LRootLen: Integer;
+  LRel: string;
+begin
+  if not TDirectory.Exists(ADir) then
+    raise EAddonError.CreateFmt('bundle folder not found: %s', [ADir]);
+  LFiles := TDirectory.GetFiles(ADir, '*', TSearchOption.soAllDirectories);
+  LRootLen := Length(IncludeTrailingPathDelimiter(TPath.GetFullPath(ADir)));
+  LList := TStringList.Create;
+  try
+    for LIndex := 0 to High(LFiles) do
+    begin
+      LRel := Copy(TPath.GetFullPath(LFiles[LIndex]), LRootLen + 1, MaxInt);
+      LRel := LowerCase(StringReplace(LRel, '\', '/', [rfReplaceAll]));
+      LList.Add(LRel + ' ' + TAefosSha256.HexDigestFile(LFiles[LIndex]));
+    end;
+    LList.CustomSort(_CompareOrdinal);
+    Result := TAefosSha256.HexDigest(LList.Text);
+  finally
+    LList.Free;
+  end;
 end;
 
 class procedure TAddonNet.VerifySha256(const AFile, AExpected: string);

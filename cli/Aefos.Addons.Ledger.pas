@@ -75,6 +75,7 @@ begin
   Result.AddPair('trust', AItem.Trust.ToStr);
   Result.AddPair('sha256', AItem.Sha256);
   Result.AddPair('installedAt', AItem.InstalledAt);
+  Result.AddPair('source', AItem.Source);
   Result.AddPair('artifacts', _ArtifactsToJson(AItem.Artifacts));
   LFiles := TJSONArray.Create;
   for LIndex := 0 to High(AItem.Files) do
@@ -138,6 +139,9 @@ begin
   Result.Trust := TAddonTrust.Parse(_Str(AObj, 'trust'));
   Result.Sha256 := _Str(AObj, 'sha256');
   Result.InstalledAt := _Str(AObj, 'installedAt');
+  // Absent in a ledger written before stores existed. Empty means "wherever it
+  // can be found", which is what that older install actually meant.
+  Result.Source := _Str(AObj, 'source');
   LArt := AObj.Values['artifacts'];
   if LArt is TJSONObject then
   begin

@@ -78,6 +78,12 @@ type
     { Display name for messages ('Claude plugin', 'Agent Plugins 1.0', ...). }
     class function FormatName(const AFormat: TPluginFormat): string; static;
 
+    { Where that format keeps its manifest, so a catalogue can read a bundle's
+      name and version without adopting it. Exposed rather than duplicated: the
+      point of a detection table is that it exists in one place. }
+    class function ManifestPathOf(const ABundleDir: string;
+      const AFormat: TPluginFormat): string; static;
+
     { Turns a foreign bundle into a manifest the installer can already place:
       metadata read from the foreign manifest, install[] mappings synthesised
       from the layout, artifacts set from what was actually found. Normalises
@@ -165,6 +171,12 @@ begin
     Result := LSecond
   else
     Result := '';
+end;
+
+class function TAddonPluginFormat.ManifestPathOf(const ABundleDir: string;
+  const AFormat: TPluginFormat): string;
+begin
+  Result := _ManifestPath(ABundleDir, AFormat);
 end;
 
 class function TAddonPluginFormat.Detect(const ABundleDir: string): TPluginFormat;

@@ -1,4 +1,4 @@
-program aefos;
+﻿program aefos;
 {$IFDEF FPC}{$mode delphiunicode}{$ENDIF}
 
 {$APPTYPE CONSOLE}
@@ -32,6 +32,8 @@ uses
   Aefos.Addons.Paths in 'Aefos.Addons.Paths.pas',
   Aefos.Addons.Manifest in 'Aefos.Addons.Manifest.pas',
   Aefos.Addons.PluginFormat in 'Aefos.Addons.PluginFormat.pas',
+  Aefos.Addons.Sources in 'Aefos.Addons.Sources.pas',
+  Aefos.Addons.Catalog in 'Aefos.Addons.Catalog.pas',
   Aefos.Addons.Ledger in 'Aefos.Addons.Ledger.pas',
   Aefos.Addons.Net in 'Aefos.Addons.Net.pas',
   Aefos.Addons.Installer in 'Aefos.Addons.Installer.pas',
@@ -54,6 +56,7 @@ var
   GArgv: TArray<string>;
   GArgs: TAddonCliArgs;
   GOpts: TInstallOptions;
+  GCatalog: TArray<TAddonCatalogResult>;
   LIndex: Integer;
 
 procedure Log(const ALine: string);
@@ -71,6 +74,8 @@ begin
   Writeln('  aefos uninstall <slug>         remove an installed addon');
   Writeln('  aefos update [<slug>] [--check]  refresh changed addons (no slug = all)');
   Writeln('  aefos list                     list installed addons');
+  Writeln('  aefos catalog [--json]         what can be installed, from every source');
+  Writeln('  aefos sources                  the configured stores');
   Writeln('');
   Writeln('Options:');
   Writeln('  -y, --yes            consent to third-party code (mcp/tools) up front');
@@ -80,6 +85,52 @@ begin
   Writeln('  -v, --version        version');
   Writeln('');
   Writeln('Addons install under ~/.aefos (commands, skills, addons).');
+end;
+
+procedure PrintSources;
+var
+  LSources: TArray<TAddonSource>;
+  LIndex: Integer;
+  LWhere: string;
+begin
+  LSources := TAddonSources.Load;
+  Writeln('Sources (', TAddonSources.ConfigPath, '):');
+  for LIndex := 0 to High(LSources) do
+  begin
+    LWhere := LSources[LIndex].Location;
+    if Trim(LWhere) = '' then
+      LWhere := '(built-in gallery)';
+    if not LSources[LIndex].Enabled then
+      LWhere := LWhere + '   (disabled)';
+    Writeln(Format('  %-12s %-6s %s', [LSources[LIndex].Name,
+      TAddonSources.KindToStr(LSources[LIndex].Kind), LWhere]));
+  end;
+end;
+
+// The human view of the catalogue. --json is the one the IDE dialog reads; this
+// is for the person at a prompt, and it prints the SOURCE first because with
+// more than one store the name alone stops identifying anything.
+procedure PrintCatalog(const AResults: TArray<TAddonCatalogResult>);
+var
+  LI, LJ, LTotal: Integer;
+begin
+  LTotal := 0;
+  for LI := 0 to High(AResults) do
+  begin
+    if AResults[LI].Error <> '' then
+    begin
+      Writeln(Format('  ! %s: %s', [AResults[LI].Source.Name, AResults[LI].Error]));
+      Continue;
+    end;
+    for LJ := 0 to High(AResults[LI].Rows) do
+    begin
+      Writeln(Format('  %-10s %-22s %-10s %s', [AResults[LI].Rows[LJ].Source,
+        AResults[LI].Rows[LJ].Entry.Slug, AResults[LI].Rows[LJ].Entry.Version,
+        AResults[LI].Rows[LJ].Entry.Name]));
+      Inc(LTotal);
+    end;
+  end;
+  Writeln(Format('%d addon(s) available.', [LTotal]));
 end;
 
 function AefosVersion: string;
@@ -141,6 +192,15 @@ begin
           TAddonInstaller.Update(GArgs.Slug, GOpts, Log);
       acUninstall: TAddonInstaller.Uninstall(GArgs.Slug, Log);
       acList:    TAddonInstaller.List(Log);
+      acSources: PrintSources;
+      acCatalog:
+        begin
+          GCatalog := TAddonCatalog.ReadAll;
+          if GArgs.Json then
+            Writeln(TAddonCatalog.ToJson(GCatalog))
+          else
+            PrintCatalog(GCatalog);
+        end;
     end;
     Halt(0);
   except

@@ -917,6 +917,66 @@ begin
   end;
 end;
 
+// ===========================================================================
+//  Make each IDE find ITS OWN Aefos BPLs.
+//
+//  A design package names the runtime packages it needs, and the IDE resolves
+//  each one through the process PATH - where every installed RAD Studio has
+//  already put its own Bpl folder. Our packages carry the SAME file name in
+//  every version (no LIBSUFFIX), so on a machine with more than one IDE the
+//  first Bpl folder on PATH answers for all of them. Measured on a VM holding
+//  17.0 through 22.0: PATH listed 21.0 fifth-from-front and 17.0 far behind it,
+//  so the Seattle IDE loaded the SYDNEY Aefos.MCP.Core.bpl. That build has no
+//  Aefos.Compat.JsonFormat helper (it is compiled only below CompilerVersion 33),
+//  which surfaced as "entry point ...TAefosJsonFormatHelper@Format not found",
+//  and the WebView package - a Sydney BPL dragging the Sydney RTL into a Seattle
+//  process - died with an access violation instead. Two unrelated-looking
+//  failures, one cause: whoever comes first on PATH wins.
+//
+//  The IDE's own environment override is the cure, and Embarcadero uses it for
+//  precisely this: their InterBase entry prepends an IDE_spoof folder so the
+//  right DLL is found first. The key lives under the VERSION's hive, which is
+//  exactly the granularity the problem has.
+//
+//  MERGE, NEVER OVERWRITE. The value already carries entries we did not write
+//  (the InterBase spoof among them); replacing it would break somebody else's
+//  product to fix ours. Prepending our folder to whatever is there is enough,
+//  and re-running the installer must not stack copies - hence the leading-match
+//  test and the removal of any stale occurrence further along.
+procedure _PinBplSearchPath(const Ver: string);
+var
+  Key, Cur, Bpl: string;
+begin
+  Bpl := ExpandConstant('{commondocs}\Embarcadero\Studio\' + Ver + '\Bpl');
+  Key := 'Software\Embarcadero\BDS\' + Ver + '\Environment Variables';
+  // No value yet: $(PATH) is what the IDE would have used on its own, so keeping
+  // it as the tail leaves every other folder reachable, just behind ours.
+  if not RegQueryStringValue(HKCU, Key, 'Path', Cur) then
+    Cur := '$(PATH)';
+  if Pos(Uppercase(Bpl) + ';', Uppercase(Cur)) = 1 then
+    exit;  // already in front - idempotent across re-installs
+  StringChangeEx(Cur, Bpl + ';', '', True);
+  RegWriteStringValue(HKCU, Key, 'Path', Bpl + ';' + Cur);
+end;
+
+// D13 is deliberately left out, and the reason is not caution - it is that one
+// prepended folder is the WRONG shape there. Delphi 13 ships two IDEs, 32-bit
+// and 64-bit, and they share this single registry hive while loading from
+// different folders (Bpl and Bpl\Win64). Putting either one in front would make
+// the other IDE meet a BPL of the wrong bitness, and LoadLibrary fails on that
+// outright rather than moving on to the next folder on PATH - so the fix would
+// break the very IDE it skipped. A per-bitness answer (or a LIBSUFFIX, which
+// makes the whole collision impossible) is what D13 needs; until then it keeps
+// today's behaviour, which is no worse than before this procedure existed.
+procedure PinBplSearchPathForSelectedVersions;
+var
+  I: Integer;
+begin
+  for I := 0 to GetArrayLength(GVer) - 1 do
+    if WantVer(GVer[I]) and (GVer[I] <> '{#VerD13}') then
+      _PinBplSearchPath(GVer[I]);
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   Msg: string;
@@ -929,6 +989,7 @@ begin
   if CurStep <> ssPostInstall then
     exit;
 
+  PinBplSearchPathForSelectedVersions();
   WriteMcpJson();
   _ExtractCopilotZip();
 
@@ -985,6 +1046,44 @@ begin
         + 'Install it manually: https://aka.ms/webview2';
 
   MsgBox(Msg, mbInformation, MB_OK);
+end;
+
+// Undo _PinBplSearchPath. The value is shared, so we take OUR folder out and put
+// the rest back exactly as we found it - deleting the value would take the
+// InterBase spoof (and anything else the user added) down with us. If what is
+// left is the bare '$(PATH)' we wrote as a tail, the override carries no
+// information and the value goes away entirely, which is the state the IDE had
+// before Aefos existed.
+procedure _UnpinBplSearchPath(const Ver: string);
+var
+  Key, Cur, Bpl: string;
+begin
+  Key := 'Software\Embarcadero\BDS\' + Ver + '\Environment Variables';
+  if not RegQueryStringValue(HKCU, Key, 'Path', Cur) then
+    exit;
+  Bpl := ExpandConstant('{commondocs}\Embarcadero\Studio\' + Ver + '\Bpl');
+  StringChangeEx(Cur, Bpl + ';', '', True);
+  if Trim(Cur) = '$(PATH)' then
+    RegDeleteValue(HKCU, Key, 'Path')
+  else
+    RegWriteStringValue(HKCU, Key, 'Path', Cur);
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep <> usUninstall then
+    exit;
+  // The version checkbox page is gone by uninstall time, so sweep every version
+  // this installer knows how to install rather than guessing which were picked.
+  // _UnpinBplSearchPath is a no-op where no override exists.
+  _UnpinBplSearchPath('{#VerD10S}');
+  _UnpinBplSearchPath('{#VerD10B}');
+  _UnpinBplSearchPath('{#VerD10T}');
+  _UnpinBplSearchPath('{#VerD10R}');
+  _UnpinBplSearchPath('{#VerD10Y}');
+  _UnpinBplSearchPath('{#VerD11}');
+  _UnpinBplSearchPath('{#VerD12}');
+  _UnpinBplSearchPath('{#VerD13}');
 end;
 
 [CustomMessages]

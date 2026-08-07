@@ -16,21 +16,44 @@
   rtl290.bpl. We follow their suffix exactly, so an Aefos BPL sits next to the RTL
   it was built against and reads as belonging to it.
 
-  THE NUMBERS ARE MEASURED, NOT REMEMBERED. Each one was read off the IDE's own
+  ---------------------------------------------------------------------------
+  🩸 WHY {$IFDEF VERxxx} AND NOT {$IF CompilerVersion = nn}
+
+  Because CompilerVersion DOES NOT EXIST in a .dpk, and the way it fails is the
+  dangerous kind. Measured on Delphi 12 (compiler 36.0):
+
+      {$IF CompilerVersion = 36}  -> taken
+      {$IF CompilerVersion = 99}  -> ALSO TAKEN
+      {$IF Declared(CompilerVersion)} -> not taken
+      {$IF RTLVersion = 99}       -> ALSO TAKEN
+
+  An {$IF} naming an undeclared constant is treated as TRUE. Plain {$IFDEF} and
+  {$IF 0 = 1} behave correctly in the same file, so this is specific to those
+  symbols: a package's directive section does not have them. The first version of
+  this file used CompilerVersion and every branch fired at once - all eight
+  {$LIBSUFFIX} lines executed and the last one won. That is a conditional that
+  compiles, looks reasonable, and silently means nothing.
+
+  {$IFDEF VERxxx} is proven to work here: on Delphi 12 only VER360 was taken,
+  VER300/VER350/VER370 were not, and {$LIBSUFFIX '290'} made the compiler write
+  TestSfx4290.bpl.
+  ---------------------------------------------------------------------------
+
+  THE NUMBERS ARE MEASURED, NOT REMEMBERED. Each suffix was read off the IDE's own
   bin folder (rtl<suffix>.bpl / designide<suffix>.bpl) on 2026-08-07:
 
-    CompilerVersion  BDS    Product          Suffix
-    30               17.0   10 Seattle       230
-    31               18.0   10.1 Berlin      240
-    32               19.0   10.2 Tokyo       250
-    33               20.0   10.3 Rio         260
-    34               21.0   10.4 Sydney      270
-    35               22.0   Delphi 11        280
-    36               23.0   Delphi 12        290
-    37               37.0   Delphi 13        370
+    VER symbol  BDS    Product          Suffix
+    VER300      17.0   10 Seattle       230
+    VER310      18.0   10.1 Berlin      240
+    VER320      19.0   10.2 Tokyo       250
+    VER330      20.0   10.3 Rio         260
+    VER340      21.0   10.4 Sydney      270
+    VER350      22.0   Delphi 11        280
+    VER360      23.0   Delphi 12        290
+    VER370      37.0   Delphi 13        370
 
-  Note the jump at the end: 35 -> 280 and 36 -> 290 are ten apart, 36 -> 37 is
-  eighty. There is no formula to derive, which is exactly why the table is read
+  Note the jump at the end: 22.0 -> 280 and 23.0 -> 290 are ten apart, 23.0 -> 37.0
+  is eighty. There is no formula to derive, which is exactly why the table is read
   from disk rather than computed - the one time this file could be "obviously"
   generalised is the time it would be wrong.
 
@@ -39,32 +62,27 @@
   by their name, and inventing a difference here would break that convention for
   no gain.
 
-  AUTO covers whatever ships next: it asks the compiler for its own suffix, so a
-  future RAD Studio needs no edit here. It is only reached above 37 because every
-  version at or below that has a measured number, and a measured number beats a
-  mechanism we have not watched run.
+  A FUTURE RAD STUDIO matches no line here and therefore gets no suffix. That is
+  deliberate: {$LIBSUFFIX AUTO} would cover it, but AUTO cannot be guarded (the
+  only guard available is {$IFDEF VERxxx}, which by definition does not know the
+  version that has not shipped), and an unguarded AUTO would also reach 10 Seattle,
+  where it does not exist. So the new version produces an unsuffixed BPL and
+  build-packages.ps1 stops the build asking for the suffixed name - a loud failure
+  with an obvious fix (add the row) instead of a quiet one.
 
-  IF THIS FILE STOPS BEING INCLUDED - the IDE rewrites a .dpk when you add or
-  remove files through the Project Manager, and a directive it does not recognise
-  can be dropped - the BPL silently goes back to its unsuffixed name and the
-  collision returns. That is why build-packages.ps1 asserts the SUFFIXED file
-  exists after every build: the failure has to be loud.
+  THE SAME LOUD FAILURE COVERS the other way this can break: the IDE rewrites a
+  .dpk when you add or remove files through the Project Manager, and a directive
+  it does not recognise can be dropped. If the {$I} line for this file ever goes,
+  the BPL returns to its unsuffixed name and the staging step refuses it.
 *)
 
 {$IFNDEF FPC}
-
-{$IF CompilerVersion < 30}
-  {$MESSAGE FATAL 'Aefos needs Delphi 10 Seattle (CompilerVersion 30) or newer.'}
-{$IFEND}
-
-{$IF CompilerVersion = 30}{$LIBSUFFIX '230'}{$IFEND}
-{$IF CompilerVersion = 31}{$LIBSUFFIX '240'}{$IFEND}
-{$IF CompilerVersion = 32}{$LIBSUFFIX '250'}{$IFEND}
-{$IF CompilerVersion = 33}{$LIBSUFFIX '260'}{$IFEND}
-{$IF CompilerVersion = 34}{$LIBSUFFIX '270'}{$IFEND}
-{$IF CompilerVersion = 35}{$LIBSUFFIX '280'}{$IFEND}
-{$IF CompilerVersion = 36}{$LIBSUFFIX '290'}{$IFEND}
-{$IF CompilerVersion = 37}{$LIBSUFFIX '370'}{$IFEND}
-{$IF CompilerVersion > 37}{$LIBSUFFIX AUTO}{$IFEND}
-
+{$IFDEF VER300}{$LIBSUFFIX '230'}{$ENDIF}
+{$IFDEF VER310}{$LIBSUFFIX '240'}{$ENDIF}
+{$IFDEF VER320}{$LIBSUFFIX '250'}{$ENDIF}
+{$IFDEF VER330}{$LIBSUFFIX '260'}{$ENDIF}
+{$IFDEF VER340}{$LIBSUFFIX '270'}{$ENDIF}
+{$IFDEF VER350}{$LIBSUFFIX '280'}{$ENDIF}
+{$IFDEF VER360}{$LIBSUFFIX '290'}{$ENDIF}
+{$IFDEF VER370}{$LIBSUFFIX '370'}{$ENDIF}
 {$ENDIF}

@@ -287,14 +287,18 @@ foreach ($v in $targets) {
              "lost its {`$I Aefos.LibSuffix.inc} line.")
     }
 
-    # An unsuffixed BPL left over from a build before this change is not inert:
-    # it sits in the folder the IDE searches, under the very name that used to
-    # collide across versions. Sweeping it is the point of the rename.
-    foreach ($b in $BplNames) {
-      $legacy = Join-Path $src "$b.bpl"
-      if (Test-Path $legacy) {
-        Remove-Item $legacy -Force
-        Write-Host "  -   removed pre-suffix $b.bpl from $src" -ForegroundColor DarkYellow
+    # An unsuffixed BPL left over from a build before this change is not inert.
+    # In the IDE's Bpl folder it sits under the very name that used to collide
+    # across versions; in the staging folder it is worse than clutter, because
+    # the installer identifies a payload's suffix by looking at the file names
+    # there and would find the old one first. Both get swept.
+    foreach ($dir in @($src, $dst)) {
+      foreach ($b in $BplNames) {
+        $legacy = Join-Path $dir "$b.bpl"
+        if (Test-Path $legacy) {
+          Remove-Item $legacy -Force
+          Write-Host "  -   removed pre-suffix $b.bpl from $dir" -ForegroundColor DarkYellow
+        }
       }
     }
 

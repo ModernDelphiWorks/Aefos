@@ -27,6 +27,7 @@ uses
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.Forms,
+  Aefos.WebView.Types,
   Aefos.WebView.Control;
 
 type
@@ -35,6 +36,7 @@ type
   private
     FBusy: Boolean;
     procedure _WebViewReady;
+    procedure _WebViewFailed(const AHResult: HRESULT);
     procedure _WebViewMessage(const AMessage: string);
     procedure _SendTheme;
     procedure _LoadCatalog;
@@ -126,8 +128,14 @@ begin
   GStoreForm := TAefosAddonStoreForm.Create(nil);
   try
     TThemeHelper.ApplyPremiumTheme(GStoreForm);
+    // BEFORE the handle exists - the host bakes the config in when it is
+    // created, and creation happens on the first show. Shared, never Default:
+    // an empty user-data folder sends WebView2 to write beside bds.exe, and a
+    // folder different from the chat's cannot coexist in one process.
+    GStoreForm.AefosWebView1.Configure(TWebViewConfig.Shared);
     GStoreForm.AefosWebView1.OnReady := GStoreForm._WebViewReady;
     GStoreForm.AefosWebView1.OnMessageReceived := GStoreForm._WebViewMessage;
+    GStoreForm.AefosWebView1.OnFailed := GStoreForm._WebViewFailed;
     GStoreForm.AefosWebView1.Navigate('file:///' +
       StringReplace(_MaterialisePage, '\', '/', [rfReplaceAll]));
     GStoreForm.ShowModal;
@@ -174,6 +182,16 @@ end;
 procedure TAefosAddonStoreForm._WebViewReady;
 begin
   _SendTheme;
+end;
+
+// The page cannot report this - there is no page. So the window title carries
+// it, because a WebView that never starts otherwise looks exactly like a store
+// that is slow, and the first version of this window sat on "Loading Aefos..."
+// with nothing anywhere saying why.
+procedure TAefosAddonStoreForm._WebViewFailed(const AHResult: HRESULT);
+begin
+  Caption := Format('Aefos Addons - WebView2 could not start (0x%.8x)',
+    [Cardinal(AHResult)]);
 end;
 
 // Reading the catalogue is itself a shell-out that can block (an HTTP gallery,

@@ -44,6 +44,15 @@ type
     procedure _CallPage(const AFunc, AJsonArg: string);
     procedure _PageLog(const AText: string);
   public
+    { Configures the WebView and wires its events HERE, before anything else can
+      touch the control. The host bakes its config in on the first CreateWnd,
+      and a handle can be allocated by something as innocent as walking the
+      children to apply a theme - after which Configure is ignored, because the
+      host already exists. That is the chat's documented order ("Configure
+      BEFORE the handle exists", "wire events BEFORE Parent"); doing it in the
+      constructor is the only way to be sure nothing got there first. }
+    constructor Create(AOwner: TComponent); override;
+
     { Opens the store. One window at a time on purpose: two of them would show
       two catalogues that disagree the moment either one installs something. }
     class procedure Execute; static;
@@ -118,6 +127,20 @@ begin
     Result := TJSONString(LVal).Value;
 end;
 
+constructor TAefosAddonStoreForm.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  // First thing after the .dfm is streamed and before any caller can reach the
+  // control. Its OWN folder, like every other pane here: Default leaves it
+  // empty, which sends WebView2 to keep its user data beside bds.exe, and
+  // sharing the chat's would couple this window to the chat's browser
+  // arguments (see TWebViewConfig.ForPane).
+  AefosWebView1.Configure(TWebViewConfig.ForPane('AddonStore'));
+  AefosWebView1.OnReady := _WebViewReady;
+  AefosWebView1.OnMessageReceived := _WebViewMessage;
+  AefosWebView1.OnFailed := _WebViewFailed;
+end;
+
 class procedure TAefosAddonStoreForm.Execute;
 begin
   if Assigned(GStoreForm) then
@@ -128,15 +151,6 @@ begin
   GStoreForm := TAefosAddonStoreForm.Create(nil);
   try
     TThemeHelper.ApplyPremiumTheme(GStoreForm);
-    // BEFORE the handle exists - the host bakes the config in when it is
-    // created, and creation happens on the first show. Its OWN folder, like
-    // every other pane here: Default leaves it empty, which sends WebView2 to
-    // write beside bds.exe, and sharing the chat's would couple this window to
-    // the chat's browser arguments.
-    GStoreForm.AefosWebView1.Configure(TWebViewConfig.ForPane('AddonStore'));
-    GStoreForm.AefosWebView1.OnReady := GStoreForm._WebViewReady;
-    GStoreForm.AefosWebView1.OnMessageReceived := GStoreForm._WebViewMessage;
-    GStoreForm.AefosWebView1.OnFailed := GStoreForm._WebViewFailed;
     GStoreForm.AefosWebView1.Navigate('file:///' +
       StringReplace(_MaterialisePage, '\', '/', [rfReplaceAll]));
     GStoreForm.ShowModal;

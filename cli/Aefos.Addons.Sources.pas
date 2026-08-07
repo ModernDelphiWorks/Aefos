@@ -46,12 +46,16 @@ type
   { How a source's index is read. Not the bundle format - that is measured. }
   TAddonSourceKind = (askAefos, askPath, askGit);
 
-  { One configured store. }
+  { One store. }
   TAddonSource = record
     Name: string;      // short id, used by --source and shown in the catalogue
     Kind: TAddonSourceKind;
     Location: string;  // URL for aefos/git, directory for path
     Enabled: Boolean;
+    { True for the ONE official store, which is not configured and cannot be
+      repointed. Everything else is a store somebody added, and the difference
+      is load-bearing rather than cosmetic - see Load. }
+    Builtin: Boolean;
   end;
 
   { One row of the merged catalogue: a registry entry plus where it came from. }
@@ -66,18 +70,31 @@ type
     { Absolute path of sources.json (it may not exist). }
     class function ConfigPath: string; static;
 
-    { The configured sources. A missing or unreadable file yields the single
-      built-in gallery, so the CLI keeps working with no configuration at all. }
+    { Every store: the OFFICIAL one first, always, then whatever sources.json
+      adds. The official store is not part of the file and cannot be removed
+      from it - configuring a company store must not cost you the gallery,
+      which is exactly what a list that REPLACED the default used to do.
+
+      An entry named "aefos" may only turn the official store OFF. It cannot
+      repoint it: a store you can silently repoint is the whole supply-chain
+      risk, and "official" has to mean "came from the official store" rather
+      than "said it was official". (The offline installer's escape hatch stays
+      where it was, in %AEFOS_ADDONS_REGISTRY%, which is deliberate and local.) }
     class function Load: TArray<TAddonSource>; static;
 
     { Writes the list. Used by `aefos source add/remove` and, later, by the
       Options page - both go through here so the file has one writer shape. }
     class procedure Save(const ASources: TArray<TAddonSource>); static;
 
-    { The built-in gallery row, which Load returns when nothing is configured.
+    { The official gallery row, which Load always returns first.
       Named Builtin rather than Default because Default() is an intrinsic: inside
       the method the compiler resolved Default(TAddonSource) to the method itself. }
     class function Builtin: TAddonSource; static;
+
+    { The reserved name of the official store. Exposed so the Options page can
+      refuse it as a name for a custom store instead of writing a file the CLI
+      would then quietly ignore. }
+    class function BuiltinName: string; static;
 
     { Parses "aefos"/"path"/"git"; anything else raises, because a source whose
       kind we guessed would read the wrong thing silently. }
@@ -134,6 +151,12 @@ begin
   Result.Kind := askAefos;
   Result.Location := '';    // empty => TAddonNet.RegistryUrl, the built-in one
   Result.Enabled := True;
+  Result.Builtin := True;
+end;
+
+class function TAddonSources.BuiltinName: string;
+begin
+  Result := CDefaultName;
 end;
 
 function _Str(const AObj: TJSONObject; const AKey: string): string;
@@ -164,52 +187,64 @@ end;
 
 class function TAddonSources.Load: TArray<TAddonSource>;
 var
-  LPath, LText: string;
+  LPath, LText, LName: string;
   LVal, LListVal: TJSONValue;
   LArr: TJSONArray;
   LObj: TJSONObject;
   LIndex, LCount: Integer;
 begin
-  SetLength(Result, 0);
+  // The official store is position zero, before anything is read. Nothing in
+  // the file can remove it; one thing in the file can switch it off.
+  SetLength(Result, 1);
+  Result[0] := Builtin;
+  LCount := 1;
+
   LPath := ConfigPath;
   if not TFile.Exists(LPath) then
-    Exit(TArray<TAddonSource>.Create(Builtin));
+    Exit;
   try
     LText := TFile.ReadAllText(LPath, TEncoding.UTF8);
   except
-    Exit(TArray<TAddonSource>.Create(Builtin));
+    Exit;                               // unreadable config => official alone
   end;
   LVal := TJSONObject.ParseJSONValue(LText);
   try
     if not (LVal is TJSONObject) then
-      Exit(TArray<TAddonSource>.Create(Builtin));
+      Exit;
     LListVal := TJSONObject(LVal).Values['sources'];
     if not (LListVal is TJSONArray) then
-      Exit(TArray<TAddonSource>.Create(Builtin));
+      Exit;
     LArr := TJSONArray(LListVal);
-    LCount := 0;
-    SetLength(Result, LArr.Count);
+    SetLength(Result, LArr.Count + 1);
     for LIndex := 0 to LArr.Count - 1 do
     begin
       if not (LArr.Items[LIndex] is TJSONObject) then
         Continue;
       LObj := TJSONObject(LArr.Items[LIndex]);
-      Result[LCount].Name := _Str(LObj, 'name');
-      if Result[LCount].Name = '' then
+      LName := _Str(LObj, 'name');
+      if LName = '' then
         Continue;                       // a nameless store cannot be referred to
+      if SameText(LName, CDefaultName) then
+      begin
+        // The reserved name. It may say enabled:false and nothing else: a
+        // location here would silently REPLACE the official store, and every
+        // addon it published would then wear the official badge.
+        Result[0].Enabled := _BoolOrTrue(LObj, 'enabled');
+        Continue;
+      end;
+      Result[LCount].Name := LName;
       Result[LCount].Kind := ParseKind(_Str(LObj, 'kind'));
       Result[LCount].Location := _Str(LObj, 'location');
       if Result[LCount].Location = '' then
         Result[LCount].Location := _Str(LObj, 'url');   // friendlier alias
       Result[LCount].Enabled := _BoolOrTrue(LObj, 'enabled');
+      Result[LCount].Builtin := False;
       Inc(LCount);
     end;
     SetLength(Result, LCount);
   finally
     LVal.Free;
   end;
-  if Length(Result) = 0 then
-    Result := TArray<TAddonSource>.Create(Builtin);
 end;
 
 class procedure TAddonSources.Save(const ASources: TArray<TAddonSource>);
@@ -224,6 +259,20 @@ begin
     LRoot.AddPair('sources', LArr);
     for LIndex := 0 to High(ASources) do
     begin
+      if ASources[LIndex].Builtin then
+      begin
+        // The official store is not configuration, so it is not written back -
+        // round-tripping it would put a location in the file, and Load refuses
+        // to read one. The single thing worth persisting is it being OFF.
+        if not ASources[LIndex].Enabled then
+        begin
+          LItem := TJSONObject.Create;
+          LItem.AddPair('name', ASources[LIndex].Name);
+          LItem.AddPair('enabled', TJSONBool.Create(False));
+          LArr.AddElement(LItem);
+        end;
+        Continue;
+      end;
       LItem := TJSONObject.Create;
       LItem.AddPair('name', ASources[LIndex].Name);
       LItem.AddPair('kind', KindToStr(ASources[LIndex].Kind));

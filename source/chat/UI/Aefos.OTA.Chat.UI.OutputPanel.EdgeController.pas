@@ -264,9 +264,10 @@ begin
   // TEdgeBrowser's docked-blank bug). Configure BEFORE the handle exists; the host
   // bakes these in on creation. UserDataFolder: a writable temp subfolder. The
   // occlusion-disable arg is moot for composition but kept for parity.
-  LCfg := TWebViewConfig.Default; // bg already opaque #1e1e1e (anti-flash)
-  LCfg.UserDataFolder := TPath.Combine(TPath.GetTempPath, 'Aefos_WebView2');
-  LCfg.AdditionalBrowserArguments := '--disable-features=CalculateNativeWinOcclusion';
+  // Shared, not Default: the user-data folder and the occlusion argument now
+  // live in ONE place. A second WebView in this process that picked a folder of
+  // its own would never become ready, and would not say why.
+  LCfg := TWebViewConfig.Shared; // bg already opaque #1e1e1e (anti-flash)
   FBrowser.Configure(LCfg);
   // Wire events BEFORE Parent (setting Parent can create the handle, which kicks
   // off the host's async WebView2 creation that fires these back).

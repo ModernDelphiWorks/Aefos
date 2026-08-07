@@ -172,9 +172,17 @@ foreach ($v in $targets) {
     # The first casualty was AfterTargets (MSBuild 4.0), which our staging target
     # used to carry: every package died with MSB4066 "the attribute AfterTargets is
     # unrecognized" before a line of Pascal was read. That one is now fixed at the
-    # source - the .dproj files hook $(BuildDependsOn) instead, an idiom 3.5 and
-    # every version since understand - because a build started from INSIDE the old
-    # IDE hosts its own 3.5 engine and can never be handed a different msbuild.
+    # source - the .dproj files hook $(_PostCompileTargets), an unassigned extension
+    # point that works back to 3.5 - because a build started from INSIDE the old IDE
+    # hosts its own 3.5 engine and can never be handed a different msbuild.
+    #
+    # The hook lives in the Base PropertyGroup, NOT at the end of the file. The tail
+    # of a .dproj is parsed by the IDE itself, and the old IDE stops understanding
+    # the file from the first construct it does not expect there: a first attempt
+    # appended a PropertyGroup after the Import elements, msbuild was perfectly
+    # happy, and the IDE silently lost the whole Base group - packages linked as
+    # .exe (no GenDll) and units failed with "Unit 'SysUtils' not found" (no
+    # DCC_Namespace). Add build logic where the IDE already writes properties.
     #
     # This override stays regardless: it is proven on Seattle (same projects, same
     # 30.0 compiler, MSBuild 4.0 - builds clean), and giving the command line the

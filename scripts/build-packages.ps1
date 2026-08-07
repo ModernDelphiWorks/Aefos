@@ -166,18 +166,19 @@ foreach ($v in $targets) {
     Write-Host "=== Building Aefos group for Delphi $v ($Config/$plat) ===" -ForegroundColor Cyan
     # Prepend MSBuild 4.0 when rsvars picked an older one.
     #
-    # Seattle's rsvars.bat sets FrameworkDir to .NET v3.5, i.e. MSBuild 3.5 - and
-    # AfterTargets does not exist before MSBuild 4.0. Our .dproj files each carry
-    # an AfterTargets="Build" target (AefosStageBplForInstaller), so every package
-    # dies with MSB4066 "the attribute AfterTargets is unrecognized" before a line
-    # of Pascal is read. It reads like a broken project file; it is a build engine
-    # five years older than the attribute.
+    # Seattle's rsvars.bat sets FrameworkDir to .NET v3.5, i.e. MSBuild 3.5, which
+    # is older than several things the toolchain now takes for granted.
     #
-    # Fixing it here rather than in the eight .dproj files is deliberate: those
-    # files are also opened by the IDE, and rewriting the target into a 3.5-era
-    # idiom would degrade every modern build to work around one old one. Proven on
-    # Seattle: same projects, same compiler (30.0), MSBuild 4.0 - builds and the
-    # staging target runs.
+    # The first casualty was AfterTargets (MSBuild 4.0), which our staging target
+    # used to carry: every package died with MSB4066 "the attribute AfterTargets is
+    # unrecognized" before a line of Pascal was read. That one is now fixed at the
+    # source - the .dproj files hook $(BuildDependsOn) instead, an idiom 3.5 and
+    # every version since understand - because a build started from INSIDE the old
+    # IDE hosts its own 3.5 engine and can never be handed a different msbuild.
+    #
+    # This override stays regardless: it is proven on Seattle (same projects, same
+    # 30.0 compiler, MSBuild 4.0 - builds clean), and giving the command line the
+    # modern engine costs nothing while removing a whole class of 3.5-era surprise.
     $msbuildPrefix = ''
     $msOverride = Get-AefosMSBuildOverrideDir $rsvars
     if ($msOverride -ne '') {

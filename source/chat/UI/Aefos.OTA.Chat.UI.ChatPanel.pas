@@ -2618,10 +2618,12 @@ begin
     _OpenMcpModal;
     Exit;
   end;
-  // /addons: open the addon store - the catalogue of every configured store,
+  // /install: open the addon store - the catalogue of every configured store,
   // with an Install button. Never echoed nor dispatched to the executor: it is
-  // a window, not a prompt.
-  if SameText(LCmd, 'addons') or SameText(LCmd, 'store') then
+  // a window, not a prompt. /addons and /store answer too, because both are
+  // what someone would try.
+  if SameText(LCmd, 'install') or SameText(LCmd, 'addons') or
+     SameText(LCmd, 'store') then
   begin
     TAefosAddonStoreForm.Execute;
     Exit;

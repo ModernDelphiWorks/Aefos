@@ -22,6 +22,5 @@ object AefosAddonStoreForm: TAefosAddonStoreForm
     Width = 900
     Height = 620
     Align = alClient
-    TabOrder = 0
   end
 end

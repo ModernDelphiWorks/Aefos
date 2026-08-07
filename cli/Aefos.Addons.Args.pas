@@ -1,4 +1,4 @@
-unit Aefos.Addons.Args;
+﻿unit Aefos.Addons.Args;
 {$IFDEF FPC}{$mode delphiunicode}{$ENDIF}
 
 {
@@ -25,13 +25,14 @@ uses
 
 type
   TAddonCommand = (acNone, acInstall, acUninstall, acUpdate, acList,
-    acHelp, acVersion);
+    acHelp, acVersion, acCatalog, acSources);
 
   TAddonCliArgs = record
     Command: TAddonCommand;
     Slug: string;
     Yes: Boolean;
     Check: Boolean;     // --check: dry-run, report without installing
+    Json: Boolean;      // --json: machine-readable output (the IDE dialog reads it)
     Registry: string;   // '' = default/env
     Error: string;      // non-empty => parse failed (user-facing one-liner)
     { Parses the argv tail into this record. Never raises; a bad input lands in
@@ -53,6 +54,10 @@ begin
     ACmd := acUpdate
   else if SameText(AWord, 'list') or SameText(AWord, 'ls') then
     ACmd := acList
+  else if SameText(AWord, 'catalog') or SameText(AWord, 'search') then
+    ACmd := acCatalog
+  else if SameText(AWord, 'sources') then
+    ACmd := acSources
   else
     Result := False;
 end;
@@ -82,6 +87,8 @@ begin
       Result.Yes := True
     else if LArg = '--check' then
       Result.Check := True
+    else if SameText(LArg, '--json') then
+      Result.Json := True
     else if LArg = '--registry' then
     begin
       if LIndex >= High(AArgv) then
@@ -102,7 +109,7 @@ begin
       if not _ParseCommand(LArg, Result.Command) then
       begin
         Result.Error := 'Unknown command "' + LArg +
-          '". Use install, uninstall, update or list.';
+          '". Use install, uninstall, update, list, catalog or sources.';
         Exit;
       end;
     end

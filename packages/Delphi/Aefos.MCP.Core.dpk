@@ -47,6 +47,7 @@
 {$RUNONLY}
 {$DESCRIPTION 'Aefos MCP Core - RTL-only MCP engine (no ToolsAPI)'}
 {$IMPLICITBUILD ON}
+{$I Aefos.LibSuffix.inc}   // one BPL name per IDE version - see the file
 
 requires
   rtl,

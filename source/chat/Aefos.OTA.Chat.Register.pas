@@ -3940,28 +3940,45 @@ end;
 // the IDE still references after the BPL unmaps.
 procedure _LogAefosModuleBases;
 const
+  // Base names. The file on disk carries the IDE's package suffix
+  // (Aefos.LibSuffix.inc), so the real module is Aefos.Data230.bpl on Seattle and
+  // Aefos.Data290.bpl on Athens.
   CModules: array[0..5] of string = (
-    'Aefos.OTA.Chat.bpl', 'Aefos.Data.bpl', 'Aefos.Tools.bpl',
-    'Aefos.MCP.Core.bpl', 'Aefos.MCP.Tools.OTA.bpl', 'Aefos.OTA.Terminal.bpl');
+    'Aefos.OTA.Chat', 'Aefos.Data', 'Aefos.Tools',
+    'Aefos.MCP.Core', 'Aefos.MCP.Tools.OTA', 'Aefos.OTA.Terminal');
 var
-  LIdx:  Integer;
-  LBase: HMODULE;
-  LNt:   PImageNtHeaders;
-  LSize: Cardinal;
+  LIdx:   Integer;
+  LBase:  HMODULE;
+  LNt:    PImageNtHeaders;
+  LSize:  Cardinal;
+  LSuffix: string;
+  LName:  string;
 begin
-  _TeardownLog('=== LOAD (module bases) ===');
+  // The suffix is READ OFF THIS VERY MODULE rather than kept in a table here. A
+  // fifth copy of that table is a fifth chance to update four of them: if this
+  // one drifted, GetModuleHandle would return 0 for everything and the log would
+  // report "not loaded" six times - a diagnostic that lies quietly is worse than
+  // none, and this one exists precisely for the unload AV that is hard to see.
+  LSuffix := ChangeFileExt(ExtractFileName(GetModuleName(HInstance)), '');
+  if Copy(LSuffix, 1, Length(CModules[0])) = CModules[0] then
+    LSuffix := Copy(LSuffix, Length(CModules[0]) + 1, MaxInt)
+  else
+    LSuffix := '';
+
+  _TeardownLog('=== LOAD (module bases, suffix "' + LSuffix + '") ===');
   for LIdx := Low(CModules) to High(CModules) do
   begin
-    LBase := GetModuleHandle(PChar(CModules[LIdx]));
+    LName := CModules[LIdx] + LSuffix + '.bpl';
+    LBase := GetModuleHandle(PChar(LName));
     if LBase = 0 then
-      _TeardownLog('[load] ' + CModules[LIdx] + ' not loaded')
+      _TeardownLog('[load] ' + LName + ' not loaded')
     else
     begin
       LNt := PImageNtHeaders(NativeUInt(LBase) +
         Cardinal(PImageDosHeader(LBase)^._lfanew));
       LSize := LNt^.OptionalHeader.SizeOfImage;
       _TeardownLog(Format('[load] %s base=%.8x end=%.8x size=%.8x',
-        [CModules[LIdx], NativeUInt(LBase), NativeUInt(LBase) + LSize, LSize]));
+        [LName, NativeUInt(LBase), NativeUInt(LBase) + LSize, LSize]));
     end;
   end;
 end;

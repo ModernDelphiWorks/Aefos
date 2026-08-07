@@ -64,19 +64,41 @@
 #define VerD12     "23.0"
 #define VerD13     "37.0"
 
+; --- package name suffix, one per version ----------------------------------
+; Our BPLs carry the same suffix Embarcadero puts on theirs (rtl230, rtl290,
+; rtl370), because without it every version shipped the SAME file name: on a
+; machine with two RAD Studios the first Bpl folder on PATH answered for both,
+; and a Seattle IDE was measured loading a Sydney Aefos.MCP.Core.bpl.
+;
+; These literals exist because Inno resolves file names at compile time. They are
+; NOT the source of truth - Aefos.LibSuffix.inc tells the compiler, and
+; build-installer.ps1 reads the suffix back off the staged files and refuses to
+; build when it disagrees with what is declared here.
+;
+; Win32 and Win64 share a suffix: RAD Studio ships rtl290.bpl in both bin and
+; bin64 and tells the bitnesses apart by folder.
+#define SufD10S    "230"
+#define SufD10B    "240"
+#define SufD10T    "250"
+#define SufD10R    "260"
+#define SufD10Y    "270"
+#define SufD11     "280"
+#define SufD12     "290"
+#define SufD13     "370"
+
 ; A version's payload is emitted ONLY if its BPLs were staged, so building just
 ; one Delphi yields a single-version installer (FileExists is a compile-time check).
-#define HaveD10S FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10S + "\Aefos.OTA.Chat.bpl")
-#define HaveD10B FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10B + "\Aefos.OTA.Chat.bpl")
-#define HaveD10T   FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10T + "\Aefos.OTA.Chat.bpl")
-#define HaveD10R   FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10R + "\Aefos.OTA.Chat.bpl")
-#define HaveD10Y   FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10Y + "\Aefos.OTA.Chat.bpl")
-#define HaveD11  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD11 + "\Aefos.OTA.Chat.bpl")
-#define HaveD12  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD12 + "\Aefos.OTA.Chat.bpl")
-#define HaveD13  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD13 + "\Aefos.OTA.Chat.bpl")
+#define HaveD10S FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10S + "\Aefos.OTA.Chat" + SufD10S + ".bpl")
+#define HaveD10B FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10B + "\Aefos.OTA.Chat" + SufD10B + ".bpl")
+#define HaveD10T   FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10T + "\Aefos.OTA.Chat" + SufD10T + ".bpl")
+#define HaveD10R   FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10R + "\Aefos.OTA.Chat" + SufD10R + ".bpl")
+#define HaveD10Y   FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD10Y + "\Aefos.OTA.Chat" + SufD10Y + ".bpl")
+#define HaveD11  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD11 + "\Aefos.OTA.Chat" + SufD11 + ".bpl")
+#define HaveD12  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD12 + "\Aefos.OTA.Chat" + SufD12 + ".bpl")
+#define HaveD13  FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD13 + "\Aefos.OTA.Chat" + SufD13 + ".bpl")
 ; The 64-bit IDE payload is independent: -Platform Win32 (the default) stages
 ; nothing under Win64 and the whole block below vanishes at compile time.
-#define HaveD13x FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD13 + "\Win64\Aefos.OTA.Chat.bpl")
+#define HaveD13x FileExists(AddBackslash(SourcePath) + BplSrc + "\" + VerD13 + "\Win64\Aefos.OTA.Chat" + SufD13 + ".bpl")
 #if !HaveD10S && !HaveD10B && !HaveD10T && !HaveD10R && !HaveD10Y && !HaveD11 && !HaveD12 && !HaveD13
   #error No staged BPLs found under .\bpl\<ver>. Run scripts\build-packages.ps1 then installer\build-installer.ps1.
 #endif
@@ -209,126 +231,126 @@ Source: "redist\cli\THIRD-PARTY-LICENSES.txt"; DestDir: "{userappdata}\Aefos\bin
 
 ; --- Delphi 10 Seattle (BDS 17.0) payload - only if staged; installed if chosen -
 #if HaveD10S
-Source: "{#BplSrc}\{#VerD10S}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
-Source: "{#BplSrc}\{#VerD10S}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
-Source: "{#BplSrc}\{#VerD10S}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
-Source: "{#BplSrc}\{#VerD10S}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
-Source: "{#BplSrc}\{#VerD10S}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
-Source: "{#BplSrc}\{#VerD10S}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
-Source: "{#BplSrc}\{#VerD10S}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.Harness{#SufD10S}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.Providers{#SufD10S}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.Tools{#SufD10S}.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.MCP.Core{#SufD10S}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.MCP.Tools.OTA{#SufD10S}.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.Data{#SufD10S}.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.WebView{#SufD10S}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
 Source: "{#BplSrc}\{#VerD10S}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
 Source: "{#BplSrc}\{#VerD10S}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD10S}')
-Source: "{#BplSrc}\{#VerD10S}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
-Source: "{#BplSrc}\{#VerD10S}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
-Source: "{#BplSrc}\{#VerD10S}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.OTA.Chat{#SufD10S}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\Aefos.OTA.Terminal{#SufD10S}.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
+Source: "{#BplSrc}\{#VerD10S}\dclAefosWebView{#SufD10S}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10S}')
 #endif
 
 #if HaveD10B
-Source: "{#BplSrc}\{#VerD10B}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
-Source: "{#BplSrc}\{#VerD10B}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
-Source: "{#BplSrc}\{#VerD10B}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
-Source: "{#BplSrc}\{#VerD10B}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
-Source: "{#BplSrc}\{#VerD10B}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
-Source: "{#BplSrc}\{#VerD10B}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
-Source: "{#BplSrc}\{#VerD10B}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.Harness{#SufD10B}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.Providers{#SufD10B}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.Tools{#SufD10B}.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.MCP.Core{#SufD10B}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.MCP.Tools.OTA{#SufD10B}.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.Data{#SufD10B}.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.WebView{#SufD10B}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
 Source: "{#BplSrc}\{#VerD10B}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
 Source: "{#BplSrc}\{#VerD10B}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD10B}')
-Source: "{#BplSrc}\{#VerD10B}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
-Source: "{#BplSrc}\{#VerD10B}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
-Source: "{#BplSrc}\{#VerD10B}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.OTA.Chat{#SufD10B}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\Aefos.OTA.Terminal{#SufD10B}.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
+Source: "{#BplSrc}\{#VerD10B}\dclAefosWebView{#SufD10B}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10B}')
 #endif
 
 #if HaveD10T
-Source: "{#BplSrc}\{#VerD10T}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
-Source: "{#BplSrc}\{#VerD10T}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
-Source: "{#BplSrc}\{#VerD10T}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
-Source: "{#BplSrc}\{#VerD10T}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
-Source: "{#BplSrc}\{#VerD10T}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
-Source: "{#BplSrc}\{#VerD10T}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
-Source: "{#BplSrc}\{#VerD10T}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\Aefos.Harness{#SufD10T}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\Aefos.Providers{#SufD10T}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\Aefos.Tools{#SufD10T}.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\Aefos.MCP.Core{#SufD10T}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\Aefos.MCP.Tools.OTA{#SufD10T}.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\Aefos.Data{#SufD10T}.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\Aefos.WebView{#SufD10T}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
 Source: "{#BplSrc}\{#VerD10T}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
 Source: "{#BplSrc}\{#VerD10T}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD10T}')
-Source: "{#BplSrc}\{#VerD10T}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
-Source: "{#BplSrc}\{#VerD10T}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
-Source: "{#BplSrc}\{#VerD10T}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\Aefos.OTA.Chat{#SufD10T}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\Aefos.OTA.Terminal{#SufD10T}.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
+Source: "{#BplSrc}\{#VerD10T}\dclAefosWebView{#SufD10T}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10T}')
 #endif
 
 #if HaveD10R
-Source: "{#BplSrc}\{#VerD10R}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
-Source: "{#BplSrc}\{#VerD10R}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
-Source: "{#BplSrc}\{#VerD10R}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
-Source: "{#BplSrc}\{#VerD10R}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
-Source: "{#BplSrc}\{#VerD10R}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
-Source: "{#BplSrc}\{#VerD10R}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
-Source: "{#BplSrc}\{#VerD10R}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\Aefos.Harness{#SufD10R}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\Aefos.Providers{#SufD10R}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\Aefos.Tools{#SufD10R}.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\Aefos.MCP.Core{#SufD10R}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\Aefos.MCP.Tools.OTA{#SufD10R}.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\Aefos.Data{#SufD10R}.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\Aefos.WebView{#SufD10R}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
 Source: "{#BplSrc}\{#VerD10R}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
 Source: "{#BplSrc}\{#VerD10R}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD10R}')
-Source: "{#BplSrc}\{#VerD10R}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
-Source: "{#BplSrc}\{#VerD10R}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
-Source: "{#BplSrc}\{#VerD10R}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\Aefos.OTA.Chat{#SufD10R}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\Aefos.OTA.Terminal{#SufD10R}.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
+Source: "{#BplSrc}\{#VerD10R}\dclAefosWebView{#SufD10R}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10R}')
 #endif
 
 #if HaveD10Y
-Source: "{#BplSrc}\{#VerD10Y}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
-Source: "{#BplSrc}\{#VerD10Y}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
-Source: "{#BplSrc}\{#VerD10Y}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
-Source: "{#BplSrc}\{#VerD10Y}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
-Source: "{#BplSrc}\{#VerD10Y}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
-Source: "{#BplSrc}\{#VerD10Y}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
-Source: "{#BplSrc}\{#VerD10Y}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\Aefos.Harness{#SufD10Y}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\Aefos.Providers{#SufD10Y}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\Aefos.Tools{#SufD10Y}.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\Aefos.MCP.Core{#SufD10Y}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\Aefos.MCP.Tools.OTA{#SufD10Y}.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\Aefos.Data{#SufD10Y}.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\Aefos.WebView{#SufD10Y}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
 Source: "{#BplSrc}\{#VerD10Y}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
 Source: "{#BplSrc}\{#VerD10Y}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD10Y}')
-Source: "{#BplSrc}\{#VerD10Y}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
-Source: "{#BplSrc}\{#VerD10Y}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
-Source: "{#BplSrc}\{#VerD10Y}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\Aefos.OTA.Chat{#SufD10Y}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\Aefos.OTA.Terminal{#SufD10Y}.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
+Source: "{#BplSrc}\{#VerD10Y}\dclAefosWebView{#SufD10Y}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD10Y}')
 #endif
 
 ; --- Delphi 11 (BDS 22.0) payload - only if staged; installed only if chosen ----
 #if HaveD11
-Source: "{#BplSrc}\{#VerD11}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
-Source: "{#BplSrc}\{#VerD11}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
-Source: "{#BplSrc}\{#VerD11}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
-Source: "{#BplSrc}\{#VerD11}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
-Source: "{#BplSrc}\{#VerD11}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
-Source: "{#BplSrc}\{#VerD11}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
-Source: "{#BplSrc}\{#VerD11}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\Aefos.Harness{#SufD11}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\Aefos.Providers{#SufD11}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\Aefos.Tools{#SufD11}.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\Aefos.MCP.Core{#SufD11}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\Aefos.MCP.Tools.OTA{#SufD11}.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\Aefos.Data{#SufD11}.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\Aefos.WebView{#SufD11}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 Source: "{#BplSrc}\{#VerD11}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD11}')
-Source: "{#BplSrc}\{#VerD11}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
-Source: "{#BplSrc}\{#VerD11}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
-Source: "{#BplSrc}\{#VerD11}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\Aefos.OTA.Chat{#SufD11}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\Aefos.OTA.Terminal{#SufD11}.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
+Source: "{#BplSrc}\{#VerD11}\dclAefosWebView{#SufD11}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD11}')
 #endif
 
 ; --- Delphi 12 (BDS 23.0) payload - only if staged; installed only if chosen ----
 #if HaveD12
-Source: "{#BplSrc}\{#VerD12}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
-Source: "{#BplSrc}\{#VerD12}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
-Source: "{#BplSrc}\{#VerD12}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
-Source: "{#BplSrc}\{#VerD12}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
-Source: "{#BplSrc}\{#VerD12}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
-Source: "{#BplSrc}\{#VerD12}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
-Source: "{#BplSrc}\{#VerD12}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\Aefos.Harness{#SufD12}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\Aefos.Providers{#SufD12}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\Aefos.Tools{#SufD12}.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\Aefos.MCP.Core{#SufD12}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\Aefos.MCP.Tools.OTA{#SufD12}.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\Aefos.Data{#SufD12}.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\Aefos.WebView{#SufD12}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 Source: "{#BplSrc}\{#VerD12}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD12}')
-Source: "{#BplSrc}\{#VerD12}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
-Source: "{#BplSrc}\{#VerD12}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
-Source: "{#BplSrc}\{#VerD12}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\Aefos.OTA.Chat{#SufD12}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\Aefos.OTA.Terminal{#SufD12}.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
+Source: "{#BplSrc}\{#VerD12}\dclAefosWebView{#SufD12}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD12}')
 #endif
 
 ; --- Delphi 13 (BDS 37.0) payload - only if staged; installed only if chosen ----
 #if HaveD13
-Source: "{#BplSrc}\{#VerD13}\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Aefos.Harness{#SufD13}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Aefos.Providers{#SufD13}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Aefos.Tools{#SufD13}.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Aefos.MCP.Core{#SufD13}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Aefos.MCP.Tools.OTA{#SufD13}.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Aefos.Data{#SufD13}.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Aefos.WebView{#SufD13}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\WebView2Loader.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 Source: "{#BplSrc}\{#VerD13}\sqlite3.dll";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion skipifsourcedoesntexist; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Aefos.OTA.Chat{#SufD13}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Aefos.OTA.Terminal{#SufD13}.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\dclAefosWebView{#SufD13}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 #endif
 
 ; --- Delphi 13, 64-bit IDE (bin64\bds.exe) - a SEPARATE set of packages --------
@@ -342,16 +364,16 @@ Source: "{#BplSrc}\{#VerD13}\dclAefosWebView.bpl";     DestDir: "{commondocs}\Em
 ; Optional exactly like a version payload: build-packages.ps1 -Platform Win32 (the
 ; default) stages nothing here, and this whole block disappears at compile time.
 #if HaveD13x
-Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Harness.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Providers.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Tools.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.MCP.Core.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.MCP.Tools.OTA.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Data.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.WebView.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.OTA.Chat.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.OTA.Terminal.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
-Source: "{#BplSrc}\{#VerD13}\Win64\dclAefosWebView.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Harness{#SufD13}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Providers{#SufD13}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Tools{#SufD13}.bpl";         DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.MCP.Core{#SufD13}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.MCP.Tools.OTA{#SufD13}.bpl"; DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.Data{#SufD13}.bpl";          DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.WebView{#SufD13}.bpl";       DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.OTA.Chat{#SufD13}.bpl";      DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\Aefos.OTA.Terminal{#SufD13}.bpl";  DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
+Source: "{#BplSrc}\{#VerD13}\Win64\dclAefosWebView{#SufD13}.bpl";     DestDir: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64"; Flags: ignoreversion; Check: WantVer('{#VerD13}')
 ; A 64-bit IDE process cannot bind the 32-bit loader RAD Studio ships, so this is
 ; the x64 one -- staged by build-installer.ps1 from the same place the Lazarus
 ; installer gets it. Without it the chat would fall back to plain text in the
@@ -372,83 +394,83 @@ Source: "redist\MicrosoftEdgeWebView2RuntimeInstaller{#WV2Arch}.exe"; Flags: don
 ; the chosen versions are touched. (commondocs = C:\Users\Public\Documents.)
 
 #if HaveD10S
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Chat.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10S}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10S}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\dclAefosWebView.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10S}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Chat.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10S}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10S}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\dclAefosWebView.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Chat{#SufD10S}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Terminal{#SufD10S}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\dclAefosWebView{#SufD10S}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Chat{#SufD10S}.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\Aefos.OTA.Terminal{#SufD10S}.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10S}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10S}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10S}\Bpl\dclAefosWebView{#SufD10S}.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10S}')
 #endif
 
 #if HaveD10B
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Chat.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10B}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10B}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\dclAefosWebView.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10B}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Chat.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10B}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10B}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\dclAefosWebView.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Chat{#SufD10B}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Terminal{#SufD10B}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\dclAefosWebView{#SufD10B}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Chat{#SufD10B}.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\Aefos.OTA.Terminal{#SufD10B}.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10B}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10B}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10B}\Bpl\dclAefosWebView{#SufD10B}.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10B}')
 #endif
 
 #if HaveD10T
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\Aefos.OTA.Chat.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10T}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10T}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\dclAefosWebView.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10T}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\Aefos.OTA.Chat.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10T}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10T}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\dclAefosWebView.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10T}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\Aefos.OTA.Chat{#SufD10T}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10T}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\Aefos.OTA.Terminal{#SufD10T}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10T}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\dclAefosWebView{#SufD10T}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10T}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\Aefos.OTA.Chat{#SufD10T}.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10T}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\Aefos.OTA.Terminal{#SufD10T}.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10T}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10T}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10T}\Bpl\dclAefosWebView{#SufD10T}.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10T}')
 #endif
 
 #if HaveD10R
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\Aefos.OTA.Chat.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10R}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10R}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\dclAefosWebView.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10R}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\Aefos.OTA.Chat.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10R}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10R}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\dclAefosWebView.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10R}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\Aefos.OTA.Chat{#SufD10R}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10R}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\Aefos.OTA.Terminal{#SufD10R}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10R}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\dclAefosWebView{#SufD10R}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10R}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\Aefos.OTA.Chat{#SufD10R}.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10R}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\Aefos.OTA.Terminal{#SufD10R}.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10R}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10R}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10R}\Bpl\dclAefosWebView{#SufD10R}.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10R}')
 #endif
 
 #if HaveD10Y
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\Aefos.OTA.Chat.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10Y}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10Y}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\dclAefosWebView.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10Y}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\Aefos.OTA.Chat.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10Y}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10Y}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\dclAefosWebView.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10Y}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\Aefos.OTA.Chat{#SufD10Y}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10Y}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\Aefos.OTA.Terminal{#SufD10Y}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10Y}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\dclAefosWebView{#SufD10Y}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD10Y}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\Aefos.OTA.Chat{#SufD10Y}.bpl"; ValueData: "Aefos AI - Chat"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10Y}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\Aefos.OTA.Terminal{#SufD10Y}.bpl"; ValueData: "Aefos AI - Terminal"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10Y}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD10Y}\Known Packages"; ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD10Y}\Bpl\dclAefosWebView{#SufD10Y}.bpl"; ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD10Y}')
 #endif
 
 #if HaveD11
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\Aefos.OTA.Chat.bpl";     Flags: deletevalue; Check: WantVer('{#VerD11}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD11}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\dclAefosWebView.bpl";       Flags: deletevalue; Check: WantVer('{#VerD11}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\Aefos.OTA.Chat.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD11}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD11}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\dclAefosWebView.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD11}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\Aefos.OTA.Chat{#SufD11}.bpl";     Flags: deletevalue; Check: WantVer('{#VerD11}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\Aefos.OTA.Terminal{#SufD11}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD11}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\dclAefosWebView{#SufD11}.bpl";       Flags: deletevalue; Check: WantVer('{#VerD11}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\Aefos.OTA.Chat{#SufD11}.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD11}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\Aefos.OTA.Terminal{#SufD11}.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD11}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD11}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD11}\Bpl\dclAefosWebView{#SufD11}.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD11}')
 #endif
 
 #if HaveD12
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\Aefos.OTA.Chat.bpl";     Flags: deletevalue; Check: WantVer('{#VerD12}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD12}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\dclAefosWebView.bpl";       Flags: deletevalue; Check: WantVer('{#VerD12}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\Aefos.OTA.Chat.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD12}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD12}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\dclAefosWebView.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD12}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\Aefos.OTA.Chat{#SufD12}.bpl";     Flags: deletevalue; Check: WantVer('{#VerD12}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\Aefos.OTA.Terminal{#SufD12}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD12}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\dclAefosWebView{#SufD12}.bpl";       Flags: deletevalue; Check: WantVer('{#VerD12}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\Aefos.OTA.Chat{#SufD12}.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD12}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\Aefos.OTA.Terminal{#SufD12}.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD12}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD12}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD12}\Bpl\dclAefosWebView{#SufD12}.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD12}')
 #endif
 
 #if HaveD13
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Aefos.OTA.Chat.bpl";     Flags: deletevalue; Check: WantVer('{#VerD13}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Aefos.OTA.Terminal.bpl"; Flags: deletevalue; Check: WantVer('{#VerD13}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\dclAefosWebView.bpl";       Flags: deletevalue; Check: WantVer('{#VerD13}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Aefos.OTA.Chat.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\dclAefosWebView.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Aefos.OTA.Chat{#SufD13}.bpl";     Flags: deletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Aefos.OTA.Terminal{#SufD13}.bpl"; Flags: deletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Disabled Packages"; ValueType: none; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\dclAefosWebView{#SufD13}.bpl";       Flags: deletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Aefos.OTA.Chat{#SufD13}.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Aefos.OTA.Terminal{#SufD13}.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\dclAefosWebView{#SufD13}.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
 
 ; The 64-bit IDE reads a DIFFERENT key. Registering under "Known Packages" alone
 ; installs nothing visible in the 64-bit IDE -- it reads "Known Packages x64",
 ; and the two lists never see each other.
 #if HaveD13x
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64\Aefos.OTA.Chat.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64\Aefos.OTA.Terminal.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
-Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64\dclAefosWebView.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64\Aefos.OTA.Chat{#SufD13}.bpl";     ValueData: "Aefos AI - Chat";              Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64\Aefos.OTA.Terminal{#SufD13}.bpl"; ValueData: "Aefos AI - Terminal";          Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
+Root: HKCU; Subkey: "Software\Embarcadero\BDS\{#VerD13}\Known Packages x64";    ValueType: string; ValueName: "{commondocs}\Embarcadero\Studio\{#VerD13}\Bpl\Win64\dclAefosWebView{#SufD13}.bpl";       ValueData: "Aefos AI - WebView2 component"; Flags: uninsdeletevalue; Check: WantVer('{#VerD13}')
 #endif
 #endif
 
@@ -968,13 +990,59 @@ end;
 // break the very IDE it skipped. A per-bitness answer (or a LIBSUFFIX, which
 // makes the whole collision impossible) is what D13 needs; until then it keeps
 // today's behaviour, which is no worse than before this procedure existed.
-procedure PinBplSearchPathForSelectedVersions;
+// An upgrade from a pre-suffix Aefos leaves the old BPLs sitting in the IDE's Bpl
+// folder AND still listed in Known Packages under their old names. That is not
+// clutter: the IDE would load the old design package beside the new one, and the
+// old runtime BPLs keep the very file names this release exists to stop using -
+// so a second RAD Studio on the machine could still be answered by them.
+//
+// Every name is spelled out rather than wildcarded. This deletes files from a
+// folder full of other people's packages, which is no place for a pattern match.
+procedure _RemoveLegacyUnsuffixedInstall(const Ver: string);
+var
+  Dir, KeyBase, F: string;
+  Names: array[0..9] of string;
+  I: Integer;
+begin
+  Dir := ExpandConstant('{commondocs}\Embarcadero\Studio\' + Ver + '\Bpl\');
+  KeyBase := 'Software\Embarcadero\BDS\' + Ver + '\';
+  Names[0] := 'Aefos.Harness';
+  Names[1] := 'Aefos.Providers';
+  Names[2] := 'Aefos.WebView';
+  Names[3] := 'Aefos.Tools';
+  Names[4] := 'Aefos.MCP.Core';
+  Names[5] := 'Aefos.MCP.Tools.OTA';
+  Names[6] := 'Aefos.Data';
+  Names[7] := 'Aefos.OTA.Chat';
+  Names[8] := 'Aefos.OTA.Terminal';
+  Names[9] := 'dclAefosWebView';
+  for I := 0 to 9 do
+  begin
+    F := Dir + Names[I] + '.bpl';
+    RegDeleteValue(HKCU, KeyBase + 'Known Packages', F);
+    RegDeleteValue(HKCU, KeyBase + 'Disabled Packages', F);
+    DeleteFile(F);
+    // Delphi 13's 64-bit IDE keeps its own folder AND its own registry key.
+    F := Dir + 'Win64\' + Names[I] + '.bpl';
+    RegDeleteValue(HKCU, KeyBase + 'Known Packages x64', F);
+    RegDeleteValue(HKCU, KeyBase + 'Disabled Packages x64', F);
+    DeleteFile(F);
+  end;
+end;
+
+procedure PrepareSelectedVersions;
 var
   I: Integer;
 begin
   for I := 0 to GetArrayLength(GVer) - 1 do
-    if WantVer(GVer[I]) and (GVer[I] <> '{#VerD13}') then
-      _PinBplSearchPath(GVer[I]);
+    if WantVer(GVer[I]) then
+    begin
+      _RemoveLegacyUnsuffixedInstall(GVer[I]);
+      // D13 stays out of the Path pin for the reason given above; the suffix now
+      // carries that version too, so it loses nothing by being skipped here.
+      if GVer[I] <> '{#VerD13}' then
+        _PinBplSearchPath(GVer[I]);
+    end;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
@@ -989,7 +1057,7 @@ begin
   if CurStep <> ssPostInstall then
     exit;
 
-  PinBplSearchPathForSelectedVersions();
+  PrepareSelectedVersions();
   WriteMcpJson();
   _ExtractCopilotZip();
 

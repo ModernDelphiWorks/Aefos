@@ -27,6 +27,7 @@ package Aefos.OTA.Terminal;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Aefos AI - Terminal (integrated IDE terminal + in-process MCP server)'}
 {$IMPLICITBUILD ON}
+{$I Aefos.LibSuffix.inc}   // one BPL name per IDE version - see the file
 
 requires
   rtl,

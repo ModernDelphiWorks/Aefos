@@ -41,6 +41,7 @@
 {$RUNONLY}
 {$DESCRIPTION 'Aefos Data - shared SQLite/FireDAC persistence (static SQLite, WAL)'}
 {$IMPLICITBUILD ON}
+{$I Aefos.LibSuffix.inc}   // one BPL name per IDE version - see the file
 
 requires
   rtl,

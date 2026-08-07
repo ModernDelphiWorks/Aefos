@@ -64,6 +64,39 @@ function Get-AefosRsVarsPath {
   Join-Path ${env:ProgramFiles(x86)} "Embarcadero\Studio\$Bds\bin\rsvars.bat"
 }
 
+function Get-AefosIdePackageSuffix {
+  <#
+    .SYNOPSIS
+      The suffix a given RAD Studio puts on its package file names: 230, 290, 370.
+
+    .DESCRIPTION
+      Our BPLs carry this suffix too, so an Aefos package built for Seattle is
+      Aefos.MCP.Core230.bpl and cannot be mistaken for the Athens one. Without it
+      every version shipped the same file name, and on a machine with more than
+      one IDE the first Bpl folder on PATH answered for all of them - which is how
+      a Seattle IDE came to load a Sydney BPL.
+
+      MEASURED, not tabulated. rtl<suffix>.bpl sits in every version's bin folder,
+      so the number is read off the target IDE rather than remembered here.
+      Aefos.LibSuffix.inc does keep the same numbers on the Pascal side, because
+      {$LIBSUFFIX} needs a literal - but reading from disk here means a
+      disagreement between the two surfaces as a missing file while staging,
+      loudly, instead of as a wrongly-named BPL that ships.
+
+      There is no formula to derive: 22.0 -> 280 and 23.0 -> 290 are ten apart,
+      23.0 -> 37.0 is eighty.
+  #>
+  param([Parameter(Mandatory = $true)][string] $Bds)
+  $bin = Join-Path ${env:ProgramFiles(x86)} "Embarcadero\Studio\$Bds\bin"
+  $rtl = Get-ChildItem $bin -Filter 'rtl*.bpl' -ErrorAction SilentlyContinue |
+         Where-Object { $_.Name -match '^rtl(\d+)\.bpl$' } |
+         Select-Object -First 1
+  if (-not $rtl) {
+    throw "Cannot read the package suffix for BDS $Bds : no rtl<suffix>.bpl in $bin."
+  }
+  return [regex]::Match($rtl.Name, '^rtl(\d+)\.bpl$').Groups[1].Value
+}
+
 function Get-AefosFrameworkVersion {
   <#
     .SYNOPSIS

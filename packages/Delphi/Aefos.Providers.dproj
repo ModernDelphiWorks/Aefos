@@ -203,12 +203,20 @@
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Target Name="AefosStageBplForInstaller" Condition="'$(Config)'=='Release' and '$(Platform)'=='Win32'">
         <PropertyGroup>
-            <AefosBpl>$(BDSCOMMONDIR)\Bpl\$(MSBuildProjectName).bpl</AefosBpl>
-            <AefosStage>$(MSBuildProjectDirectory)\..\..\installer\bpl</AefosStage>
+            <!-- Per version, because the same file name now exists once per IDE and a
+                 flat folder would mix Seattle and Athens builds under one roof. -->
+            <AefosStage>$(MSBuildProjectDirectory)\..\..\installer\bpl\$(PRODUCTVERSION)</AefosStage>
         </PropertyGroup>
+        <ItemGroup>
+            <!-- The BPL carries a per-version LIBSUFFIX (see Aefos.LibSuffix.inc), so its
+                 name cannot be written here without copying that table into a fourth
+                 place. The wildcard asks the disk, which is the one source that cannot
+                 drift out of step with what the compiler actually produced. -->
+            <AefosBplFiles Include="$(BDSCOMMONDIR)\Bpl\$(MSBuildProjectName)*.bpl"/>
+        </ItemGroup>
         <MakeDir Directories="$(AefosStage)" Condition="!Exists('$(AefosStage)')"/>
-        <Copy SourceFiles="$(AefosBpl)" DestinationFolder="$(AefosStage)" SkipUnchangedFiles="false" Condition="Exists('$(AefosBpl)')"/>
-        <Message Importance="high" Condition="Exists('$(AefosBpl)')" Text="[Aefos] staged $(MSBuildProjectName).bpl -&gt; installer\bpl"/>
+        <Copy SourceFiles="@(AefosBplFiles)" DestinationFolder="$(AefosStage)" SkipUnchangedFiles="false"/>
+        <Message Importance="high" Text="[Aefos] staged @(AefosBplFiles-&gt;'%(Filename)%(Extension)') -&gt; installer\bpl\$(PRODUCTVERSION)"/>
     </Target>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
 </Project>

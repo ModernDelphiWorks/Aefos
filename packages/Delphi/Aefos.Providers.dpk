@@ -30,6 +30,7 @@ package Aefos.Providers;
 {$DESCRIPTION 'Aefos Providers - AI executor profiles (Claude/Codex/Copilot/Gemini) + local Ollama transport'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
+{$I Aefos.LibSuffix.inc}   // one BPL name per IDE version - see the file
 
 requires
   rtl;

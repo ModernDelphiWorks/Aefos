@@ -69,6 +69,15 @@ type
 
     { Resolve over a freshly read catalogue - the single-shot form. }
     class function ResolveOne(const ASlug, APreferSource: string): TAddonCatalogRow; static;
+
+    { Gives an entry the sha256 the rest of the system compares, when the store
+      published none. Only a FOLDER bundle can be in that position - it is a
+      directory, not a release - and the answer is measured from the tree.
+
+      Lives here rather than in the installer because the catalogue needs the
+      same answer to say whether an installed addon is current, and one
+      measurement with two owners is how the two drift apart. }
+    class procedure EnsureIdentity(var AEntry: TAddonRegistryEntry); static;
   end;
 
 implementation
@@ -80,6 +89,7 @@ uses
   Aefos.Compat.Json,
   Aefos.Compat.JsonFormat,
   Aefos.Addons.Manifest,
+  Aefos.Addons.Ledger,
   Aefos.Addons.Net,
   Aefos.Addons.PluginFormat;
 
@@ -114,6 +124,17 @@ begin
   AEntry.Url := ADir;                       // a path store installs from disk
   AEntry.Trust := atCommunity;              // never "official" unless we said so
   AEntry.Name := AEntry.Slug;
+  // A folder store has no registry to declare a type, so the type is MEASURED
+  // from what the bundle actually carries - the same instinct as everywhere
+  // else here. An MCP config makes it an MCP server, a tools folder makes it
+  // tools, and anything else is a plain addon.
+  if TAddonPluginFormat.McpConfigPathOf(ADir, LFormat) <> '' then
+    AEntry.Kind := akMcp
+  else if TDirectory.Exists(TPath.Combine(ADir, 'tools')) then
+    AEntry.Kind := akTool
+  else
+    AEntry.Kind := akCommand;
+  AEntry.KindName := AEntry.Kind.ToStr;
   LJson := '';
   try
     if TFile.Exists(TAddonPluginFormat.ManifestPathOf(ADir, LFormat)) then
@@ -291,13 +312,68 @@ begin
   Result := Resolve(ReadAll, ASlug, APreferSource);
 end;
 
+class procedure TAddonCatalog.EnsureIdentity(var AEntry: TAddonRegistryEntry);
+begin
+  if (Trim(AEntry.Sha256) = '') and TDirectory.Exists(AEntry.Url) then
+    AEntry.Sha256 := TAddonNet.Sha256OfTree(AEntry.Url);
+end;
+
+// The button's own answer: available / installed / update. Computed here and
+// not in the dialog, because deciding it needs the sha comparison and a folder
+// bundle's MEASURED identity - logic that must not exist twice.
+//
+// The identity is measured only for rows that are actually installed, so the
+// cost is bounded by what the user has rather than by how big the store is.
+procedure _AddState(const AObj: TJSONObject;
+  const AInstalled: TArray<TInstalledAddon>; const ARow: TAddonCatalogRow);
+var
+  LIndex: Integer;
+  LItem: TInstalledAddon;
+  LEntry: TAddonRegistryEntry;
+  LHit: Boolean;
+begin
+  LHit := False;
+  LItem := Default(TInstalledAddon);
+  for LIndex := 0 to High(AInstalled) do
+  begin
+    if not SameText(AInstalled[LIndex].Slug, ARow.Entry.Slug) then
+      Continue;
+    // Slug alone is not identity once there are stores: the same name in two
+    // stores is two different addons, and only the one actually installed may
+    // claim the row. An empty recorded source is a pre-stores ledger, which
+    // matched by slug and still does.
+    if (AInstalled[LIndex].Source <> '') and
+       not SameText(AInstalled[LIndex].Source, ARow.Source) then
+      Continue;
+    LItem := AInstalled[LIndex];
+    LHit := True;
+    Break;
+  end;
+  AObj.AddPair('installed', TJSONBool.Create(LHit));
+  if not LHit then
+  begin
+    AObj.AddPair('state', 'available');
+    Exit;
+  end;
+  AObj.AddPair('installedVersion', LItem.Version);
+  LEntry := ARow.Entry;
+  TAddonCatalog.EnsureIdentity(LEntry);
+  if LItem.DecideUpdate(LEntry) = uaUpToDate then
+    AObj.AddPair('state', 'installed')
+  else
+    AObj.AddPair('state', 'update');
+end;
+
 class function TAddonCatalog.ToJson(
   const AResults: TArray<TAddonCatalogResult>): string;
 var
   LRoot, LObj: TJSONObject;
   LAddons, LErrors: TJSONArray;
+  LInstalled: TArray<TInstalledAddon>;
+  LEntry: TAddonRegistryEntry;
   LI, LJ: Integer;
 begin
+  LInstalled := TAddonLedger.Load;
   LRoot := TJSONObject.Create;
   try
     LAddons := TJSONArray.Create;
@@ -316,13 +392,21 @@ begin
       end;
       for LJ := 0 to High(AResults[LI].Rows) do
       begin
+        LEntry := AResults[LI].Rows[LJ].Entry;
         LObj := TJSONObject.Create;
         LObj.AddPair('source', AResults[LI].Rows[LJ].Source);
-        LObj.AddPair('slug', AResults[LI].Rows[LJ].Entry.Slug);
-        LObj.AddPair('name', AResults[LI].Rows[LJ].Entry.Name);
-        LObj.AddPair('version', AResults[LI].Rows[LJ].Entry.Version);
-        LObj.AddPair('description', AResults[LI].Rows[LJ].Entry.Description);
-        LObj.AddPair('trust', AResults[LI].Rows[LJ].Entry.Trust.ToStr);
+        LObj.AddPair('slug', LEntry.Slug);
+        LObj.AddPair('name', LEntry.Name);
+        LObj.AddPair('version', LEntry.Version);
+        LObj.AddPair('description', LEntry.Description);
+        LObj.AddPair('trust', LEntry.Trust.ToStr);
+        // The type as the store spelled it: the dialog builds one group per
+        // distinct value, so a store publishing a type nobody has seen gets a
+        // group of its own with nothing here to change.
+        LObj.AddPair('kind', LEntry.KindName);
+        // What the user would see on the button. Answering it HERE means the
+        // dialog makes one call and never has to reconcile two lists itself.
+        _AddState(LObj, LInstalled, AResults[LI].Rows[LJ]);
         LAddons.AddElement(LObj);
       end;
     end;

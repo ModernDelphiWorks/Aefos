@@ -188,7 +188,18 @@
                  place. The wildcard asks the disk, which is the one source that cannot
                  drift out of step with what the compiler actually produced. -->
             <AefosBplFiles Include="$(BDSCOMMONDIR)\Bpl\$(MSBuildProjectName)*.bpl"/>
+            <AefosBplPlain Include="$(BDSCOMMONDIR)\Bpl\$(MSBuildProjectName).bpl"/>
         </ItemGroup>
+        <!-- The suffix comes from {$LIBSUFFIX} inside the .dpk, and the IDE rewrites a
+             .dpk whenever files are added or removed through the Project Manager (or the
+             Description page is saved), which can take the {$I Aefos.LibSuffix.inc} line
+             with it. build-packages.ps1 already refuses an unsuffixed BPL, but a build
+             started INSIDE the IDE never reaches that script - so the same refusal has to
+             live here, or the one path most likely to break is the one with no guard.
+             Fires only when the unsuffixed file is the ONLY one there: during the
+             changeover a stale copy can still sit beside a good new one. -->
+        <Error Condition="'@(AefosBplFiles)'=='@(AefosBplPlain)' and '@(AefosBplPlain)'!=''"
+               Text="[Aefos] $(MSBuildProjectName).bpl was built WITHOUT its version suffix. The {$I Aefos.LibSuffix.inc} line is missing from $(MSBuildProjectName).dpk - the IDE drops it when it rewrites the package. Put it back above the requires clause; without it two RAD Studios on one machine load each other%27s BPLs."/>
         <MakeDir Directories="$(AefosStage)" Condition="!Exists('$(AefosStage)')"/>
         <Copy SourceFiles="@(AefosBplFiles)" DestinationFolder="$(AefosStage)" SkipUnchangedFiles="false"/>
         <Message Importance="high" Text="[Aefos] staged @(AefosBplFiles-&gt;'%(Filename)%(Extension)') -&gt; installer\bpl\$(PRODUCTVERSION)"/>

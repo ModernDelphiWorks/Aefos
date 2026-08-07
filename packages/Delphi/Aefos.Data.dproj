@@ -80,6 +80,19 @@
              is an unassigned extension point in CodeGear.Delphi.Targets and works
              on every MSBuild back to 3.5, which is the engine the old IDEs host. -->
         <_PostCompileTargets>AefosStageBplForInstaller</_PostCompileTargets>
+        <!-- Static SQLite: LOOK for the unit, do not guess a version.
+             FireDAC.Phys.SQLiteWrapper.Stat links the SQLite engine into this BPL
+             instead of loading sqlite3.dll at run time, and it is not in every
+             FireDAC: measured absent in 10 Seattle and 10.1 Berlin, present from
+             Delphi 11 on. Aefos.Data.SQLite.pas pulls it in unless the symbol is
+             defined, so on an IDE without it the unit fails with F2613.
+             The test lives here, in the project, because that is the only place
+             BOTH paths read: build-packages.ps1 can pass a define, a build started
+             from inside the IDE cannot be passed anything. The symbol stays
+             NEGATIVE so the default - no symbol - remains correct for a modern
+             Delphi. Where it fires, the BPL needs sqlite3.dll deployed beside it;
+             the script stages that copy. -->
+        <DCC_Define Condition="!Exists('$(BDS)\lib\$(Platform)\release\FireDAC.Phys.SQLiteWrapper.Stat.dcu')">AEFOS_NO_STATIC_SQLITE;$(DCC_Define)</DCC_Define>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>Aefos_Data</SanitizedProjectName>

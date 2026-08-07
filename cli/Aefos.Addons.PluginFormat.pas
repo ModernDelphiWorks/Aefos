@@ -84,6 +84,13 @@ type
     class function ManifestPathOf(const ABundleDir: string;
       const AFormat: TPluginFormat): string; static;
 
+    { Where that format keeps its MCP config, or '' when it carries none - so a
+      catalogue can tell what TYPE a bundle is without adopting it. Exposed for
+      the same reason as ManifestPathOf: a detection table that gets copied is
+      no longer a table. }
+    class function McpConfigPathOf(const ABundleDir: string;
+      const AFormat: TPluginFormat): string; static;
+
     { Turns a foreign bundle into a manifest the installer can already place:
       metadata read from the foreign manifest, install[] mappings synthesised
       from the layout, artifacts set from what was actually found. Normalises
@@ -177,6 +184,12 @@ class function TAddonPluginFormat.ManifestPathOf(const ABundleDir: string;
   const AFormat: TPluginFormat): string;
 begin
   Result := _ManifestPath(ABundleDir, AFormat);
+end;
+
+class function TAddonPluginFormat.McpConfigPathOf(const ABundleDir: string;
+  const AFormat: TPluginFormat): string;
+begin
+  Result := _FindMcpConfig(ABundleDir, AFormat);
 end;
 
 class function TAddonPluginFormat.Detect(const ABundleDir: string): TPluginFormat;

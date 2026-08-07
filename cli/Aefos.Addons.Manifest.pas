@@ -85,6 +85,11 @@ begin
   Result.Version := _Str(AObj, 'version');
   Result.Description := _Str(AObj, 'description');
   Result.Kind := TAddonKind.Parse(_Str(AObj, 'type'));
+  // Kept as the store wrote it, so a type this build has never heard of still
+  // reaches the UI under its own name instead of Parse's akCommand fallback.
+  Result.KindName := LowerCase(Trim(_Str(AObj, 'type')));
+  if Result.KindName = '' then
+    Result.KindName := Result.Kind.ToStr;
   Result.Trust := TAddonTrust.Parse(_Str(AObj, 'trust'));
   Result.Url := _Str(AObj, 'url');
   Result.Sha256 := LowerCase(Trim(_Str(AObj, 'sha256')));

@@ -65,6 +65,12 @@ type
     Version: string;
     Description: string;
     Kind: TAddonKind;
+    { The type as the STORE spelled it, kept beside the parsed enum on purpose.
+      Kind.Parse folds anything it does not know into akCommand, which is right
+      for behaviour and wrong for display: a store that starts publishing a new
+      type would have it silently filed under an old one. The UI groups by this
+      string, so a new type becomes a new group with nothing here to rebuild. }
+    KindName: string;
     Trust: TAddonTrust;
     Url: string;            // the versioned .zip
     Sha256: string;         // lowercase hex of the .zip

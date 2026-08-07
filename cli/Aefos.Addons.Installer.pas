@@ -242,11 +242,11 @@ end;
 // A folder bundle publishes no sha - it is a directory, not a release - so one
 // is MEASURED before any comparison. Without this every update run would find
 // an empty sha against a recorded one, call it "changed", and reinstall an
-// addon that has not moved.
+// addon that has not moved. The measurement itself lives on the catalogue,
+// which needs the same answer to say whether a row is current.
 procedure _EnsureIdentity(var AEntry: TAddonRegistryEntry);
 begin
-  if (Trim(AEntry.Sha256) = '') and TDirectory.Exists(AEntry.Url) then
-    AEntry.Sha256 := TAddonNet.Sha256OfTree(AEntry.Url);
+  TAddonCatalog.EnsureIdentity(AEntry);
 end;
 
 // Recursively copies ASrcDir into ADstDir, appending every written file to

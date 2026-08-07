@@ -551,6 +551,7 @@ uses
   Aefos.OTA.Chat.Core.ChatCommand,
   Aefos.OTA.Chat.Core.CommandAutoReplicate,
   Aefos.OTA.Chat.Core.SessionStore,
+  Aefos.OTA.Chat.UI.AddonStoreForm,
   Aefos.Provider.Registry;
 
 // Debug-only teardown/diagnostic breadcrumb. Unconditional OutputDebugString
@@ -2615,6 +2616,14 @@ begin
   if SameText(LCmd, 'mcp') then
   begin
     _OpenMcpModal;
+    Exit;
+  end;
+  // /addons: open the addon store - the catalogue of every configured store,
+  // with an Install button. Never echoed nor dispatched to the executor: it is
+  // a window, not a prompt.
+  if SameText(LCmd, 'addons') or SameText(LCmd, 'store') then
+  begin
+    TAefosAddonStoreForm.Execute;
     Exit;
   end;
   // /inspector: open the MCP Tool Inspector window (subscription/dev tool) -

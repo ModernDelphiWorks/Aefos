@@ -1,0 +1,11 @@
+/* Aefos AI - the addon store page, embedded in the BPL.
+ *
+ * ONE COPY. The page is authored as assets\addon-store.html and referenced from
+ * here, so the file that gets edited and the file that ships are the same file.
+ * The alternative - pasting the markup into a Pascal const - is how the two
+ * start to differ, and the difference only shows up on a user's screen.
+ *
+ * Regenerate the .res after editing the html (same as Branding.rc):
+ *   brcc32 Aefos.OTA.Chat.UI.AddonStore.rc
+ */
+AEFOS_ADDON_STORE_HTML RCDATA "assets\\addon-store.html"

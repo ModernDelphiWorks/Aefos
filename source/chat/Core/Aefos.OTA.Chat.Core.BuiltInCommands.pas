@@ -313,6 +313,7 @@ begin
     Modal('mcp', 'MCP servers'),
     Modal('inspector', 'MCP Tool Inspector'),
     Modal('command', 'Create/edit a command'),
+    Modal('addons', 'Browse and install addons'),
     // Agentic built-ins (dispatched with a guide).
     LNewProject,
     LSuggest,

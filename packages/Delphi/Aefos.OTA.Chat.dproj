@@ -90,6 +90,13 @@
              is an unassigned extension point in CodeGear.Delphi.Targets and works
              on every MSBuild back to 3.5, which is the engine the old IDEs host. -->
         <_PostCompileTargets>AefosStageBplForInstaller</_PostCompileTargets>
+        <!-- Same static-SQLite measurement as Aefos.Data.dproj, and for the same
+             reason: this package requires Aefos.Data and reaches
+             Aefos.Data.SQLite.pas through SessionStore.SQLite, so a build-all
+             recompiles that unit HERE too and needs the symbol here too. Seattle
+             found this the hard way, one package after Aefos.Data went green.
+             Any package that ends up compiling that unit needs this line. -->
+        <DCC_Define Condition="!Exists('$(BDS)\lib\$(Platform)\release\FireDAC.Phys.SQLiteWrapper.Stat.dcu')">AEFOS_NO_STATIC_SQLITE;$(DCC_Define)</DCC_Define>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>Aefos_OTA_Chat</SanitizedProjectName>

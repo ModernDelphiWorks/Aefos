@@ -107,6 +107,8 @@ contains
   Aefos.OTA.Chat.UI.Options.Registration in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.Options.Registration.pas',
   Aefos.OTA.Chat.UI.Options.ChatFrame in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.Options.ChatFrame.pas' {AefosChatOptionsFrame: TFrame},
   Aefos.OTA.Chat.UI.AboutForm in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.AboutForm.pas',
+  Aefos.OTA.Chat.Core.AddonStore in '..\..\source\chat\Core\Aefos.OTA.Chat.Core.AddonStore.pas',
+  Aefos.OTA.Chat.UI.AddonStoreForm in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.AddonStoreForm.pas' {AefosAddonStoreForm},
   Aefos.OTA.UI.MCPToolInspector.Assets in '..\..\source\mcp\OTA\Aefos.OTA.UI.MCPToolInspector.Assets.pas',
   Aefos.OTA.UI.MCPToolInspector in '..\..\source\mcp\OTA\Aefos.OTA.UI.MCPToolInspector.pas',
   Aefos.OTA.Chat.UI.Branding in '..\..\source\chat\UI\Aefos.OTA.Chat.UI.Branding.pas';

@@ -211,25 +211,30 @@ foreach ($v in $targets) {
     $hppOut = Join-Path $root "Bin\$plat\$Config"
     New-Item -ItemType Directory -Force $hppOut | Out-Null
 
-    # Static SQLite: LOOK, do not guess.
+    # Static SQLite: the DEFINE is not decided here.
     #
     # FireDAC.Phys.SQLiteWrapper.Stat is what links the SQLite engine into
     # Aefos.Data instead of loading sqlite3.dll at run time, and it does not exist
     # in every FireDAC. Measured: absent in 10 Seattle AND in 10.1 Berlin, present
     # in Delphi 11. An earlier CompilerVersion guess put the boundary just above
-    # Seattle and Berlin proved it wrong the day it was installed - hence this.
+    # Seattle and Berlin proved it wrong the day it was installed.
     #
-    # The define is NEGATIVE on purpose. Building from the IDE passes no defines at
-    # all, so the default (no symbol) has to be the CORRECT behaviour for every
-    # modern Delphi - static linkage. Only a command-line build that has looked at
-    # the lib folder and found nothing switches it off.
-    $sqliteDefine = ''
+    # This script used to pass AEFOS_NO_STATIC_SQLITE when the .dcu was missing,
+    # which left the IDE with no way to build Aefos.Data at all: a build started
+    # from inside the IDE is passed no defines by anyone, so on Seattle it died
+    # with F2613 on a unit the command line had quietly compiled around. The same
+    # Exists() test now lives in Aefos.Data.dproj, which is the one thing BOTH
+    # paths read. Proven on the VM: BDS 17.0 gets RELEASE;AEFOS_NO_STATIC_SQLITE
+    # and 22.0 gets RELEASE, each building clean.
+    #
+    # What stays here is the consequence the project file cannot carry out: with
+    # no static engine the BPL loads sqlite3.dll at RUN time, so the DLL has to
+    # travel with it. Measure the same way for that decision only.
     $needsSqliteDll = $false
     $statDcu = Join-Path (Split-Path -Parent (Split-Path -Parent $rsvars)) `
                          "lib\$($plat.ToLower())\release\FireDAC.Phys.SQLiteWrapper.Stat.dcu"
     if (-not (Test-Path $statDcu)) {
       Write-Host "  no static SQLite in this FireDAC -- Aefos.Data will load sqlite3.dll at run time." -ForegroundColor DarkYellow
-      $sqliteDefine = '/p:DCC_Define=AEFOS_NO_STATIC_SQLITE '
       $needsSqliteDll = $true
     }
     # Say WHERE the BPLs go, rather than trusting the IDE's per-user state.
@@ -249,7 +254,7 @@ foreach ($v in $targets) {
     $cmd = "`"$rsvars`" && $msbuildPrefix" +
            "msbuild `"$grp`" /t:Build /p:Config=$Config /p:Platform=$plat " +
            "/p:DCC_BplOutput=`"$bplOut`" " +
-           "$sqliteDefine/p:DCC_ForceExecute=true /v:minimal /nologo"
+           "/p:DCC_ForceExecute=true /v:minimal /nologo"
     cmd /c $cmd
     if ($LASTEXITCODE -ne 0) { throw "Build FAILED for Delphi $v/$plat (exit $LASTEXITCODE)." }
 

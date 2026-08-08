@@ -60,11 +60,30 @@ New to the codebase? [`docs/architecture.md`](docs/architecture.md) is the map, 
    ```
    Open `docs/manual/_html/README.html` (PT) or `docs/manual/_html-en/README.html` (EN).
 
-## Licensing of your contribution
+## Licensing of your contribution — the CLA
 
-Aefos is GPL v3. By contributing code you agree it is licensed under the same terms,
-and you confirm you have the right to contribute it — that it is yours to give, and
-not your employer's.
+Before your first pull request can be merged, you sign the
+[Contributor License Agreement](CLA.md). A bot comments on the PR with a link; you
+reply to it once, and every future PR of yours is covered.
+
+**You keep the copyright to what you write.** What you grant is a licence — one
+broad enough that Aefos AI can also be licensed commercially. That is what lets the
+project stay GPL v3 in public *and* pay for itself, the same arrangement Qt, MySQL
+and Grafana use.
+
+Without it, any file a contributor touched would be locked to the GPL for good: the
+maintainer would have to remove that work or hunt down its author years later to
+release anything under other terms.
+
+You also confirm the work is **yours to give** — not your employer's — and that any
+third-party material in it is declared. The details are in [CLA.md](CLA.md), and it
+is short.
+
+## The name "Aefos AI"
+
+The code is GPL v3; the **name and logo are not**. You are free to fork, modify and
+redistribute under the GPL, but a fork is not "Aefos AI" — see
+[TRADEMARK.md](TRADEMARK.md) before naming a derivative.
 
 ## Code of Conduct
 

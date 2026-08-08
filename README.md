@@ -169,6 +169,10 @@ design-time package cannot exist without is expressly allowed.
 The licence that governed the software before 5 August 2026, when it was
 proprietary, is kept for the record in [`EULA-historical.md`](EULA-historical.md).
 
+The **code** is GPL v3; the **name and logo are not** — a fork is welcome, but it
+is not "Aefos AI". See [`TRADEMARK.md`](TRADEMARK.md). Contributors sign a short
+[CLA](CLA.md) and keep the copyright to their own work.
+
 ## Updating, reinstalling & moving to another machine
 
 Close RAD Studio and run the new `Aefos-Setup-*.exe` over the old one. That is the

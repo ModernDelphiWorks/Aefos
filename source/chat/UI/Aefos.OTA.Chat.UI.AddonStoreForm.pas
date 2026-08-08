@@ -52,6 +52,11 @@ type
       BEFORE the handle exists", "wire events BEFORE Parent"); doing it in the
       constructor is the only way to be sure nothing got there first. }
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+    { The window frees itself on close, because it is shown MODELESS - see
+      Execute for why it cannot be modal. }
+    procedure DoClose(var AAction: TCloseAction); override;
 
     { Opens the store. One window at a time on purpose: two of them would show
       two catalogues that disagree the moment either one installs something. }
@@ -78,15 +83,16 @@ var
   // place that creates it.
   GStoreForm: TAefosAddonStoreForm = nil;
 
-// TEMPORARY diagnostic — writes into the same file and behind the same switch as
-// the WebView control/host traces, so the whole open reads as one timeline.
+// Joins the WebView control/host trace, in the same file and behind the same
+// switch (AEFOS_WEBVIEW_TRACE), so an open reads top to bottom as one story:
+// this window, then the control, then the host.
 procedure _StoreLog(const S: string);
 begin
   if GetEnvironmentVariable('AEFOS_WEBVIEW_TRACE') = '' then
     Exit;
   try
-    TFile.AppendAllText(TPath.Combine(TPath.GetTempPath, 'aefos_comp.log'),
-      'store: ' + S + sLineBreak, TEncoding.UTF8);
+    TFile.AppendAllText(WebViewTraceFile, 'store: ' + S + sLineBreak,
+      TEncoding.UTF8);
   except
     // tracing is best-effort; never let it break the pipeline
   end;
@@ -149,14 +155,26 @@ begin
   // empty, which sends WebView2 to keep its user data beside bds.exe, and
   // sharing the chat's would couple this window to the chat's browser
   // arguments (see TWebViewConfig.ForPane).
-  _StoreLog(Format('ctor: after dfm stream, wv assigned=%d handle=%d',
-    [Ord(Assigned(AefosWebView1)),
-     Ord(Assigned(AefosWebView1) and AefosWebView1.HandleAllocated)]));
   AefosWebView1.Configure(TWebViewConfig.ForPane('AddonStore'));
   AefosWebView1.OnReady := _WebViewReady;
   AefosWebView1.OnMessageReceived := _WebViewMessage;
   AefosWebView1.OnFailed := _WebViewFailed;
-  _StoreLog('ctor: configured');
+  _StoreLog('configured');
+end;
+
+destructor TAefosAddonStoreForm.Destroy;
+begin
+  // The single-instance check in Execute reads this, so it has to be cleared by
+  // whoever actually dies - the window frees itself now, not the caller.
+  if GStoreForm = Self then
+    GStoreForm := nil;
+  inherited;
+end;
+
+procedure TAefosAddonStoreForm.DoClose(var AAction: TCloseAction);
+begin
+  inherited DoClose(AAction);
+  AAction := caFree;
 end;
 
 class procedure TAefosAddonStoreForm.Execute;
@@ -166,23 +184,21 @@ begin
     GStoreForm.BringToFront;
     Exit;
   end;
-  _StoreLog('Execute: creating form');
+  _StoreLog('opening');
   GStoreForm := TAefosAddonStoreForm.Create(nil);
-  try
-    _StoreLog(Format('  form created, wv handle=%d',
-      [Ord(GStoreForm.AefosWebView1.HandleAllocated)]));
-    TThemeHelper.ApplyPremiumTheme(GStoreForm);
-    _StoreLog(Format('  theme applied, wv handle=%d',
-      [Ord(GStoreForm.AefosWebView1.HandleAllocated)]));
-    GStoreForm.AefosWebView1.Navigate('file:///' +
-      StringReplace(_MaterialisePage, '\', '/', [rfReplaceAll]));
-    _StoreLog('  navigate issued; showing modal');
-    GStoreForm.ShowModal;
-    _StoreLog('  modal closed');
-  finally
-    GStoreForm.Free;
-    GStoreForm := nil;
-  end;
+  TThemeHelper.ApplyPremiumTheme(GStoreForm);
+  GStoreForm.AefosWebView1.Navigate('file:///' +
+    StringReplace(_MaterialisePage, '\', '/', [rfReplaceAll]));
+  // MODELESS, and that is not a preference. Shown with ShowModal, the WebView2
+  // composition controller never completed: the environment was created and
+  // CreateCoreWebView2CompositionController returned S_OK, but its completion
+  // handler was never called, so the window sat on "Loading Aefos..." forever
+  // with nothing failing (traced 2026-08-08). The modal loop disables the
+  // application's other top-level windows, and the host's composition anchor is
+  // one of them - a WS_POPUP created next to the control. Shown modeless, the
+  // callback arrives. The store is a browsing window anyway; nothing about it
+  // wants to block the IDE, and a single instance is still enforced above.
+  GStoreForm.Show;
 end;
 
 procedure TAefosAddonStoreForm._CallPage(const AFunc, AJsonArg: string);

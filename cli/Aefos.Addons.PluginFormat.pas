@@ -60,12 +60,10 @@ type
   TPluginFormat = (pfNone, pfAefos, pfAgentPlugins, pfCopilot, pfClaude,
     pfOpenPlugin);
 
-  { Called with one human-readable line per adoption decision. }
-{$IFDEF FPC}
-  TPluginFormatLog = procedure(const ALine: string);
-{$ELSE}
-  TPluginFormatLog = reference to procedure(const ALine: string);
-{$ENDIF}
+  { Called with one human-readable line per adoption decision. Alias of the one
+    declaration in Aefos.Addons.Types - re-declaring it here would make it a
+    DIFFERENT type from the installer's, which older compilers reject outright. }
+  TPluginFormatLog = TAddonLogProc;
 
   { Static, sealed namespace: the class IS the namespace, never instantiated. }
   TAddonPluginFormat = class sealed

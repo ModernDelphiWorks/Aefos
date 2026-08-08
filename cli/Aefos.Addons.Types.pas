@@ -17,6 +17,25 @@ uses
   SysUtils;
 
 type
+  { Called with one human-readable line of progress. ONE declaration for the
+    whole addon stack - every other unit ALIASES this one instead of repeating
+    the declaration.
+
+    Why it has to live here: two structurally identical "reference to procedure"
+    declarations are two DIFFERENT types, and a compiler older than Athens
+    refuses to pass one where the other is expected (E2010 Incompatible types,
+    measured on Delphi 11 / compiler 35.0). Athens and up happen to accept it,
+    so the duplicate only breaks where nobody looks. An alias is the same type
+    everywhere, which is what makes the handler cross unit boundaries at all.
+
+    FPC 3.2.2 has no anonymous methods, so there it stays a plain procedural
+    type - see the KNOWN DIVERGENCE note in Aefos.Addons.Installer. }
+{$IFDEF FPC}
+  TAddonLogProc = procedure(const ALine: string);
+{$ELSE}
+  TAddonLogProc = reference to procedure(const ALine: string);
+{$ENDIF}
+
   { The primary kind used for portal filtering. A bundle may still carry more
     than one artifact regardless of its declared primary type. }
   TAddonKind = (akCommand, akMcp, akTool);

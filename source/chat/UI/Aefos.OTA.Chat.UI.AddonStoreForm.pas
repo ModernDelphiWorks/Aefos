@@ -41,6 +41,8 @@ type
     procedure _SendTheme;
     procedure _LoadCatalog;
     procedure _RunAction(const AAction, ASlug, ASource: string);
+    procedure _LoadSources;
+    procedure _RunSourceEdit(const AAction, AName, AKind, ALocation: string);
     procedure _CallPage(const AFunc, AJsonArg: string);
     procedure _PageLog(const AText: string);
   public
@@ -321,6 +323,85 @@ begin
     end).Start;
 end;
 
+// The store list, same shape of trip as the catalogue: shelling out can block on
+// nothing worse than a disk, but it is the same runner with the same rule.
+procedure TAefosAddonStoreForm._LoadSources;
+begin
+  if FBusy then
+    Exit;
+  FBusy := True;
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      LRes: TAddonStoreResult;
+    begin
+      LRes := TAefosAddonStore.SourcesJson;
+      TThread.Queue(nil,
+        procedure
+        begin
+          if not Assigned(GStoreForm) then
+            Exit;
+          FBusy := False;
+          if LRes.Ok then
+            _CallPage('sources', LRes.Output)
+          else
+            // An empty panel would read as "you have no stores", which is never
+            // true - the official one always exists. Say what actually happened.
+            _CallPage('sourceError', _JsString(Trim(LRes.Output)));
+        end);
+    end).Start;
+end;
+
+// Add / remove / enable / disable. Every one of them ends the same way: ask the
+// CLI again, because the panel draws the FILE rather than what it hoped the edit
+// did. BOTH answers are re-read on this one worker instead of queueing two more:
+// a store going on or off changes which addons exist at all, and FBusy would
+// have let the first re-read start and made the second one return silently.
+procedure TAefosAddonStoreForm._RunSourceEdit(const AAction, AName, AKind,
+  ALocation: string);
+begin
+  if FBusy then
+    Exit;
+  FBusy := True;
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      LRes, LSources, LCatalog: TAddonStoreResult;
+    begin
+      if SameText(AAction, 'sourceAdd') then
+        LRes := TAefosAddonStore.SourceAdd(AName, AKind, ALocation)
+      else if SameText(AAction, 'sourceRemove') then
+        LRes := TAefosAddonStore.SourceRemove(AName)
+      else
+        LRes := TAefosAddonStore.SourceEnable(AName,
+          SameText(AAction, 'sourceEnable'));
+      if LRes.Ok then
+      begin
+        LSources := TAefosAddonStore.SourcesJson;
+        LCatalog := TAefosAddonStore.CatalogJson;
+      end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          if not Assigned(GStoreForm) then
+            Exit;
+          FBusy := False;
+          // A refusal is the CLI's own sentence, shown on the form that caused
+          // it. It is the whole point of routing edits through the one writer:
+          // the rule and its wording live together.
+          if not LRes.Ok then
+          begin
+            _CallPage('sourceError', _JsString(Trim(LRes.Output)));
+            Exit;
+          end;
+          if LSources.Ok then
+            _CallPage('sources', LSources.Output);
+          if LCatalog.Ok then
+            _CallPage('data', LCatalog.Output);
+        end);
+    end).Start;
+end;
+
 procedure TAefosAddonStoreForm._WebViewMessage(const AMessage: string);
 var
   LVal: TJSONValue;
@@ -336,10 +417,13 @@ begin
     if (LAction = 'ready') or (LAction = 'refresh') then
       _LoadCatalog
     else if LAction = 'openSources' then
-      // Not wired yet: saying so beats a button that does nothing, which the
-      // user reads as the window being broken.
-      _PageLog('Custom stores are configured in ~/.aefos/sources.json ' +
-        '(the Options page is not wired yet).')
+      _LoadSources
+    else if LAction = 'sourceAdd' then
+      _RunSourceEdit(LAction, _StrOf(LObj, 'name'), _StrOf(LObj, 'kind'),
+        _StrOf(LObj, 'location'))
+    else if (LAction = 'sourceRemove') or (LAction = 'sourceEnable') or
+            (LAction = 'sourceDisable') then
+      _RunSourceEdit(LAction, _StrOf(LObj, 'name'), '', '')
     else if (LAction = 'install') or (LAction = 'update') or
             (LAction = 'remove') then
       _RunAction(LAction, _StrOf(LObj, 'slug'), _StrOf(LObj, 'source'));

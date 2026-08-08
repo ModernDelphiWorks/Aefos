@@ -75,7 +75,10 @@ begin
   Writeln('  aefos update [<slug>] [--check]  refresh changed addons (no slug = all)');
   Writeln('  aefos list                     list installed addons');
   Writeln('  aefos catalog [--json]         what can be installed, from every source');
-  Writeln('  aefos sources                  the configured stores');
+  Writeln('  aefos sources [--json]         the configured stores');
+  Writeln('  aefos sources add <name> --kind path|aefos --location <where>');
+  Writeln('  aefos sources remove <name>');
+  Writeln('  aefos sources enable|disable <name>');
   Writeln('');
   Writeln('Options:');
   Writeln('  -y, --yes            consent to third-party code (mcp/tools) up front');
@@ -114,6 +117,40 @@ begin
     Writeln(Format('  %-12s %-8s %-6s %s', [LSources[LIndex].Name,
       _OriginOf(LSources[LIndex]),
       TAddonSources.KindToStr(LSources[LIndex].Kind), LWhere]));
+  end;
+end;
+
+// "aefos sources ..." - list, or one edit. The edits print what they did rather
+// than staying silent: this is also the store window's only writer, and a window
+// that says nothing after Save cannot tell "done" from "swallowed".
+procedure RunSources;
+begin
+  case GArgs.SourceAction of
+    asaAdd:
+      begin
+        TAddonSources.Add(GArgs.SourceName, GArgs.Kind, GArgs.Location);
+        Writeln('Added store "', GArgs.SourceName, '".');
+      end;
+    asaRemove:
+      begin
+        TAddonSources.Remove(GArgs.SourceName);
+        Writeln('Removed store "', GArgs.SourceName, '".');
+      end;
+    asaEnable:
+      begin
+        TAddonSources.SetEnabled(GArgs.SourceName, True);
+        Writeln('Enabled store "', GArgs.SourceName, '".');
+      end;
+    asaDisable:
+      begin
+        TAddonSources.SetEnabled(GArgs.SourceName, False);
+        Writeln('Disabled store "', GArgs.SourceName, '".');
+      end;
+  else
+    if GArgs.Json then
+      Writeln(TAddonSources.ToJson(TAddonSources.Load))
+    else
+      PrintSources;
   end;
 end;
 
@@ -202,7 +239,7 @@ begin
           TAddonInstaller.Update(GArgs.Slug, GOpts, Log);
       acUninstall: TAddonInstaller.Uninstall(GArgs.Slug, Log);
       acList:    TAddonInstaller.List(Log);
-      acSources: PrintSources;
+      acSources: RunSources;
       acCatalog:
         begin
           GCatalog := TAddonCatalog.ReadAll;

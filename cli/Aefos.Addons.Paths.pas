@@ -28,12 +28,23 @@ type
 
     { ~/.aefos\commands }
     class function CommandsRoot: string; static;
-    { ~/.aefos\commands\<slug> }
+    { ~/.aefos\commands\<slug> - where a single-command bundle lands. }
     class function CommandDir(const ASlug: string): string; static;
+    { ~/.aefos\commands\<slug>.<name> - ONE command of a multi-command bundle.
+      The command registry keys a command by its FOLDER name (it reads
+      <name>\COMMAND.md), and that root is flat and shared, so the slug prefix
+      is what stops two addons shipping a "review" command from colliding. }
+    class function CommandDirNamed(const ASlug, AName: string): string; static;
     { ~/.aefos\skills }
     class function SkillsRoot: string; static;
-    { ~/.aefos\skills\<slug> }
+    { ~/.aefos\skills\<slug> - where a single-skill bundle lands. }
     class function SkillDir(const ASlug: string): string; static;
+    { ~/.aefos\skills\<slug>.<name> - where ONE skill of a multi-skill bundle
+      lands. The slug prefix is not decoration: skills share one flat root, so
+      two addons each shipping a "review" skill would otherwise overwrite each
+      other, and which one survived would depend on install order. Both parts
+      are slug-validated, so neither can traverse out of the skills tree. }
+    class function SkillDirNamed(const ASlug, AName: string): string; static;
     { ~/.aefos\templates }
     class function TemplatesRoot: string; static;
     { ~/.aefos\templates\<slug> }
@@ -97,6 +108,11 @@ begin
   Result := TPath.Combine(CommandsRoot, _RequireSlug(ASlug));
 end;
 
+class function TAddonPaths.CommandDirNamed(const ASlug, AName: string): string;
+begin
+  Result := TPath.Combine(CommandsRoot, _RequireSlug(ASlug) + '.' + _RequireSlug(AName));
+end;
+
 class function TAddonPaths.SkillsRoot: string;
 begin
   Result := TPath.Combine(UserRoot, 'skills');
@@ -105,6 +121,11 @@ end;
 class function TAddonPaths.SkillDir(const ASlug: string): string;
 begin
   Result := TPath.Combine(SkillsRoot, _RequireSlug(ASlug));
+end;
+
+class function TAddonPaths.SkillDirNamed(const ASlug, AName: string): string;
+begin
+  Result := TPath.Combine(SkillsRoot, _RequireSlug(ASlug) + '.' + _RequireSlug(AName));
 end;
 
 class function TAddonPaths.TemplatesRoot: string;

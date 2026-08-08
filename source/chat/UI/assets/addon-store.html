@@ -124,6 +124,45 @@
   .why { color: var(--muted); font-size: 11px; margin-top: 8px; }
   .bad-inline { color: var(--err); font-size: 12px; margin-top: 8px; }
 
+  /* ---- the Format tab --------------------------------------------------
+     Aefos installs ONE bundle format, so the window that installs them is
+     where the format is documented. The text is FIXED IN THIS FILE, not read
+     from disk: it ships with the build it describes and cannot drift from it,
+     and there is no file on a user's machine to edit into disagreeing with
+     the installer. */
+  #format { padding: 4px 0 24px; }
+  .doc { max-width: 760px; margin: 0 auto; padding: 6px 16px; }
+  .doc h2 { font-size: 15px; margin: 18px 0 6px; }
+  .doc h2:first-child { margin-top: 8px; }
+  .doc h3 { font-size: 12px; margin: 16px 0 4px; color: var(--muted);
+            text-transform: uppercase; letter-spacing: .04em; }
+  .doc p { margin: 6px 0; }
+  .doc ul { margin: 6px 0; padding-left: 18px; }
+  .doc li { margin: 3px 0; }
+  .doc code {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 3px;
+    padding: 0 4px; font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 12px;
+  }
+  .doc pre {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
+    padding: 10px 12px; overflow-x: auto; font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 12px; line-height: 1.4; margin: 8px 0;
+  }
+  .doc pre code { background: none; border: none; padding: 0; }
+  .doc table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12px; }
+  .doc th, .doc td {
+    border: 1px solid var(--line); padding: 5px 8px; text-align: left;
+    vertical-align: top;
+  }
+  .doc th { color: var(--muted); font-weight: 600; }
+  .doc .lead { color: var(--muted); }
+  .docbar {
+    display: flex; align-items: center; gap: 10px;
+    max-width: 760px; margin: 0 auto; padding: 10px 16px 0;
+  }
+  .docbar .spacer { flex: 1 1 auto; }
+
   .banner {
     margin: 8px 12px 0; padding: 7px 10px; border-radius: 4px;
     border: 1px solid var(--warn); color: var(--warn); font-size: 12px;
@@ -154,6 +193,141 @@
 <div id="banners"></div>
 <main id="list"></main>
 <main id="stores" hidden></main>
+
+<!-- The Format tab. Fixed here on purpose: it ships with the build it
+     describes, so it cannot drift from the installer that enforces it. -->
+<main id="format" hidden>
+  <div class="docbar">
+    <span class="tag">addon.json</span>
+    <span class="spacer"></span>
+    <button class="ghost" id="copyspec" title="Copy this format as text, to paste into a chat">Copy for the agent</button>
+  </div>
+  <div class="doc">
+    <h2>The Aefos addon format</h2>
+    <p class="lead">Aefos installs one bundle format, and this is it. A bundle is a
+    folder with a manifest and whatever artifacts it carries. Anything packaged for
+    another ecosystem is converted to this once, when it is authored &mdash; ask an
+    agent, with the button above.</p>
+
+    <h3>The bundle</h3>
+<pre><code>&lt;slug&gt;/
+  addon.json          REQUIRED - the manifest below
+  command/
+    COMMAND.md        one command, triggered as /&lt;slug&gt;
+  skill/
+    SKILL.md          one skill
+    okf/              its knowledge bundle (index.md, ...)
+  mcp/
+    server.json       one mcpServers fragment
+  tools/              Python tools
+  templates/          scaffolds the command or skill renders</code></pre>
+
+    <h3>The manifest</h3>
+<pre><code>{
+  "slug": "janus-orm",
+  "version": "1.0.1",
+  "name": "Janus ORM Specialist",
+  "description": "Expert on the Janus ORM.",
+  "trust": "community",
+  "requirements": { "aefos_version": "&gt;=1.0.0" },
+  "artifacts": {
+    "command": true, "skill": true,
+    "mcp": false, "tools": false, "templates": false
+  }
+}</code></pre>
+    <p><code>slug</code> and <code>version</code> are required and must match the
+    store entry. <code>artifacts</code> declares what the bundle carries: declared
+    and missing fails the install, so a no-op is never recorded as success.</p>
+
+    <h3>More than one command or skill</h3>
+    <p>Use the plural folder &mdash; a directory per artifact, not a loose file:</p>
+<pre><code>&lt;slug&gt;/
+  commands/
+    build/COMMAND.md        -&gt; /&lt;slug&gt;.build
+    review/COMMAND.md       -&gt; /&lt;slug&gt;.review
+  skills/
+    test-runner/SKILL.md
+    lint/SKILL.md</code></pre>
+    <table>
+      <tr><th>in the bundle</th><th>installs to</th><th>trigger</th></tr>
+      <tr><td><code>command/COMMAND.md</code></td><td><code>commands/&lt;slug&gt;/</code></td><td><code>/&lt;slug&gt;</code></td></tr>
+      <tr><td><code>commands/&lt;name&gt;/</code></td><td><code>commands/&lt;slug&gt;.&lt;name&gt;/</code></td><td><code>/&lt;slug&gt;.&lt;name&gt;</code></td></tr>
+      <tr><td><code>skill/</code></td><td><code>skills/&lt;slug&gt;/</code></td><td>&mdash;</td></tr>
+      <tr><td><code>skills/&lt;name&gt;/</code></td><td><code>skills/&lt;slug&gt;.&lt;name&gt;/</code></td><td>&mdash;</td></tr>
+    </table>
+    <p>The <code>&lt;slug&gt;.</code> prefix is not decoration: commands and skills
+    share one flat root, so two addons both shipping a <code>review</code> would
+    otherwise overwrite each other.</p>
+
+    <h3>What install does</h3>
+    <ul>
+      <li>Everything lands under <code>~/.aefos</code>, scoped to the slug.</li>
+      <li>A reinstall clean-replaces: an artifact the new version dropped is gone,
+      not left behind still loaded.</li>
+      <li><code>mcp</code> and <code>tools</code> are runnable code. From a
+      community-trust store they need explicit consent (<code>--yes</code>).</li>
+      <li>Over HTTP a bundle without a <code>sha256</code> is refused.</li>
+    </ul>
+
+    <h3>Publishing it</h3>
+    <p>A folder store needs no packaging at all: point a store at a directory and
+    every subfolder carrying an <code>addon.json</code> is an addon.</p>
+<pre><code>aefos sources add mystore --kind path --location D:\Addons
+aefos install my-addon --source mystore</code></pre>
+  </div>
+</main>
+
+<!-- The same format as plain text, for the clipboard. Kept beside the rendered
+     version rather than scraped from it: what an agent needs is the rules, not
+     the markup, and scraping would hand it the table borders too. -->
+<pre id="spec" hidden>Aefos addon format (addon.json)
+
+A bundle is a folder with a manifest:
+
+  &lt;slug&gt;/
+    addon.json          REQUIRED
+    command/COMMAND.md  one command, triggered as /&lt;slug&gt;
+    skill/SKILL.md      one skill (+ okf/ for its knowledge bundle)
+    mcp/server.json     one mcpServers fragment
+    tools/              Python tools
+    templates/          scaffolds
+
+addon.json:
+
+  {
+    "slug": "my-addon",
+    "version": "1.0.0",
+    "name": "My Addon",
+    "description": "What it does.",
+    "trust": "community",
+    "requirements": { "aefos_version": "&gt;=1.0.0" },
+    "artifacts": { "command": true, "skill": true,
+                   "mcp": false, "tools": false, "templates": false }
+  }
+
+slug and version are required and must match the store entry. artifacts
+declares what the bundle carries; declared and missing fails the install.
+
+For several commands or skills, use the plural folder - a DIRECTORY per
+artifact, never a loose .md:
+
+  commands/build/COMMAND.md   installs as /&lt;slug&gt;.build
+  commands/review/COMMAND.md  installs as /&lt;slug&gt;.review
+  skills/test-runner/SKILL.md installs as skills/&lt;slug&gt;.test-runner
+
+The &lt;slug&gt;. prefix is required: commands and skills share one flat root,
+so two addons both shipping "review" would otherwise overwrite each other.
+
+Install rules:
+- everything lands under ~/.aefos, scoped to the slug
+- a reinstall clean-replaces; a dropped artifact is removed
+- mcp and tools are runnable code: community-trust needs --yes
+- over HTTP, a bundle without sha256 is refused
+
+To publish without packaging, point a store at a folder:
+  aefos sources add mystore --kind path --location D:\Addons
+  aefos install my-addon --source mystore
+</pre>
 <div id="log"></div>
 
 <script>
@@ -258,22 +432,29 @@
     nav.innerHTML = html;
   }
 
-  // The two outer tabs always BOTH exist, even when one is empty: "Custom" that
+  // The outer tabs always ALL exist, even when one is empty: "Custom" that
   // vanishes when you have no store of your own is a feature you never find out
   // about, and finding it is the whole point of the tab.
+  //
+  // "Format" sits here rather than in a menu because it answers the question
+  // this window creates: someone looking at ten addons and wondering how to
+  // make the eleventh. It carries no count - it is not a pile of addons - and
+  // selecting it swaps the body for the document instead of filtering a list.
   function renderOrigins() {
     var nav = document.getElementById("origins"), html = "", i, k;
-    var names = { official: "Official", custom: "Custom" };
-    var order = ["official", "custom"];
+    var names = { official: "Official", custom: "Custom", format: "Format" };
+    var order = ["official", "custom", "format"];
     for (i = 0; i < order.length; i++) {
       k = order[i];
-      var n = 0, j;
-      for (j = 0; j < state.addons.length; j++) {
-        if ((state.addons[j].origin || "custom") === k) n++;
+      var n = 0, j, count = "";
+      if (k !== "format") {
+        for (j = 0; j < state.addons.length; j++) {
+          if ((state.addons[j].origin || "custom") === k) n++;
+        }
+        count = '<span class="count">' + n + "</span>";
       }
       html += '<button data-origin="' + k + '" aria-selected="' +
-        (k === state.origin) + '">' + names[k] +
-        '<span class="count">' + n + "</span></button>";
+        (k === state.origin) + '">' + names[k] + count + "</button>";
     }
     nav.innerHTML = html;
   }
@@ -425,14 +606,24 @@
     document.getElementById("stores").innerHTML = out;
   }
 
-  // One view at a time: the addon list and the stores panel are answers to
-  // different questions, and showing both would make the window about neither.
+  // One view at a time: the addon list, the stores panel and the format document
+  // are answers to different questions, and showing two would make the window
+  // about neither.
+  //
+  // Format keeps the header (it is one of those tabs, and you get back by
+  // clicking another) but drops the parts that only mean something for a list:
+  // the search box, the store filter and the type tabs would all be controls
+  // with nothing to control.
   function applyView() {
     var isStores = state.view === "stores";
+    var isFormat = !isStores && state.origin === "format";
     document.getElementById("stores").hidden = !isStores;
-    document.getElementById("list").hidden = isStores;
+    document.getElementById("format").hidden = !isFormat;
+    document.getElementById("list").hidden = isStores || isFormat;
     document.getElementById("head").hidden = isStores;
-    document.getElementById("banners").hidden = isStores;
+    document.getElementById("banners").hidden = isStores || isFormat;
+    document.querySelector(".row1").hidden = isFormat;
+    document.getElementById("tabs").hidden = isFormat;
   }
 
   function render() {
@@ -473,6 +664,39 @@
   }
 
   document.getElementById("sources").addEventListener("click", openStores);
+
+  // Copy the format as plain text, so it can be pasted into a chat with "build
+  // me an addon in this format". The clipboard API needs a user gesture, which
+  // a click is; execCommand is the fallback for a WebView that refuses it, and
+  // the button SAYS which one happened rather than looking the same either way.
+  document.getElementById("copyspec").addEventListener("click", function () {
+    var b = document.getElementById("copyspec");
+    var text = document.getElementById("spec").textContent;
+    function done(ok) {
+      b.textContent = ok ? "Copied" : "Press Ctrl+C";
+      setTimeout(function () { b.textContent = "Copy for the agent"; }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); },
+        function () { done(legacyCopy(text)); });
+      return;
+    }
+    done(legacyCopy(text));
+  });
+
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.top = "-1000px";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
 
   document.getElementById("stores").addEventListener("click", function (e) {
     if (e.target.id === "backtolist") {

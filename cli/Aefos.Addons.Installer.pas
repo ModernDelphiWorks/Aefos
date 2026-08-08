@@ -20,19 +20,15 @@ uses
   Aefos.Addons.Types;
 
 type
-  // The progress line sink. On Delphi a `reference to` (so a standalone or
-  // captured proc binds). FPC 3.2.2 has no anonymous methods; a plain
-  // procedural type is enough here - every call site passes a standalone
-  // procedure and the installer never builds a closure for it.
+  // The progress line sink. Alias of the one declaration in Aefos.Addons.Types
+  // (which carries the FPC branch): on Delphi a `reference to` so a standalone
+  // or captured proc binds, on FPC 3.2.2 a plain procedural type because it has
+  // no anonymous methods.
   // KNOWN DIVERGENCE: the two branches are DIFFERENT types. Passing a
   // capturing anonymous method on the Delphi side compiles there but will
   // break the FPC build - keep call sites on plain procedures (or convert
   // this to a carrier-object callback when a closure becomes necessary).
-  {$IFDEF FPC}
-  TAddonLog = procedure(const ALine: string);
-  {$ELSE}
-  TAddonLog = reference to procedure(const ALine: string);
-  {$ENDIF}
+  TAddonLog = TAddonLogProc;
 
   TInstallOptions = record
     Yes: Boolean;       // --yes: pre-consent third-party (mcp/tools) code

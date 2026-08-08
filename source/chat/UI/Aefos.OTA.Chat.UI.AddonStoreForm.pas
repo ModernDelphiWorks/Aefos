@@ -78,6 +78,20 @@ var
   // place that creates it.
   GStoreForm: TAefosAddonStoreForm = nil;
 
+// TEMPORARY diagnostic — writes into the same file and behind the same switch as
+// the WebView control/host traces, so the whole open reads as one timeline.
+procedure _StoreLog(const S: string);
+begin
+  if GetEnvironmentVariable('AEFOS_WEBVIEW_TRACE') = '' then
+    Exit;
+  try
+    TFile.AppendAllText(TPath.Combine(TPath.GetTempPath, 'aefos_comp.log'),
+      'store: ' + S + sLineBreak, TEncoding.UTF8);
+  except
+    // tracing is best-effort; never let it break the pipeline
+  end;
+end;
+
 // The page is embedded, but WebView2 navigates to a URL, so it has to exist as
 // a file somewhere. Written fresh on every open: the copy on disk is a cache of
 // the resource, never a thing a user is expected to edit, and rewriting it is
@@ -135,10 +149,14 @@ begin
   // empty, which sends WebView2 to keep its user data beside bds.exe, and
   // sharing the chat's would couple this window to the chat's browser
   // arguments (see TWebViewConfig.ForPane).
+  _StoreLog(Format('ctor: after dfm stream, wv assigned=%d handle=%d',
+    [Ord(Assigned(AefosWebView1)),
+     Ord(Assigned(AefosWebView1) and AefosWebView1.HandleAllocated)]));
   AefosWebView1.Configure(TWebViewConfig.ForPane('AddonStore'));
   AefosWebView1.OnReady := _WebViewReady;
   AefosWebView1.OnMessageReceived := _WebViewMessage;
   AefosWebView1.OnFailed := _WebViewFailed;
+  _StoreLog('ctor: configured');
 end;
 
 class procedure TAefosAddonStoreForm.Execute;
@@ -148,12 +166,19 @@ begin
     GStoreForm.BringToFront;
     Exit;
   end;
+  _StoreLog('Execute: creating form');
   GStoreForm := TAefosAddonStoreForm.Create(nil);
   try
+    _StoreLog(Format('  form created, wv handle=%d',
+      [Ord(GStoreForm.AefosWebView1.HandleAllocated)]));
     TThemeHelper.ApplyPremiumTheme(GStoreForm);
+    _StoreLog(Format('  theme applied, wv handle=%d',
+      [Ord(GStoreForm.AefosWebView1.HandleAllocated)]));
     GStoreForm.AefosWebView1.Navigate('file:///' +
       StringReplace(_MaterialisePage, '\', '/', [rfReplaceAll]));
+    _StoreLog('  navigate issued; showing modal');
     GStoreForm.ShowModal;
+    _StoreLog('  modal closed');
   finally
     GStoreForm.Free;
     GStoreForm := nil;
@@ -196,6 +221,7 @@ end;
 
 procedure TAefosAddonStoreForm._WebViewReady;
 begin
+  _StoreLog('OnReady');
   _SendTheme;
 end;
 
@@ -205,6 +231,7 @@ end;
 // with nothing anywhere saying why.
 procedure TAefosAddonStoreForm._WebViewFailed(const AHResult: HRESULT);
 begin
+  _StoreLog(Format('OnFailed hr=%.8x', [Cardinal(AHResult)]));
   Caption := Format('Aefos Addons - WebView2 could not start (0x%.8x)',
     [Cardinal(AHResult)]);
 end;

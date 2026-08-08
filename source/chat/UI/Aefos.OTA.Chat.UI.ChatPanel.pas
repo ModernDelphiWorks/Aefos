@@ -327,6 +327,11 @@ type
     // AFromQueue = a drain re-entry from _DrainQueuedMessage: the bubble was
     // already echoed when the message was queued, so the echo is skipped and
     // the queue gate is bypassed (else the drain would just re-queue).
+    { Opens a link the user clicked in a message, WITHOUT navigating this panel:
+      a project file goes to the IDE editor (that is where a .md of this project
+      belongs), a real URL goes to the system browser, and anything unresolvable
+      says so in the chat instead of failing silently. }
+    procedure _OpenLink(const AHref: string);
     procedure _DispatchCommand(const AText: string;
       const AFromQueue: Boolean = False);
     procedure _DrainQueuedMessage;
@@ -547,6 +552,7 @@ uses
   Vcl.Dialogs,
   Vcl.Themes,
   DeskUtil,
+  Winapi.ShellAPI,
   ToolsAPI,
   Aefos.OTA.Chat.Core.ChatCommand,
   Aefos.OTA.Chat.Core.CommandAutoReplicate,
@@ -2179,6 +2185,14 @@ begin
     _DispatchCommand(Copy(AMessage, Length('send:') + 1, MaxInt));
     Exit;
   end;
+  // A link the user clicked in a message. The page cancelled the navigation and
+  // sent us the href, because this WebView is the conversation itself - see the
+  // click handler in OutputPanel.Assets for what happens when it navigates.
+  if AMessage.StartsWith('openlink:') then
+  begin
+    _OpenLink(Trim(Copy(AMessage, Length('openlink:') + 1, MaxInt)));
+    Exit;
+  end;
   // The shell page reports a broken JS runtime (e.g. window.marked missing
   // because the shell file loaded truncated). Reload the shell once — Navigate
   // rewrites the file and the nav-completed replay rebuilds the conversation,
@@ -2546,6 +2560,75 @@ begin
   end;
 end;
 
+procedure TAefosChatPanel._OpenLink(const AHref: string);
+var
+  LHref, LPath, LRoot: string;
+  LModule: IOTAModuleServices;
+
+  // Says it in the chat, where the click happened. A link that does nothing and
+  // explains nothing is the same silence that made the navigation bug hard to
+  // read in the first place.
+  procedure _Notify(const AText: string);
+  begin
+    if Assigned(FController) then
+      FController.EnqueueFooter(AText, True);
+  end;
+
+begin
+  LHref := Trim(AHref);
+  if LHref = '' then
+    Exit;
+  // A real URL: hand it to the system, which is the only thing that should own
+  // a browser window. Never this panel.
+  if LHref.StartsWith('http://', True) or LHref.StartsWith('https://', True) or
+     LHref.StartsWith('mailto:', True) then
+  begin
+    ShellExecute(0, 'open', PChar(LHref), nil, nil, SW_SHOWNORMAL);
+    Exit;
+  end;
+  // Everything else is meant as a FILE. The agent writes project-relative paths
+  // (`.project/analysis/project-overview.md`) because that is how it refers to
+  // what it just wrote; a browser reads the same string as a URL and mangles the
+  // backslashes. Resolve it the way the sentence meant it.
+  LPath := LHref;
+  if LPath.StartsWith('file:///', True) then
+    LPath := Copy(LPath, Length('file:///') + 1, MaxInt);
+  LPath := StringReplace(LPath, '/', PathDelim, [rfReplaceAll]);
+  LPath := StringReplace(LPath, '%5C', PathDelim, [rfReplaceAll, rfIgnoreCase]);
+  LPath := StringReplace(LPath, '%20', ' ', [rfReplaceAll]);
+  LModule := nil;
+  if not Supports(BorlandIDEServices, IOTAModuleServices, LModule) then
+    LModule := nil;
+  if not TPath.IsPathRooted(LPath) then
+  begin
+    // Relative means relative to the PROJECT: that is what the agent meant when
+    // it wrote the path, because that is the directory it ran in.
+    LRoot := '';
+    if Assigned(LModule) and Assigned(LModule.GetActiveProject) then
+      LRoot := TPath.GetDirectoryName(LModule.GetActiveProject.FileName);
+    if LRoot = '' then
+    begin
+      _Notify('Cannot open "' + LHref +
+        '": it is a relative path and no project is open to resolve it against.');
+      Exit;
+    end;
+    LPath := TPath.Combine(LRoot, LPath);
+  end;
+  if not TFile.Exists(LPath) then
+  begin
+    // Name the path that was tried. "File not found" on its own is the message
+    // that sends someone hunting through three folders.
+    _Notify('File not found: ' + LPath);
+    Exit;
+  end;
+  // The IDE editor, not a browser: it is a file of the project the developer has
+  // open, and the editor is where they can actually do something with it.
+  if Assigned(LModule) then
+    LModule.OpenModule(LPath)
+  else
+    ShellExecute(0, 'open', PChar(LPath), nil, nil, SW_SHOWNORMAL);
+end;
+
 procedure TAefosChatPanel._DispatchCommand(const AText: string;
   const AFromQueue: Boolean);
 var
@@ -2677,7 +2760,14 @@ begin
   // builtin matched just above, or a stored command resolved by an exact name hit
   // - so a free-text prompt (LCmd = the whole prompt) never pollutes recents.
   _RecordRecent(LCmd, LIsBuiltin, LBuiltin);
-  FOnCommand(LCmd);
+  // Dispatch the text AS TYPED, slash and all. The executor needs that slash to
+  // tell "/release these notes" (the command, plus what the developer wants)
+  // from "release these notes" (a sentence that happens to start with the name
+  // of an installed command). Stripping it here left both looking identical,
+  // and the only safe reading of an identical pair is the literal one - which
+  // is why a command with anything after it used to reach the model as raw
+  // text, with its COMMAND.md never loaded.
+  FOnCommand(AText);
 end;
 
 procedure TAefosChatPanel._DrainQueuedMessage;

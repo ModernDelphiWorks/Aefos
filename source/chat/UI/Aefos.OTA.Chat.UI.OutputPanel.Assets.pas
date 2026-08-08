@@ -4389,6 +4389,25 @@ const
     '  };' + sLineBreak +
     '  window.dsSyncPad();' + sLineBreak +
     '  window.addEventListener("resize", function(){ window.dsSyncPad(); });' + sLineBreak +
+    // A link in an assistant message must never NAVIGATE this page. This page IS
+    // the conversation: navigating it away replaces the whole chat with whatever
+    // the href pointed at, and the transcript goes with it. Measured live - the
+    // agent wrote `.project/analysis/project-overview.md`, the click resolved it
+    // to file:///C:/%5CUsers%5C... (a Windows path is not a URL), the WebView
+    // showed "can't reach this page", and only Alt+Left brought the chat back.
+    // Nobody guesses Alt+Left.
+    // So: cancel every anchor click and hand the href to the host, which knows
+    // what a project-relative path means and where a real URL should open.
+    '  document.addEventListener("click", function(e){' + sLineBreak +
+    '    var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;' + sLineBreak +
+    '    if(!a) return;' + sLineBreak +
+    '    var h = a.getAttribute("href") || "";' + sLineBreak +
+    // In-page anchors are the one navigation that is not a navigation: they
+    // scroll. Leave those to the browser.
+    '    if(h.charAt(0) === "#") return;' + sLineBreak +
+    '    e.preventDefault();' + sLineBreak +
+    '    try{ window.chrome.webview.postMessage("openlink:" + h); }catch(err){}' + sLineBreak +
+    '  }, true);' + sLineBreak +
     '  /* Visual Scanner. A pure function of the payload the Pascal side emits' + sLineBreak +
     '     (TAefosVisualSession.ToJson): no state, no timers, no inference. A step' + sLineBreak +
     '     spins because the payload said "active", and for no other reason. */' + sLineBreak +

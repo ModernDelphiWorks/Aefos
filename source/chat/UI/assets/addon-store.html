@@ -448,14 +448,31 @@
   document.getElementById("store").addEventListener("change", function (e) {
     state.store = e.target.value; renderTabs(); renderList();
   });
+  // Refresh re-reads every store, which on a good day changes NOTHING on screen -
+  // and a button that leaves the window identical reads as a button that does not
+  // work. So it says it is working, and the host always answers (even when it is
+  // busy) so this can never stay stuck.
+  function setRefreshing(on) {
+    var b = document.getElementById("refresh");
+    b.textContent = on ? "Refreshing" + String.fromCharCode(8230) : "Refresh";
+    b.disabled = on;
+  }
+
   document.getElementById("refresh").addEventListener("click", function () {
+    setRefreshing(true);
     post({ action: "refresh" });
   });
-  document.getElementById("sources").addEventListener("click", function () {
+  // BOTH doors into the panel come through here. They were two lines each, and
+  // the second door (the "Add a store..." button on an empty Custom tab) only
+  // asked the host for the list without switching the view: the answer arrived,
+  // the panel filled in behind the addon list, and the button looked dead.
+  function openStores() {
     state.view = "stores";
     applyView();
     post({ action: "openSources" });    // the host answers with aefosStore.sources
-  });
+  }
+
+  document.getElementById("sources").addEventListener("click", openStores);
 
   document.getElementById("stores").addEventListener("click", function (e) {
     if (e.target.id === "backtolist") {
@@ -497,7 +514,7 @@
     state.tab = b.getAttribute("data-kind"); render();
   });
   document.getElementById("list").addEventListener("click", function (e) {
-    if (e.target.id === "addstore") { post({ action: "openSources" }); return; }
+    if (e.target.id === "addstore") { openStores(); return; }
     var b = e.target.closest("button[data-do]");
     if (!b) return;
     var id = b.getAttribute("data-id");
@@ -516,8 +533,13 @@
       state.addons = (payload && payload.addons) || [];
       state.errors = (payload && payload.errors) || [];
       state.busy = null;
+      setRefreshing(false);
       render();
     },
+
+    // The host was already reading when Refresh was pressed. Nothing is wrong,
+    // but the button has to come back or it stays "Refreshing" forever.
+    refreshed: function () { setRefreshing(false); },
     theme: function (vars) {
       for (var k in vars) {
         if (Object.prototype.hasOwnProperty.call(vars, k)) {

@@ -133,8 +133,8 @@ begin
   if GetEnvironmentVariable('AEFOS_WEBVIEW_TRACE') = '' then
     Exit;
   try
-    TFile.AppendAllText(TPath.Combine(TPath.GetTempPath, 'aefos_comp.log'),
-      S + sLineBreak, TEncoding.UTF8);
+    TFile.AppendAllText(WebViewTraceFile, 'host: ' + S + sLineBreak,
+      TEncoding.UTF8);
   except
     // tracing is best-effort; never let it break the pipeline
   end;

@@ -78,17 +78,16 @@ type
 
 implementation
 
-// TEMPORARY diagnostic — same switch and same file as the composition host's
-// _CompLog (env var AEFOS_WEBVIEW_TRACE, %TEMP%\aefos_comp.log), so the control
-// side and the host side interleave in ONE timeline. Remove once the store window
-// is understood.
+// Off unless AEFOS_WEBVIEW_TRACE is set, and shares the composition host's file so
+// the control side and the host side read as ONE timeline — which is what finally
+// showed the store window's controller callback never arriving.
 procedure _CtlLog(const S: string);
 begin
   if GetEnvironmentVariable('AEFOS_WEBVIEW_TRACE') = '' then
     Exit;
   try
-    TFile.AppendAllText(TPath.Combine(TPath.GetTempPath, 'aefos_comp.log'),
-      'ctl: ' + S + sLineBreak, TEncoding.UTF8);
+    TFile.AppendAllText(WebViewTraceFile, 'ctl: ' + S + sLineBreak,
+      TEncoding.UTF8);
   except
     // tracing is best-effort; never let it break the pipeline
   end;
@@ -119,27 +118,26 @@ end;
 
 procedure TAefosWebView._EnsureHost;
 begin
-  _CtlLog(Format('_EnsureHost enter: name=%s designing=%d handle=%d host=%d '
-    + 'configured=%d udf="%s"',
-    [Name, Ord(csDesigning in ComponentState), Ord(HandleAllocated),
-     Ord(Assigned(FHost)), Ord(FConfigured), FConfig.UserDataFolder]));
+  _CtlLog(Format('ensure(dsg=%d,h=%d,host=%d,cfg=%d)',
+    [Ord(csDesigning in ComponentState), Ord(HandleAllocated),
+     Ord(Assigned(FHost)), Ord(FConfigured)]));
   // Never spin up a real WebView2 inside the form designer — just paint a
   // placeholder (see Paint). Keeps the component droppable without freezing the IDE.
   if (csDesigning in ComponentState) or not HandleAllocated then
   begin
-    _CtlLog('  EXIT: designing or no handle');
+    _CtlLog('EXIT-no-handle');
     Exit;
   end;
   if Assigned(FHost) then
   begin
-    _CtlLog('  reparent existing host');
+    _CtlLog('reparent');
     FHost.Reparent(Handle);
     FHost.SetBounds(ClientRect);
     Exit;
   end;
-  _CtlLog('  creating host');
+  _CtlLog('creating');
   FHost := TCompositionWebViewHost.Create(Handle, FConfig);
-  _CtlLog('  host created');
+  _CtlLog('created');
   FHost.OnReady := procedure
     begin
       Invalidate; // clear the "Loading…" placeholder; the WebView frame takes over
@@ -160,9 +158,9 @@ begin
   // Start AFTER the callbacks are wired: a synchronous failure (e.g. WebView2 runtime
   // missing -> E_FAIL) must reach OnFailed so the host can show its text fallback
   // instead of hanging on a black panel forever.
-  _CtlLog('  calling Start');
+  _CtlLog('start');
   FHost.Start;
-  _CtlLog('  Start returned');
+  _CtlLog('started');
   FHost.SetBounds(ClientRect);
   if FPendingUrl <> '' then
   begin
@@ -176,14 +174,15 @@ begin
   inherited CreateWnd;
   _CtlLog('CreateWnd');
   // Created on first show; on later recreates (dock/undock) this re-binds the host.
-  // The try/except is TEMPORARY: it exists to prove whether an exception on this
-  // path is being swallowed somewhere above (it re-raises, so behaviour is unchanged).
+  // The try/except only NAMES a failure on the way past (it re-raises, so nothing
+  // is swallowed): a host that dies here leaves a control that looks merely slow,
+  // and "looks slow" is the single most expensive symptom this unit produces.
   try
     _EnsureHost;
   except
     on E: Exception do
     begin
-      _CtlLog(Format('  EXCEPTION %s: %s', [E.ClassName, E.Message]));
+      _CtlLog(Format('EXC %s: %s', [E.ClassName, E.Message]));
       raise;
     end;
   end;

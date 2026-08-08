@@ -77,7 +77,34 @@ type
     class function ForPane(const APane: string): TWebViewConfig; static;
   end;
 
+{ Where the WebView trace lands when AEFOS_WEBVIEW_TRACE is set - shared, so the
+  window, the control and the host all append to ONE file and an open reads in
+  order. Deliberately NOT %TEMP%: inside bds.exe a run that provably created the
+  host and called Start left nothing whatsoever under %TEMP%, and reading that
+  silence as "the code never ran" sent a whole morning down the wrong hole.
+  %APPDATA%\Aefos is where these panes already write successfully. }
+function WebViewTraceFile: string;
+
 implementation
+
+uses
+  {$IFDEF FPC}
+  SysUtils;
+  {$ELSE}
+  System.SysUtils;
+  {$ENDIF}
+
+function WebViewTraceFile: string;
+var
+  LDir: string;
+begin
+  // SysUtils only, no IOUtils: this unit compiles under FPC too.
+  LDir := IncludeTrailingPathDelimiter(GetEnvironmentVariable('APPDATA'))
+    + 'Aefos';
+  if not DirectoryExists(LDir) then
+    ForceDirectories(LDir);
+  Result := IncludeTrailingPathDelimiter(LDir) + 'webview-trace.log';
+end;
 
 { TWebViewConfig }
 

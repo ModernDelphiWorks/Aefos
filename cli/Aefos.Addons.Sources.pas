@@ -22,12 +22,12 @@ unit Aefos.Addons.Sources;
   config.json - that file already has two writers, and a third would be asking
   for the lossy-write bug we have already paid for once.
 
-  KINDS. A source says how to READ AN INDEX, not what format the bundles are in;
-  bundle format is measured from the bundle itself (Aefos.Addons.PluginFormat).
+  KINDS. A source says how to READ AN INDEX. The bundles themselves are always
+  in the one Aefos format (addon.json - docs\addons-contract.md).
 
     aefos  - a registry.json in the Aefos gallery shape, fetched over HTTP.
-    path   - a folder on disk (or a UNC share). Every subfolder carrying a
-             manifest we recognise is one entry. A company share is a store.
+    path   - a folder on disk (or a UNC share). Every subfolder carrying an
+             addon.json is one entry. A company share is a store.
     git    - a repository index fetched over HTTP. Kept in the enum so the
              config format does not have to change when it lands, and reported
              honestly as unsupported until then rather than failing obscurely.

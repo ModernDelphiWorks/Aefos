@@ -90,8 +90,7 @@ uses
   Aefos.Compat.JsonFormat,
   Aefos.Addons.Manifest,
   Aefos.Addons.Ledger,
-  Aefos.Addons.Net,
-  Aefos.Addons.PluginFormat;
+  Aefos.Addons.Net;
 
 function _Str(const AObj: TJSONObject; const AKey: string): string;
 var
@@ -110,14 +109,16 @@ end;
   has to be the thing the user can see and type, not a field inside a file. }
 function _EntryFromDir(const ADir: string; out AEntry: TAddonRegistryEntry): Boolean;
 var
-  LFormat: TPluginFormat;
-  LJson: string;
+  LManifestPath, LJson: string;
   LVal: TJSONValue;
   LObj: TJSONObject;
 begin
   Result := False;
-  LFormat := TAddonPluginFormat.Detect(ADir);
-  if LFormat = pfNone then
+  // One format, ours: a folder is a bundle when it carries addon.json. Anything
+  // else in a store folder is simply not an addon (a README, a build script),
+  // which is why this returns False instead of raising.
+  LManifestPath := TPath.Combine(ADir, 'addon.json');
+  if not TFile.Exists(LManifestPath) then
     Exit;
   AEntry := Default(TAddonRegistryEntry);
   AEntry.Slug := TPath.GetFileName(ExcludeTrailingPathDelimiter(ADir));
@@ -128,7 +129,7 @@ begin
   // from what the bundle actually carries - the same instinct as everywhere
   // else here. An MCP config makes it an MCP server, a tools folder makes it
   // tools, and anything else is a plain addon.
-  if TAddonPluginFormat.McpConfigPathOf(ADir, LFormat) <> '' then
+  if TFile.Exists(TPath.Combine(ADir, TPath.Combine('mcp', 'server.json'))) then
     AEntry.Kind := akMcp
   else if TDirectory.Exists(TPath.Combine(ADir, 'tools')) then
     AEntry.Kind := akTool
@@ -137,9 +138,7 @@ begin
   AEntry.KindName := AEntry.Kind.ToStr;
   LJson := '';
   try
-    if TFile.Exists(TAddonPluginFormat.ManifestPathOf(ADir, LFormat)) then
-      LJson := TFile.ReadAllText(
-        TAddonPluginFormat.ManifestPathOf(ADir, LFormat), TEncoding.UTF8);
+    LJson := TFile.ReadAllText(LManifestPath, TEncoding.UTF8);
   except
     LJson := '';
   end;

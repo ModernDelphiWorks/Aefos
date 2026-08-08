@@ -31,7 +31,6 @@ uses
   Aefos.Addons.Types in 'Aefos.Addons.Types.pas',
   Aefos.Addons.Paths in 'Aefos.Addons.Paths.pas',
   Aefos.Addons.Manifest in 'Aefos.Addons.Manifest.pas',
-  Aefos.Addons.PluginFormat in 'Aefos.Addons.PluginFormat.pas',
   Aefos.Addons.Sources in 'Aefos.Addons.Sources.pas',
   Aefos.Addons.Catalog in 'Aefos.Addons.Catalog.pas',
   Aefos.Addons.Ledger in 'Aefos.Addons.Ledger.pas',

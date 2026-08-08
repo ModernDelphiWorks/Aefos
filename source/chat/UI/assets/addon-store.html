@@ -16,6 +16,13 @@
     --err:       #d05a5a;
   }
   * { box-sizing: border-box; }
+  /* `hidden` has to actually hide. The user-agent rule behind it is
+     [hidden] { display: none } at the WEAKEST specificity, so any rule of ours
+     that sets display - and .row1, nav and main all set flex or block -
+     silently outranks it. Everything this page hides, it hides through this
+     attribute, so getting it wrong leaves controls on screen with nothing to
+     control (measured: the search row survived the Format tab). */
+  [hidden] { display: none !important; }
   html, body { height: 100%; margin: 0; }
   body {
     background: var(--bg); color: var(--fg);
@@ -178,6 +185,20 @@
   }
   #log.on { display: block; }
   #log .bad { color: var(--err); }
+  /* The strip has to be dismissable. It opens on its own when something runs
+     and it is the only part of the window with no tab to leave by: changing
+     tabs is about addons, not about the last install, so the transcript
+     legitimately outlives the tab you were on when it appeared. Without a way
+     out it just stays there, eating a third of the window, forever. */
+  #logclose {
+    position: absolute; top: 4px; right: 8px;
+    background: transparent; color: var(--muted); border: none;
+    font: 16px/1 "Segoe UI", system-ui, sans-serif; cursor: pointer;
+    padding: 2px 6px; border-radius: 3px;
+  }
+  #logclose:hover { color: var(--fg); background: var(--bg); }
+  #logwrap { position: relative; flex: 0 0 auto; display: none; }
+  #logwrap.on { display: block; }
 </style>
 
 <header id="head">
@@ -328,7 +349,10 @@ To publish without packaging, point a store at a folder:
   aefos sources add mystore --kind path --location D:\Addons
   aefos install my-addon --source mystore
 </pre>
-<div id="log"></div>
+<div id="logwrap">
+  <button id="logclose" title="Close this transcript" aria-label="Close">&times;</button>
+  <div id="log"></div>
+</div>
 
 <script>
 "use strict";
@@ -665,6 +689,24 @@ To publish without packaging, point a store at a folder:
 
   document.getElementById("sources").addEventListener("click", openStores);
 
+  // The transcript strip: opened by the host as work runs, closed by the person
+  // reading it. Closing DISCARDS it - a strip that reopened with the last run's
+  // text still in it would read as a new run that had not started.
+  function showLog(on) {
+    document.getElementById("logwrap").className = on ? "on" : "";
+    document.getElementById("log").className = on ? "on" : "";
+  }
+
+  function openLog() {
+    document.getElementById("log").innerHTML = "";
+    showLog(true);
+  }
+
+  document.getElementById("logclose").addEventListener("click", function () {
+    document.getElementById("log").innerHTML = "";
+    showLog(false);
+  });
+
   // Copy the format as plain text, so it can be pasted into a chat with "build
   // me an addon in this format". The clipboard API needs a user gesture, which
   // a click is; execCommand is the fallback for a WebView that refuses it, and
@@ -744,8 +786,7 @@ To publish without packaging, point a store at a folder:
     var id = b.getAttribute("data-id");
     var cut = id.indexOf("/");
     state.busy = id;
-    document.getElementById("log").innerHTML = "";
-    document.getElementById("log").className = "on";
+    openLog();
     renderList();
     post({ action: b.getAttribute("data-do"),
            source: id.slice(0, cut), slug: id.slice(cut + 1) });
@@ -773,7 +814,7 @@ To publish without packaging, point a store at a folder:
     },
     log: function (line, bad) {
       var el = document.getElementById("log");
-      el.className = "on";
+      showLog(true);
       var d = document.createElement("div");
       if (bad) d.className = "bad";
       d.textContent = line;

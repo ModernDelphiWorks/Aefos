@@ -271,6 +271,20 @@ begin
             Inc(LCount);
           end;
           SetLength(Result.Rows, LCount);
+          // A store is the folder that CONTAINS addons, one per subfolder. Point
+          // it at an addon itself - the obvious mistake, and the one a folder
+          // picker practically invites - and every subfolder is that bundle's
+          // own commands/, payload/, tools/, so the store reads as EMPTY.
+          // Measured live: the maintainer browsed to the bundle, got a silent
+          // "Custom 0", and had no way to tell that from a store with nothing
+          // published in it. Say which one it is, and name the folder to use.
+          if (LCount = 0) and
+             TFile.Exists(TPath.Combine(ASource.Location, 'addon.json')) then
+            raise EAddonError.CreateFmt(
+              'folder "%s" IS an addon, not a store. A store is the folder that ' +
+              'holds addons - point it at "%s".',
+              [ASource.Location,
+               ExtractFileDir(ExcludeTrailingPathDelimiter(ASource.Location))]);
         end;
     else
       // Named in the config format from the start so adding it later needs no

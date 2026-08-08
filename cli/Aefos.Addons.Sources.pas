@@ -82,9 +82,23 @@ type
       where it was, in %AEFOS_ADDONS_REGISTRY%, which is deliberate and local.) }
     class function Load: TArray<TAddonSource>; static;
 
-    { Writes the list. Used by `aefos source add/remove` and, later, by the
-      Options page - both go through here so the file has one writer shape. }
+    { Writes the list. Every writer goes through here so the file has one writer
+      shape - including the store window, which edits the list by running the
+      CLI rather than writing the file itself. }
     class procedure Save(const ASources: TArray<TAddonSource>); static;
+
+    { The three edits, each Load-modify-Save so the file is never half a list.
+      They RAISE on a refusal (EAddonManifest) instead of returning a flag: every
+      caller here reports errors the same way, and a silently ignored edit in a
+      store list is the kind of thing nobody notices until an install goes to the
+      wrong place. }
+    class procedure Add(const AName, AKind, ALocation: string); static;
+    class procedure Remove(const AName: string); static;
+    class procedure SetEnabled(const AName: string; const AEnabled: Boolean); static;
+
+    { The list as JSON, which is how the store window reads it. Same shape as the
+      catalogue's rows: what it is, where it reads, whether it is on. }
+    class function ToJson(const ASources: TArray<TAddonSource>): string; static;
 
     { The official gallery row, which Load always returns first.
       Named Builtin rather than Default because Default() is an intrinsic: inside
@@ -282,6 +296,127 @@ begin
     end;
     ForceDirectories(TAddonPaths.UserRoot);
     TFile.WriteAllBytes(ConfigPath, TEncoding.UTF8.GetBytes(LRoot.Format(2)));
+  finally
+    LRoot.Free;
+  end;
+end;
+
+{ Index of a store by name, or -1. }
+function _IndexOf(const ASources: TArray<TAddonSource>;
+  const AName: string): Integer;
+var
+  LIndex: Integer;
+begin
+  Result := -1;
+  for LIndex := 0 to High(ASources) do
+    if SameText(ASources[LIndex].Name, AName) then
+      Exit(LIndex);
+end;
+
+class procedure TAddonSources.Add(const AName, AKind, ALocation: string);
+var
+  LSources: TArray<TAddonSource>;
+  LKind: TAddonSourceKind;
+  LNew: TAddonSource;
+begin
+  if Trim(AName) = '' then
+    raise EAddonManifest.Create('A store needs a name.');
+  // The name is how --source refers to the store, so it has to survive being a
+  // command-line word. Refusing here beats writing a store nobody can select.
+  if Pos(' ', AName) > 0 then
+    raise EAddonManifest.CreateFmt(
+      'Store name "%s" cannot contain spaces - it is used as "--source %s".',
+      [AName, AName]);
+  if SameText(AName, CDefaultName) then
+    raise EAddonManifest.CreateFmt(
+      '"%s" is the official gallery and cannot be redefined. It can only be ' +
+      'turned off (aefos sources disable %s).', [CDefaultName, CDefaultName]);
+  LKind := ParseKind(AKind);
+  if LKind = askGit then
+    raise EAddonManifest.Create(
+      'git stores are not supported yet. Use kind "path" for a folder or ' +
+      'share, or "aefos" for a registry.json over HTTP.');
+
+  LSources := Load;
+  if _IndexOf(LSources, AName) >= 0 then
+    raise EAddonManifest.CreateFmt(
+      'There is already a store called "%s". Remove it first, or pick ' +
+      'another name.', [AName]);
+
+  LNew := Default(TAddonSource);
+  LNew.Name := AName;
+  LNew.Kind := LKind;
+  LNew.Location := ALocation;
+  LNew.Enabled := True;
+  LNew.Builtin := False;
+  SetLength(LSources, Length(LSources) + 1);
+  LSources[High(LSources)] := LNew;
+  Save(LSources);
+end;
+
+class procedure TAddonSources.Remove(const AName: string);
+var
+  LSources: TArray<TAddonSource>;
+  LAt, LIndex: Integer;
+begin
+  if SameText(AName, CDefaultName) then
+    raise EAddonManifest.CreateFmt(
+      'The official gallery cannot be removed. Turn it off instead ' +
+      '(aefos sources disable %s).', [CDefaultName]);
+  LSources := Load;
+  LAt := _IndexOf(LSources, AName);
+  if LAt < 0 then
+    raise EAddonManifest.CreateFmt('There is no store called "%s".', [AName]);
+  for LIndex := LAt to High(LSources) - 1 do
+    LSources[LIndex] := LSources[LIndex + 1];
+  SetLength(LSources, Length(LSources) - 1);
+  Save(LSources);
+end;
+
+class procedure TAddonSources.SetEnabled(const AName: string;
+  const AEnabled: Boolean);
+var
+  LSources: TArray<TAddonSource>;
+  LAt: Integer;
+begin
+  LSources := Load;
+  LAt := _IndexOf(LSources, AName);
+  if LAt < 0 then
+    raise EAddonManifest.CreateFmt('There is no store called "%s".', [AName]);
+  // The official store is the one entry whose ONLY writable field is this, and
+  // Save already knows to persist nothing else about it.
+  LSources[LAt].Enabled := AEnabled;
+  Save(LSources);
+end;
+
+class function TAddonSources.ToJson(
+  const ASources: TArray<TAddonSource>): string;
+var
+  LRoot, LItem: TJSONObject;
+  LArr: TJSONArray;
+  LIndex: Integer;
+begin
+  LRoot := TJSONObject.Create;
+  try
+    LArr := TJSONArray.Create;
+    LRoot.AddPair('sources', LArr);
+    for LIndex := 0 to High(ASources) do
+    begin
+      LItem := TJSONObject.Create;
+      LItem.AddPair('name', ASources[LIndex].Name);
+      LItem.AddPair('kind', KindToStr(ASources[LIndex].Kind));
+      // The official store's location is not configuration and Load never reads
+      // one, so it travels empty rather than as the URL compiled in - a URL here
+      // would look editable in the window, and it is not.
+      if ASources[LIndex].Builtin then
+        LItem.AddPair('location', '')
+      else
+        LItem.AddPair('location', ASources[LIndex].Location);
+      LItem.AddPair('enabled', TJSONBool.Create(ASources[LIndex].Enabled));
+      LItem.AddPair('builtin', TJSONBool.Create(ASources[LIndex].Builtin));
+      LArr.AddElement(LItem);
+    end;
+    Result := LRoot.Format(2);
   finally
     LRoot.Free;
   end;

@@ -17,6 +17,16 @@
               --registry <url>       override the registry URL (also AEFOS_ADDONS_REGISTRY)
               -h | --help | -v | --version
 
+    sources takes an ACTION as well, because the store list is edited from the
+    store window and the CLI stays its ONE writer - two writers of the same file
+    is a bug this project has already paid for once:
+
+      aefos sources                          list them
+      aefos sources --json                   the same list, for the store window
+      aefos sources add <name> --kind path|aefos|git --location <where>
+      aefos sources remove <name>
+      aefos sources enable <name> | disable <name>
+
   Parsing never raises; a bad input lands in Result.Error.
 }
 
@@ -29,6 +39,10 @@ type
   TAddonCommand = (acNone, acInstall, acUninstall, acUpdate, acList,
     acHelp, acVersion, acCatalog, acSources);
 
+  { What "aefos sources" is being asked to do. Listing is the one that needs no
+    word, so it is also what an unadorned "aefos sources" keeps meaning. }
+  TAddonSourceAction = (asaList, asaAdd, asaRemove, asaEnable, asaDisable);
+
   TAddonCliArgs = record
     Command: TAddonCommand;
     Slug: string;
@@ -37,6 +51,12 @@ type
     Json: Boolean;      // --json: machine-readable output (the IDE dialog reads it)
     Source: string;     // --source: which configured store to use ('' = any)
     Registry: string;   // '' = default/env
+    { sources only. SourceName is the store being edited - deliberately NOT
+      reusing Slug, which means an addon everywhere else in this record. }
+    SourceAction: TAddonSourceAction;
+    SourceName: string;
+    Kind: string;       // --kind: aefos | path | git (parsed by TAddonSources)
+    Location: string;   // --location: URL or directory
     Error: string;      // non-empty => parse failed (user-facing one-liner)
     { Parses the argv tail into this record. Never raises; a bad input lands in
       Result.Error. The record owns the parse that only exists to build it. }
@@ -59,8 +79,29 @@ begin
     ACmd := acList
   else if SameText(AWord, 'catalog') or SameText(AWord, 'search') then
     ACmd := acCatalog
-  else if SameText(AWord, 'sources') then
+  else if SameText(AWord, 'sources') or SameText(AWord, 'source') then
     ACmd := acSources
+  else
+    Result := False;
+end;
+
+{ The word after "sources". "list" is accepted for symmetry even though bare
+  "aefos sources" already means it. }
+function _ParseSourceAction(const AWord: string;
+  out AAction: TAddonSourceAction): Boolean;
+begin
+  Result := True;
+  if SameText(AWord, 'add') then
+    AAction := asaAdd
+  else if SameText(AWord, 'remove') or SameText(AWord, 'rm') or
+          SameText(AWord, 'delete') then
+    AAction := asaRemove
+  else if SameText(AWord, 'enable') then
+    AAction := asaEnable
+  else if SameText(AWord, 'disable') then
+    AAction := asaDisable
+  else if SameText(AWord, 'list') or SameText(AWord, 'ls') then
+    AAction := asaList
   else
     Result := False;
 end;
@@ -69,9 +110,11 @@ class function TAddonCliArgs.Parse(const AArgv: TArray<string>): TAddonCliArgs;
 var
   LIndex: Integer;
   LArg: string;
+  LSeenAction: Boolean;
 begin
   Result := Default(TAddonCliArgs);
   Result.Command := acNone;
+  LSeenAction := False;
   LIndex := 0;
   while LIndex <= High(AArgv) do
   begin
@@ -112,6 +155,26 @@ begin
       Inc(LIndex);
       Result.Registry := AArgv[LIndex];
     end
+    else if SameText(LArg, '--kind') then
+    begin
+      if LIndex >= High(AArgv) then
+      begin
+        Result.Error := 'Missing kind after --kind (aefos, path or git).';
+        Exit;
+      end;
+      Inc(LIndex);
+      Result.Kind := AArgv[LIndex];
+    end
+    else if SameText(LArg, '--location') or SameText(LArg, '--url') then
+    begin
+      if LIndex >= High(AArgv) then
+      begin
+        Result.Error := 'Missing value after ' + LArg + '.';
+        Exit;
+      end;
+      Inc(LIndex);
+      Result.Location := AArgv[LIndex];
+    end
     else if (LArg <> '') and (LArg[1] = '-') then
     begin
       Result.Error := 'Unknown option ' + LArg + '. Try --help.';
@@ -123,6 +186,28 @@ begin
       begin
         Result.Error := 'Unknown command "' + LArg +
           '". Use install, uninstall, update, list, catalog or sources.';
+        Exit;
+      end;
+    end
+    else if Result.Command = acSources then
+    begin
+      // "sources" spends its positionals on ACTION then NAME; every other
+      // command spends its first one on a slug.
+      if not LSeenAction then
+      begin
+        if not _ParseSourceAction(LArg, Result.SourceAction) then
+        begin
+          Result.Error := 'Unknown sources action "' + LArg +
+            '". Use add, remove, enable or disable.';
+          Exit;
+        end;
+        LSeenAction := True;
+      end
+      else if Result.SourceName = '' then
+        Result.SourceName := LArg
+      else
+      begin
+        Result.Error := 'Unexpected argument "' + LArg + '".';
         Exit;
       end;
     end
@@ -143,7 +228,24 @@ begin
   end;
   // install/uninstall need a slug; update does NOT (no slug => all installed).
   if (Result.Command in [acInstall, acUninstall]) and (Result.Slug = '') then
+  begin
     Result.Error := 'This command needs an addon slug (e.g. "aefos install janus-orm").';
+    Exit;
+  end;
+  if Result.Command = acSources then
+  begin
+    // Every action but listing edits ONE named store, so the name is the whole
+    // subject of the command; without it there is nothing to guess at.
+    if (Result.SourceAction <> asaList) and (Result.SourceName = '') then
+    begin
+      Result.Error := 'This command needs a store name (e.g. "aefos sources ' +
+        'disable team").';
+      Exit;
+    end;
+    if (Result.SourceAction = asaAdd) and (Result.Location = '') then
+      Result.Error := 'A store needs somewhere to read: pass --location ' +
+        '<folder, share or URL>.';
+  end;
 end;
 
 end.

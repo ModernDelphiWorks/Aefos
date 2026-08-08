@@ -74,6 +74,27 @@ type
       from, and passing one here would let the dialog remove something other than
       what it is showing. }
     class function Remove(const ASlug: string): TAddonStoreResult; static;
+
+    { The store list, and the three edits to it.
+
+      These go through aefos.exe for the same reason everything else here does,
+      and for one more: sources.json has exactly ONE writer by design. The window
+      could open the file itself - it is a few lines of JSON - and then every
+      rule the CLI enforces (the reserved name, a duplicate, a name that cannot
+      be passed to --source) would exist twice and be enforced in one place. The
+      refusals ARE the feature; they belong to the writer. }
+    class function SourcesJson: TAddonStoreResult; static;
+
+    { `aefos sources add <name> --kind <kind> --location <where>`. }
+    class function SourceAdd(const AName, AKind,
+      ALocation: string): TAddonStoreResult; static;
+
+    { `aefos sources remove <name>`. }
+    class function SourceRemove(const AName: string): TAddonStoreResult; static;
+
+    { `aefos sources enable|disable <name>`. }
+    class function SourceEnable(const AName: string;
+      const AEnabled: Boolean): TAddonStoreResult; static;
   end;
 
 implementation
@@ -181,6 +202,35 @@ end;
 class function TAefosAddonStore.Remove(const ASlug: string): TAddonStoreResult;
 begin
   Result := _Run('uninstall ' + _Quote(ASlug));
+end;
+
+class function TAefosAddonStore.SourcesJson: TAddonStoreResult;
+begin
+  Result := _Run('sources --json');
+end;
+
+class function TAefosAddonStore.SourceAdd(const AName, AKind,
+  ALocation: string): TAddonStoreResult;
+begin
+  // The kind is quoted like everything else even though the page only ever
+  // sends one of two fixed words: what reaches here came through JSON, and
+  // "the page would never send that" is not a property this unit can check.
+  Result := _Run('sources add ' + _Quote(AName) + ' --kind ' + _Quote(AKind) +
+    ' --location ' + _Quote(ALocation));
+end;
+
+class function TAefosAddonStore.SourceRemove(
+  const AName: string): TAddonStoreResult;
+begin
+  Result := _Run('sources remove ' + _Quote(AName));
+end;
+
+class function TAefosAddonStore.SourceEnable(const AName: string;
+  const AEnabled: Boolean): TAddonStoreResult;
+const
+  CVerb: array[Boolean] of string = ('disable', 'enable');
+begin
+  Result := _Run('sources ' + CVerb[AEnabled] + ' ' + _Quote(AName));
 end;
 
 end.

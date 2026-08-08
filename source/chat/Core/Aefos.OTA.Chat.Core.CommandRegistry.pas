@@ -64,10 +64,33 @@ type
     // wins). Returns False when the command is in neither catalogue.
     function _FindCommandRoot(const ACommandName: string; out ARoot: string;
       out AScope: TCommandScope): Boolean;
+    { The folders an installed LINKED addon publishes: bundles that were
+      registered where they live instead of being copied under ~/.aefos. Read
+      from the aggregate `~/.aefos\addons\command-roots.json`, which the CLI
+      writes on install/uninstall - the same arrangement as the MCP aggregate,
+      and for the same reason: neither side parses the other's private files. }
+    function _LinkedCommandsDirs: TArray<string>;
+    { The same three path rules as _CommandsDir/_CommandDir/_CommandFile, but
+      taking the commands FOLDER directly. A linked addon's folder is already
+      the commands directory, with no `.aefos\commands` under it. }
+    function _CommandDirIn(const ACommandsDir, ACommandName: string): string;
+    function _CommandFileIn(const ACommandsDir, ACommandName: string): string;
+    function _ReferenceFileIn(const ACommandsDir, ACommandName,
+      AReferenceName: string): string;
+    { Resolves the commands FOLDER holding ACommandName: project, then global,
+      then the linked addons. Reading sees linked commands; WRITING does not -
+      SaveCommand/SaveReference keep using _FindCommandRoot, because a linked
+      folder is the user's own working directory and Aefos does not edit it. }
+    function _FindCommandsDir(const ACommandName: string;
+      out ACommandsDir: string; out AScope: TCommandScope): Boolean;
     function _BuildMetadata(const ACommandDir, ACommandFile: string): TCommandMetadata;
     function _DiscoverReferences(
       const ACommandDir: string): TArray<TCommandReference>;
     procedure _CollectFromRoot(const ARoot: string; const AScope: TCommandScope;
+      const ACollected: TList<TCommandMetadata>;
+      const ASeen: TDictionary<string, Byte>);
+    procedure _CollectFromCommandsDir(const ACommandsDir: string;
+      const AScope: TCommandScope;
       const ACollected: TList<TCommandMetadata>;
       const ASeen: TDictionary<string, Byte>);
     procedure _TryAppendCommand(const ACommandDir: string;
@@ -178,11 +201,14 @@ implementation
 uses
   System.Classes,
   System.Types,
+  System.JSON,
   System.IOUtils;
 
 const
   COMMAND_FILE_NAME = 'COMMAND.md';
   COMMANDS_FOLDER_REL = '.aefos\commands';
+  // Written by aefos.exe on install/uninstall of a LINKED addon; read here.
+  LINKED_ROOTS_REL = '.aefos\addons\command-roots.json';
   REFERENCES_FOLDER_NAME = 'references';
   MD_EXTENSION = '.md';
   COMMAND_NAME_MAX_LEN = 64;
@@ -548,6 +574,106 @@ begin
   Result := TPath.Combine(AProjectRoot, COMMANDS_FOLDER_REL);
 end;
 
+function TCommandRegistry._LinkedCommandsDirs: TArray<string>;
+var
+  LPath, LJson: string;
+  LVal, LItem: TJSONValue;
+  LArr: TJSONArray;
+  LIndex: Integer;
+  LList: TList<string>;
+begin
+  SetLength(Result, 0);
+  LPath := _ResolveGlobalRoot;
+  if LPath = '' then
+    Exit;
+  LPath := TPath.Combine(LPath, LINKED_ROOTS_REL);
+  if not TFile.Exists(LPath) then
+    Exit;                                  // no linked addon: the normal case
+  try
+    LJson := _ReadAllTextUtf8(LPath);
+  except
+    Exit;                                  // unreadable: behave as none
+  end;
+  LVal := TJSONObject.ParseJSONValue(LJson);
+  if LVal = nil then
+    Exit;
+  LList := TList<string>.Create;
+  try
+    if (LVal is TJSONObject) and
+       (TJSONObject(LVal).Values['commandRoots'] is TJSONArray) then
+    begin
+      LArr := TJSONArray(TJSONObject(LVal).Values['commandRoots']);
+      for LIndex := 0 to LArr.Count - 1 do
+      begin
+        LItem := LArr.Items[LIndex];
+        // A root whose folder is gone is SKIPPED, not an error: the bundle may
+        // have been moved, and one missing addon must not cost the user every
+        // other command in the picker.
+        if (LItem is TJSONString) and TDirectory.Exists(TJSONString(LItem).Value) then
+          LList.Add(TJSONString(LItem).Value);
+      end;
+    end;
+    Result := LList.ToArray;
+  finally
+    LList.Free;
+    LVal.Free;
+  end;
+end;
+
+function TCommandRegistry._CommandDirIn(const ACommandsDir,
+  ACommandName: string): string;
+begin
+  Result := TPath.Combine(ACommandsDir, CommandFolderSlug(ACommandName));
+end;
+
+function TCommandRegistry._CommandFileIn(const ACommandsDir,
+  ACommandName: string): string;
+begin
+  Result := TPath.Combine(_CommandDirIn(ACommandsDir, ACommandName),
+    COMMAND_FILE_NAME);
+end;
+
+function TCommandRegistry._ReferenceFileIn(const ACommandsDir, ACommandName,
+  AReferenceName: string): string;
+var
+  LFileName: string;
+begin
+  LFileName := AReferenceName;
+  if not LFileName.EndsWith(MD_EXTENSION, True) then
+    LFileName := LFileName + MD_EXTENSION;
+  Result := TPath.Combine(_CommandDirIn(ACommandsDir, ACommandName),
+    TPath.Combine(REFERENCES_FOLDER_NAME, LFileName));
+end;
+
+// Project first, then global, then the linked addons - the same precedence the
+// listing uses, so what the picker shows and what running it loads can never
+// disagree.
+function TCommandRegistry._FindCommandsDir(const ACommandName: string;
+  out ACommandsDir: string; out AScope: TCommandScope): Boolean;
+var
+  LRoot: string;
+  LDirs: TArray<string>;
+  LIndex: Integer;
+begin
+  if _FindCommandRoot(ACommandName, LRoot, AScope) then
+  begin
+    ACommandsDir := _CommandsDir(LRoot);
+    Exit(True);
+  end;
+  LDirs := _LinkedCommandsDirs;
+  for LIndex := 0 to High(LDirs) do
+    if TFile.Exists(_CommandFileIn(LDirs[LIndex], ACommandName)) then
+    begin
+      ACommandsDir := LDirs[LIndex];
+      // Reported as global because that is what it IS to the user: available in
+      // every project, not owned by this one. The enum stays a two-value type
+      // and no consumer of TCommandMetadata.Scope has to learn a third case.
+      AScope := csGlobal;
+      Exit(True);
+    end;
+  Result := False;
+end;
+
 function TCommandRegistry._CommandDir(const AProjectRoot,
   ACommandName: string): string;
 begin
@@ -653,37 +779,52 @@ begin
   ACollected.Add(LMeta);
 end;
 
-procedure TCommandRegistry._CollectFromRoot(const ARoot: string;
+procedure TCommandRegistry._CollectFromCommandsDir(const ACommandsDir: string;
   const AScope: TCommandScope;
   const ACollected: TList<TCommandMetadata>;
   const ASeen: TDictionary<string, Byte>);
 var
-  LCommandsDir: string;
   LDirs: TStringDynArray;
   LDirIndex: Integer;
 begin
-  if ARoot = '' then
+  if (ACommandsDir = '') or (not TDirectory.Exists(ACommandsDir)) then
     Exit;
-  LCommandsDir := _CommandsDir(ARoot);
-  if not TDirectory.Exists(LCommandsDir) then
-    Exit;
-  LDirs := TDirectory.GetDirectories(LCommandsDir);
+  LDirs := TDirectory.GetDirectories(ACommandsDir);
   for LDirIndex := 0 to High(LDirs) do
     _TryAppendCommand(LDirs[LDirIndex], AScope, ACollected, ASeen);
+end;
+
+procedure TCommandRegistry._CollectFromRoot(const ARoot: string;
+  const AScope: TCommandScope;
+  const ACollected: TList<TCommandMetadata>;
+  const ASeen: TDictionary<string, Byte>);
+begin
+  if ARoot = '' then
+    Exit;
+  _CollectFromCommandsDir(_CommandsDir(ARoot), AScope, ACollected, ASeen);
 end;
 
 function TCommandRegistry.List: TArray<TCommandMetadata>;
 var
   LCollected: TList<TCommandMetadata>;
   LSeen: TDictionary<string, Byte>;
+  LLinked: TArray<string>;
+  LIndex: Integer;
 begin
   LCollected := TList<TCommandMetadata>.Create;
   LSeen := TDictionary<string, Byte>.Create;
   try
     // Project pass first so it wins on name collisions, then the per-user
-    // global catalogue fills in commands the project does not override.
+    // global catalogue fills in commands the project does not override, and
+    // finally the linked addons - which come last for the same reason: a
+    // command the user wrote outranks one an installed bundle brought, and two
+    // bundles publishing the same name resolve by install order rather than by
+    // whichever the filesystem happened to enumerate first.
     _CollectFromRoot(_ResolveProjectRoot, csProject, LCollected, LSeen);
     _CollectFromRoot(_ResolveGlobalRoot, csGlobal, LCollected, LSeen);
+    LLinked := _LinkedCommandsDirs;
+    for LIndex := 0 to High(LLinked) do
+      _CollectFromCommandsDir(LLinked[LIndex], csGlobal, LCollected, LSeen);
     Result := LCollected.ToArray;
   finally
     LSeen.Free;
@@ -693,14 +834,14 @@ end;
 
 function TCommandRegistry.Get(const ACommandName: string): TCommandMetadata;
 var
-  LRoot: string;
+  LDir: string;
   LScope: TCommandScope;
   LCommandFile: string;
   LCommandDir: string;
 begin
-  if not _FindCommandRoot(ACommandName, LRoot, LScope) then
+  if not _FindCommandsDir(ACommandName, LDir, LScope) then
     raise ECommandNotFound.CreateFmt('Command "%s" not found', [ACommandName]);
-  LCommandFile := _CommandFile(LRoot, ACommandName);
+  LCommandFile := _CommandFileIn(LDir, ACommandName);
   LCommandDir := TPath.GetDirectoryName(LCommandFile);
   Result := _BuildMetadata(LCommandDir, LCommandFile);
   Result.Scope := LScope;
@@ -708,15 +849,15 @@ end;
 
 function TCommandRegistry.LoadBody(const ACommandName: string): string;
 var
-  LRoot: string;
+  LDir: string;
   LScope: TCommandScope;
   LCommandFile: string;
   LContent: string;
   LParsed: TFrontmatterParseResult;
 begin
-  if not _FindCommandRoot(ACommandName, LRoot, LScope) then
+  if not _FindCommandsDir(ACommandName, LDir, LScope) then
     raise ECommandNotFound.CreateFmt('Command "%s" not found', [ACommandName]);
-  LCommandFile := _CommandFile(LRoot, ACommandName);
+  LCommandFile := _CommandFileIn(LDir, ACommandName);
   LContent := _ReadAllTextUtf8(LCommandFile);
   LParsed := _ParseFrontmatter(LContent);
   Result := LParsed.BodyText;
@@ -724,15 +865,15 @@ end;
 
 function TCommandRegistry.LoadCommand(const ACommandName: string): TCanonicalCommand;
 var
-  LRoot: string;
+  LDir: string;
   LScope: TCommandScope;
   LCommandFile: string;
   LCommandDir: string;
   LParsed: TFrontmatterParseResult;
 begin
-  if not _FindCommandRoot(ACommandName, LRoot, LScope) then
+  if not _FindCommandsDir(ACommandName, LDir, LScope) then
     raise ECommandNotFound.CreateFmt('Command "%s" not found', [ACommandName]);
-  LCommandFile := _CommandFile(LRoot, ACommandName);
+  LCommandFile := _CommandFileIn(LDir, ACommandName);
   LParsed := _ParseFrontmatter(_ReadAllTextUtf8(LCommandFile));
   LCommandDir := TPath.GetDirectoryName(LCommandFile);
   Result.Name := LParsed.Name;
@@ -744,13 +885,13 @@ end;
 function TCommandRegistry.LoadReference(const ACommandName,
   AReferenceName: string): string;
 var
-  LRoot: string;
+  LDir: string;
   LScope: TCommandScope;
   LRefFile: string;
 begin
-  if not _FindCommandRoot(ACommandName, LRoot, LScope) then
+  if not _FindCommandsDir(ACommandName, LDir, LScope) then
     raise ECommandNotFound.CreateFmt('Command "%s" not found', [ACommandName]);
-  LRefFile := _ReferenceFile(LRoot, ACommandName, AReferenceName);
+  LRefFile := _ReferenceFileIn(LDir, ACommandName, AReferenceName);
   if not TFile.Exists(LRefFile) then
     raise ECommandNotFound.CreateFmt(
       'Reference "%s" of command "%s" not found at %s',

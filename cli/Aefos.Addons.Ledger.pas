@@ -76,6 +76,10 @@ begin
   Result.AddPair('sha256', AItem.Sha256);
   Result.AddPair('installedAt', AItem.InstalledAt);
   Result.AddPair('source', AItem.Source);
+  // Only written when the addon was linked, so a copied one's record keeps the
+  // shape it has always had.
+  if AItem.Origin <> '' then
+    Result.AddPair('origin', AItem.Origin);
   Result.AddPair('artifacts', _ArtifactsToJson(AItem.Artifacts));
   LFiles := TJSONArray.Create;
   for LIndex := 0 to High(AItem.Files) do
@@ -142,6 +146,9 @@ begin
   // Absent in a ledger written before stores existed. Empty means "wherever it
   // can be found", which is what that older install actually meant.
   Result.Source := _Str(AObj, 'source');
+  // Absent for a copied addon, which is every record written before linking
+  // existed - so empty keeps meaning exactly what it meant: this one was copied.
+  Result.Origin := _Str(AObj, 'origin');
   LArt := AObj.Values['artifacts'];
   if LArt is TJSONObject then
   begin

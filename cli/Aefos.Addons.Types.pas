@@ -129,6 +129,18 @@ type
       would be a supply-chain swap performed by us. Empty on a ledger written
       before sources existed, which reads as "wherever it can be found". }
     Source: string;
+    { Where the bundle LIVES, for an addon that was LINKED instead of copied.
+      Empty for a copied one.
+
+      A folder store is somewhere permanent, so an addon taken from one needs no
+      second copy of itself under ~/.aefos: install RECORDS the folder, and the
+      plugin reads the commands where they already are. Editing the bundle is
+      then live, and there is exactly one copy on disk to keep straight.
+
+      The cost is paid where it is stated: move or delete that folder and the
+      commands stop resolving. An archive store has no such folder, so bundles
+      from one are still copied. }
+    Origin: string;
     Artifacts: TAddonArtifacts;
     Files: TArray<string>;
     Roots: TArray<string>;  // absolute ~/.aefos target dirs to remove on uninstall

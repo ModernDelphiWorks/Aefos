@@ -386,6 +386,47 @@ begin
   AFiles.Add(ADstFile);
 end;
 
+// Rebuilds ~/.aefos\addons\command-roots.json from every LINKED addon in the
+// ledger: the folders the plugin should read commands from besides
+// ~/.aefos\commands.
+//
+// Same arrangement as the MCP aggregate, and for the same reason: the CLI owns
+// what it knows (which addons are installed and where they came from), the
+// plugin owns what IT knows (how to read a command), and neither has to guess
+// at the other's file format.
+//
+// A linked addon that no longer has its folder is written out anyway. Dropping
+// it here would make a moved folder look like an addon that was never
+// installed; the plugin skips a root it cannot read, and `aefos list` is where
+// the user sees it is still expected.
+procedure _RefreshCommandRoots;
+var
+  LItems: TArray<TInstalledAddon>;
+  LIndex: Integer;
+  LRoot: TJSONObject;
+  LArr: TJSONArray;
+  LDir: string;
+begin
+  LItems := TAddonLedger.Load;
+  LRoot := TJSONObject.Create;
+  try
+    LArr := TJSONArray.Create;
+    LRoot.AddPair('commandRoots', LArr);
+    for LIndex := 0 to High(LItems) do
+    begin
+      if LItems[LIndex].Origin = '' then
+        Continue;                          // copied: already under ~/.aefos
+      LDir := TPath.Combine(LItems[LIndex].Origin, 'commands');
+      LArr.Add(LDir);
+    end;
+    ForceDirectories(TAddonPaths.AddonsRoot);
+    TFile.WriteAllBytes(TAddonPaths.CommandRootsPath,
+      TEncoding.UTF8.GetBytes(LRoot.Format(2)));
+  finally
+    LRoot.Free;
+  end;
+end;
+
 // Rebuilds ~/.aefos\addons\mcp-servers.json from every ledger addon that ships
 // an mcp.json fragment. The plugin merges this file into aefos-mcp.json; the
 // CLI never writes aefos-mcp.json itself (contract §5).
@@ -482,6 +523,28 @@ begin
       Result := Result + '/' +
         ExtractFileName(ExcludeTrailingPathDelimiter(ARoots[LIndex]));
     end;
+end;
+
+// The trigger names a LINKED addon makes available: the folders under its own
+// commands\ directory, which is where they stay. Same sentence as the copied
+// case, read from the other side.
+function _CommandNamesIn(const ACommandsDir: string): string;
+var
+  LDirs: TArray<string>;
+  LIndex: Integer;
+begin
+  Result := '';
+  if not TDirectory.Exists(ACommandsDir) then
+    Exit;
+  LDirs := TDirectory.GetDirectories(ACommandsDir);
+  for LIndex := 0 to High(LDirs) do
+  begin
+    if not TFile.Exists(TPath.Combine(LDirs[LIndex], 'COMMAND.md')) then
+      Continue;
+    if Result <> '' then
+      Result := Result + ', ';
+    Result := Result + '/' + ExtractFileName(ExcludeTrailingPathDelimiter(LDirs[LIndex]));
+  end;
 end;
 
 // Lays down the addon's command(s). TWO bundle layouts are accepted on purpose:
@@ -695,6 +758,7 @@ var
   LArts: TAddonArtifacts;
   LItem: TInstalledAddon;
   LCommands: string;
+  LLinked: Boolean;
 begin
   if not TAddonPaths.IsValidSlug(ASlug) then
     raise EAddonError.CreateFmt('invalid addon slug "%s".', [ASlug]);
@@ -816,10 +880,38 @@ begin
     // actually go - before the new copy can add more.
     _SweepMovedAside(TAddonPaths.AddonDir(ASlug));
 
+    // LINK, don't copy, when the bundle lives somewhere permanent and carries
+    // nothing that has to run from a stable path.
+    //
+    // WHY. A folder store IS the install: the commands are already on disk, in
+    // a folder the user maintains. Copying them makes a second copy that is
+    // stale the moment the first is edited, and - measured, the hard way - an
+    // install that overwrites same-named commands ADOPTS them, so uninstalling
+    // the addon deletes files another installer had put there. Recording the
+    // folder avoids both.
+    //
+    // WHY NOT ALWAYS. mcp and tools are code Aefos launches. Those need a path
+    // that survives the bundle folder being moved, so a bundle carrying either
+    // is still copied - and says so, rather than half-linking in silence.
+    LLinked := (LStoreDir <> '') and
+               (not LManifest.Artifacts.HasMcp) and (not LManifest.Artifacts.HasTools);
+    if LLinked then
+    begin
+      _RemoveSlugDirs(ASlug);            // clear a previous COPIED install
+      LArts := LManifest.Artifacts;
+      ALog(Format('  = linked   %s', [LStoreDir]));
+      ALog('    (nothing copied - the chat reads the commands where they are)');
+    end;
+
     LFiles := TList<string>.Create;
     LRoots := TList<string>.Create;
     try
-      if Length(LManifest.Install) > 0 then
+      if LLinked then
+      begin
+        // Nothing to lay down. The ledger records the folder and the aggregate
+        // publishes it; that IS the install.
+      end
+      else if Length(LManifest.Install) > 0 then
       begin
         // Portal manifest: explicit source -> ~/.aefos\target_path mappings.
         _ApplyInstallMappings(LBundleDir, LManifest.Install, LFiles, LRoots,
@@ -881,11 +973,18 @@ begin
       LItem.Artifacts := LArts;
       LItem.Files := LFiles.ToArray;
       LItem.Roots := LRoots.ToArray;
+      // Set only when linked, and it is what tells uninstall to remove a record
+      // rather than files, and the aggregate which folder to publish.
+      if LLinked then
+        LItem.Origin := LStoreDir;
       TAddonLedger.Save(TAddonLedger.Upsert(TAddonLedger.Load, LItem));
       // Read the trigger names off what was actually laid down, while the roots
       // are still alive - a multi-command bundle installs /<slug>.<name>, so
       // announcing "/<slug>" would name a command that does not exist.
-      LCommands := _CommandNamesFrom(LRoots);
+      if LLinked then
+        LCommands := _CommandNamesIn(TPath.Combine(LStoreDir, 'commands'))
+      else
+        LCommands := _CommandNamesFrom(LRoots);
     finally
       LRoots.Free;
       LFiles.Free;
@@ -896,6 +995,10 @@ begin
       _RefreshMcpAggregate;
       ALog('  * MCP server registered (plugin picks it up on next provision).');
     end;
+    // Always, not only when this install linked: a COPIED install over a
+    // previously linked one has to drop the stale root, or the chat would keep
+    // reading commands from a folder this addon no longer uses.
+    _RefreshCommandRoots;
 
     if AOptions.Updating then
       ALog(Format('Updated %s to %s.', [ASlug, _VerLabel(LEntry.Version)]))
@@ -930,9 +1033,15 @@ begin
   LItems := TAddonLedger.Load;
   if not TAddonLedger.TryFind(LItems, ASlug, LItem) then
     raise EAddonNotFound.CreateFmt('addon "%s" is not installed.', [ASlug]);
+  // A LINKED addon put nothing on disk, so uninstalling it deletes nothing: it
+  // drops the record, and the aggregate stops publishing the folder. The bundle
+  // is the user's own working directory - deleting from there would be us
+  // removing their files because they pressed Remove on ours.
+  if LItem.Origin <> '' then
+    ALog(Format('  = unlinked %s (left untouched)', [LItem.Origin]))
   // Remove exactly the target dirs recorded at install (guarded under ~/.aefos);
   // fall back to the slug dirs for a pre-Roots ledger entry.
-  if Length(LItem.Roots) > 0 then
+  else if Length(LItem.Roots) > 0 then
   begin
     for LRoot in LItem.Roots do
       if _UnderUserRoot(LRoot) and TDirectory.Exists(LRoot) then
@@ -943,6 +1052,7 @@ begin
   TAddonLedger.Save(TAddonLedger.Remove(LItems, ASlug));
   if LItem.Artifacts.HasMcp then
     _RefreshMcpAggregate;
+  _RefreshCommandRoots;
   ALog(Format('Removed %s %s.', [ASlug, _VerLabel(LItem.Version)]));
 end;
 

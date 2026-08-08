@@ -34,6 +34,11 @@ type
     Yes: Boolean;       // --yes: pre-consent third-party (mcp/tools) code
     AefosVersion: string; // installed Aefos version for the requirement gate
     Source: string;     // --source: which store to take the slug from ('' = any)
+    { Set by Update, so the closing line says "Updated" instead of "Installed".
+      Update installs over the top - the mechanics are identical - but a user
+      who pressed Update and reads "Installed" is left wondering whether the
+      update happened at all. }
+    Updating: Boolean;
     { Factory: one named owner for building the options record instead of a
       Default() + field-by-field fill at the call site. }
     class function Create(AYes: Boolean;
@@ -244,6 +249,86 @@ begin
   TAddonCatalog.EnsureIdentity(AEntry);
 end;
 
+// Suffix for a file that was moved aside because it could not be overwritten.
+const
+  COldSuffix = '.aefos-old';
+
+// The next free "<file>.aefos-old[n]" beside ADst. Numbered rather than
+// overwritten: the previous one may STILL be running (an update twice in a row
+// without restarting), and clobbering it would be the very failure being
+// worked around.
+function _MovedAsideName(const ADst: string): string;
+var
+  LIndex: Integer;
+begin
+  Result := ADst + COldSuffix;
+  LIndex := 1;
+  while TFile.Exists(Result) do
+  begin
+    Result := ADst + COldSuffix + IntToStr(LIndex);
+    Inc(LIndex);
+  end;
+end;
+
+// Copy that survives a destination which is IN USE.
+//
+// Windows refuses to overwrite a running executable - and an MCP addon's server
+// is exactly that: Aefos itself spawned it, so `aefos update desktop` was
+// guaranteed to fail while the IDE that asked for the update was running. It
+// failed citing the file in %TEMP% (the copy SOURCE), which points at the wrong
+// side entirely; the locked file is the destination.
+//
+// Windows does, however, allow that file to be RENAMED: the running process
+// keeps the image it already mapped, and the name is freed for the new build.
+// So: try the plain copy, and only on failure move the destination aside and
+// copy again. The moved-aside file cannot be deleted while it is still running,
+// so it is left behind and swept on the next install, when the process is gone.
+procedure _CopyReplacing(const ASrc, ADst: string);
+var
+  LOld: string;
+begin
+  try
+    TFile.Copy(ASrc, ADst, True);
+    Exit;
+  except
+    // A destination that does not exist cannot be "in use": that failure is
+    // something else (no permission, no disk) and must not be swallowed.
+    on E: Exception do
+      if not TFile.Exists(ADst) then
+        raise;
+  end;
+  LOld := _MovedAsideName(ADst);
+  if not RenameFile(ADst, LOld) then
+    raise EAddonError.CreateFmt(
+      'cannot replace "%s": it is in use and could not be moved aside. ' +
+      'Close whatever is running it and try again.', [ADst]);
+  TFile.Copy(ASrc, ADst, True);
+  try
+    TFile.Delete(LOld);       // gone if the process already exited
+  except
+    // Still running: it keeps the old name until the next install sweeps it.
+  end;
+end;
+
+// Deletes the "<file>.aefos-old" leftovers of earlier in-use replacements.
+// Best-effort by design: one that is STILL running simply stays for next time.
+procedure _SweepMovedAside(const ADir: string);
+var
+  LFiles: TArray<string>;
+  LIndex: Integer;
+begin
+  if not TDirectory.Exists(ADir) then
+    Exit;
+  LFiles := TDirectory.GetFiles(ADir, '*' + COldSuffix + '*',
+    TSearchOption.soAllDirectories);
+  for LIndex := 0 to High(LFiles) do
+    try
+      TFile.Delete(LFiles[LIndex]);
+    except
+      // still in use - next time
+    end;
+end;
+
 // Recursively copies ASrcDir into ADstDir, appending every written file to
 // AFiles. No-op when ASrcDir is absent (artifact simply not shipped).
 procedure _CopyTree(const ASrcDir, ADstDir: string;
@@ -268,7 +353,7 @@ begin
     LRel := _TrimLeftChars(_SubstrFrom(LFiles[LIndex], Length(ASrcDir)), ['\', '/']);
     LTarget := TPath.Combine(ADstDir, LRel);
     ForceDirectories(ExtractFileDir(LTarget));
-    TFile.Copy(LFiles[LIndex], LTarget, True);
+    _CopyReplacing(LFiles[LIndex], LTarget);
     AFiles.Add(LTarget);
   end;
 end;
@@ -279,7 +364,7 @@ begin
   if not TFile.Exists(ASrcFile) then
     Exit;
   ForceDirectories(ExtractFileDir(ADstFile));
-  TFile.Copy(ASrcFile, ADstFile, True);
+  _CopyReplacing(ASrcFile, ADstFile);
   AFiles.Add(ADstFile);
 end;
 
@@ -726,6 +811,11 @@ begin
 
     _RequireConsent(LEntry, LManifest, AOptions, ALog);
 
+    // Clear out anything a PREVIOUS in-use replacement had to leave behind. By
+    // now that process has almost always exited, so this is where the leftovers
+    // actually go - before the new copy can add more.
+    _SweepMovedAside(TAddonPaths.AddonDir(ASlug));
+
     LFiles := TList<string>.Create;
     LRoots := TList<string>.Create;
     try
@@ -807,7 +897,10 @@ begin
       ALog('  * MCP server registered (plugin picks it up on next provision).');
     end;
 
-    ALog(Format('Installed %s %s.', [ASlug, _VerLabel(LEntry.Version)]));
+    if AOptions.Updating then
+      ALog(Format('Updated %s to %s.', [ASlug, _VerLabel(LEntry.Version)]))
+    else
+      ALog(Format('Installed %s %s.', [ASlug, _VerLabel(LEntry.Version)]));
     if LCommands <> '' then
       ALog('  Now available in Aefos chat: ' + LCommands);
   finally
@@ -870,15 +963,21 @@ begin
   _EnsureIdentity(LEntry);
   case LItem.DecideUpdate(LEntry) of
     uaUpToDate:
-      ALog(Format('%s is already current.', [ASlug]));
+      // Name the version it is already on. "already current" alone reads as a
+      // refusal when you pressed Update expecting something to happen; with the
+      // version it reads as the answer it is.
+      ALog(Format('%s is already up to date (%s installed).',
+        [ASlug, _VerLabel(LItem.Version)]));
     uaUpdate:
       begin
-        ALog(Format('Updating %s ...', [ASlug]));
+        ALog(Format('Updating %s %s -> %s ...',
+          [ASlug, _VerLabel(LItem.Version), _VerLabel(LEntry.Version)]));
         // Clean-replace at the store's current build (install re-verifies sha).
         // The store is PINNED to the one just resolved: re-resolving inside
         // Install could land on a different store between the two calls.
         LOpts := AOptions;
         LOpts.Source := LRow.Source;
+        LOpts.Updating := True;
         TAddonInstaller.Install(ASlug, LOpts, ALog);
       end;
   end;
@@ -928,14 +1027,17 @@ begin
     case LItems[LIndex].DecideUpdate(LEntry) of
       uaUpToDate:
         begin
-          ALog(Format('%s is already current.', [LSlug]));
+          ALog(Format('%s is already up to date (%s installed).',
+            [LSlug, _VerLabel(LItems[LIndex].Version)]));
           Inc(LCurrent);
         end;
       uaUpdate:
         begin
-          ALog(Format('Updating %s ...', [LSlug]));
+          ALog(Format('Updating %s %s -> %s ...',
+            [LSlug, _VerLabel(LItems[LIndex].Version), _VerLabel(LEntry.Version)]));
           LOpts := AOptions;
           LOpts.Source := LRow.Source;
+          LOpts.Updating := True;
           TAddonInstaller.Install(LSlug, LOpts, ALog);
           Inc(LUpdated);
         end;

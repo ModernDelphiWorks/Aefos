@@ -733,10 +733,13 @@ begin
   // ESP-096 follow-on - SaveProjectGroup + RenameProjectGroup.
   // CreateNewProject and CloseAllProjects moved to MCP.Core (RegisterUnitsTools).
   RegisterTerminalProjectGroupManagementTools(AServer, AFacade, AConsent, AAudit);
-  // Python tools (drop-a-folder): each pytools\<tool>\tool.json becomes a live
-  // MCP tool, consent + audit gated. Empty/missing root registers nothing.
+  // Python tools: each <tool>\tool.json becomes a live MCP tool, consent + audit
+  // gated. TWO sources now - the user's own pytools folder (still where new ones
+  // are created) and the tools shipped by installed addons, namespaced
+  // <slug>__. Empty/missing roots register nothing. See PyToolRoots.
   RegisterPyTools(AServer, AFacade, AConsent, AAudit,
-    TPath.Combine(TPath.Combine(TPath.GetHomePath, 'Aefos'), 'pytools'));
+    PyToolRoots(TPath.Combine(TPath.Combine(TPath.GetHomePath, 'Aefos'),
+      'pytools')));
   // Project-wide text/encoding tools (ReplaceInProject / FixEncoding) wrapping
   // the rtl-pure Aefos.Tools engine; consent + audit gated.
   RegisterProjectTextTools(AServer, AFacade, AConsent, AAudit);

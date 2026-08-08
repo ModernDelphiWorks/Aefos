@@ -29,23 +29,58 @@ unit Aefos.MCP.Tools.PyTools;
 interface
 
 uses
+  System.Types,
   Aefos.MCP.Server,
   Aefos.MCP.Types,
   Aefos.MCP.Consent,
   Aefos.MCP.AuditLog;
 
+type
+  { One folder to scan, and what to call what is found in it.
+
+    There are two kinds of Python tool now. The user's own live in
+    %APPDATA%\Aefos\pytools, are created by the PyTools dialog, and keep the name
+    their tool.json declares. An INSTALLED ADDON's live in its own slug folder
+    under ~/.aefos\addons\<slug>\tools, and wear the slug as a prefix - the same
+    <owner>__<tool> shape the addon-MCP gateway already uses.
+
+    That is not decoration. Two stores and a local folder can each ship a "format"
+    tool; without a prefix the second one registered would silently shadow the
+    first, and which one that is would depend on directory order. With it, the
+    user's own tool can never be shadowed by something they installed, and the
+    name says where the tool came from. }
+  TPyToolRoot = record
+    Path: string;
+    Prefix: string;    // '' for the user's own folder, '<slug>__' for an addon
+  end;
+
+{ The user's own folder plus one entry per installed addon that ships tools.
+
+  APyToolsRoot is passed in rather than computed because the two hosts already
+  know it (and the tests want a temp folder). The addon roots come from
+  %USERPROFILE%\.aefos\addons, which is where the addon installer writes - the
+  ONE place the two halves have to agree, and the reason a published Python tool
+  used to install into a folder nothing ever read. }
+function PyToolRoots(const APyToolsRoot: string): TArray<TPyToolRoot>;
+
 // Scans APyToolsRoot for <tool>\tool.json manifests and registers one MCP tool
 // per manifest on AServer. A missing/empty root registers nothing (no error).
 procedure RegisterPyTools(const AServer: IMCPServer;
   const AFacade: IMCPWorkspaceFacade; const AConsent: IMCPConsentRegistry;
-  const AAudit: IMCPAuditLog; const APyToolsRoot: string);
+  const AAudit: IMCPAuditLog; const APyToolsRoot: string); overload;
+
+{ The same, over several roots. The hosts call this one with PyToolRoots(...);
+  the single-root overload above is kept because it is what the pure suites and
+  the Lazarus host pass. }
+procedure RegisterPyTools(const AServer: IMCPServer;
+  const AFacade: IMCPWorkspaceFacade; const AConsent: IMCPConsentRegistry;
+  const AAudit: IMCPAuditLog; const ARoots: TArray<TPyToolRoot>); overload;
 
 implementation
 
 uses
   System.SysUtils,
-  System.Types,
-  System.IOUtils,
+  System.IOUtils,      // System.Types is in the interface uses (TStringDynArray)
   System.JSON,
   Aefos.Tools.Process,
   Aefos.Tools.PyTool,
@@ -74,7 +109,9 @@ type
     FFacade: IMCPWorkspaceFacade;
     FConsent: IMCPConsentRegistry;
     FAudit: IMCPAuditLog;
-    FRoot: string;
+    FRoots: TArray<TPyToolRoot>;
+    function _RegisterRoot(const AServer: IMCPServer;
+      const ARoot: TPyToolRoot): Integer;
     function _RequestGate(const AContext: IMCPToolContext;
       const AToolName, ASummary, ADetail: string): TMCPConsentDecision;
     function _BuildDescriptor(const ASpec: TPyToolSpec; const ATitle,
@@ -83,7 +120,7 @@ type
   public
     constructor Create(const AFacade: IMCPWorkspaceFacade;
       const AConsent: IMCPConsentRegistry; const AAudit: IMCPAuditLog;
-      const ARoot: string);
+      const ARoots: TArray<TPyToolRoot>);
     // IPyToolDispatch
     function RunTool(const ASpec: TPyToolSpec; const AParams: TJSONObject;
       const AContext: IMCPToolContext): TMCPToolResult;
@@ -151,13 +188,13 @@ end;
 
 constructor TMCPPyToolsRegistrar.Create(const AFacade: IMCPWorkspaceFacade;
   const AConsent: IMCPConsentRegistry; const AAudit: IMCPAuditLog;
-  const ARoot: string);
+  const ARoots: TArray<TPyToolRoot>);
 begin
   inherited Create;
   FFacade := AFacade;
   FConsent := AConsent;
   FAudit := AAudit;
-  FRoot := ARoot;
+  FRoots := ARoots;
 end;
 
 // Mirrors TMCPToolsRegistrar._RequestGate: session grant short-circuits, else
@@ -267,15 +304,25 @@ end;
 
 function TMCPPyToolsRegistrar.RegisterAll(const AServer: IMCPServer): Integer;
 var
+  LIndex: Integer;
+begin
+  Result := 0;
+  for LIndex := 0 to High(FRoots) do
+    Inc(Result, _RegisterRoot(AServer, FRoots[LIndex]));
+end;
+
+function TMCPPyToolsRegistrar._RegisterRoot(const AServer: IMCPServer;
+  const ARoot: TPyToolRoot): Integer;
+var
   LDirs: TStringDynArray;
-  LDir, LManifest, LRaw: string;
+  LDir, LManifest, LRaw, LDeclared: string;
   LJson: TJSONObject;
   LSpec: TPyToolSpec;
 begin
   Result := 0;
-  if not TDirectory.Exists(FRoot) then
+  if not TDirectory.Exists(ARoot.Path) then
     Exit;
-  LDirs := TDirectory.GetDirectories(FRoot);
+  LDirs := TDirectory.GetDirectories(ARoot.Path);
   for LDir in LDirs do
   begin
     LManifest := TPath.Combine(LDir, 'tool.json');
@@ -292,15 +339,21 @@ begin
       if LJson = nil then
         Continue;
       LSpec := Default(TPyToolSpec);
-      LSpec.Name := _Str(LJson, 'name');
-      if LSpec.Name = '' then
+      LDeclared := _Str(LJson, 'name');
+      if LDeclared = '' then
         Continue;
+      // The prefix is applied to the MCP name only. Nothing inside the tool -
+      // its folder, its script, its schema - knows or cares that it was
+      // installed rather than written here. The TITLE stays the declared name,
+      // because that is what a person reads and it is already unambiguous next
+      // to the description.
+      LSpec.Name := ARoot.Prefix + LDeclared;
       LSpec.ToolDir := LDir;
       LSpec.EntryPath := TPath.Combine(LDir, _StrDef(LJson, 'entry', 'main.py'));
       LSpec.Python := _Str(LJson, 'python');
       LSpec.TimeoutMs := _IntDef(LJson, 'timeoutMs', 30000);
       AServer.RegisterTool(_BuildDescriptor(LSpec,
-        _StrDef(LJson, 'title', LSpec.Name), _Str(LJson, 'description'),
+        _StrDef(LJson, 'title', LDeclared), _Str(LJson, 'description'),
         _ExtractSchema(LJson)));
       Inc(Result);
     finally
@@ -309,9 +362,58 @@ begin
   end;
 end;
 
+function PyToolRoots(const APyToolsRoot: string): TArray<TPyToolRoot>;
+var
+  LProfile, LAddonsRoot, LToolsDir: string;
+  LSlugDirs: TStringDynArray;
+  LIndex, LCount: Integer;
+begin
+  // The user's own folder is ALWAYS first and always present, even when it does
+  // not exist yet: it is where the PyTools dialog writes, so a tool created a
+  // second from now must not need a restart of anything to be found. Scanning a
+  // missing folder registers nothing and costs nothing.
+  SetLength(Result, 1);
+  Result[0].Path := APyToolsRoot;
+  Result[0].Prefix := '';
+  LCount := 1;
+
+  LProfile := GetEnvironmentVariable('USERPROFILE');
+  if LProfile = '' then
+    Exit;
+  LAddonsRoot := TPath.Combine(TPath.Combine(LProfile, '.aefos'), 'addons');
+  if not TDirectory.Exists(LAddonsRoot) then
+    Exit;
+  LSlugDirs := TDirectory.GetDirectories(LAddonsRoot);
+  SetLength(Result, Length(LSlugDirs) + 1);
+  for LIndex := 0 to High(LSlugDirs) do
+  begin
+    LToolsDir := TPath.Combine(LSlugDirs[LIndex], 'tools');
+    // Most installed addons ship no Python tool at all - a command or an MCP
+    // server. Only the ones that do become a root.
+    if not TDirectory.Exists(LToolsDir) then
+      Continue;
+    Result[LCount].Path := LToolsDir;
+    Result[LCount].Prefix := TPath.GetFileName(LSlugDirs[LIndex]) + '__';
+    Inc(LCount);
+  end;
+  SetLength(Result, LCount);
+end;
+
 procedure RegisterPyTools(const AServer: IMCPServer;
   const AFacade: IMCPWorkspaceFacade; const AConsent: IMCPConsentRegistry;
   const AAudit: IMCPAuditLog; const APyToolsRoot: string);
+var
+  LRoots: TArray<TPyToolRoot>;
+begin
+  SetLength(LRoots, 1);
+  LRoots[0].Path := APyToolsRoot;
+  LRoots[0].Prefix := '';
+  RegisterPyTools(AServer, AFacade, AConsent, AAudit, LRoots);
+end;
+
+procedure RegisterPyTools(const AServer: IMCPServer;
+  const AFacade: IMCPWorkspaceFacade; const AConsent: IMCPConsentRegistry;
+  const AAudit: IMCPAuditLog; const ARoots: TArray<TPyToolRoot>);
 var
   LRegistrar: TMCPPyToolsRegistrar;
 begin
@@ -319,8 +421,7 @@ begin
     raise EArgumentNilException.Create('RegisterPyTools: AServer');
   if not Assigned(AFacade) then
     raise EArgumentNilException.Create('RegisterPyTools: AFacade');
-  LRegistrar := TMCPPyToolsRegistrar.Create(AFacade, AConsent, AAudit,
-    APyToolsRoot);
+  LRegistrar := TMCPPyToolsRegistrar.Create(AFacade, AConsent, AAudit, ARoots);
   // Not freed when tools were registered: the handler closures hold an
   // IPyToolDispatch reference and own the lifetime (ADR-056). When nothing was
   // registered, no closure exists, so free it here to avoid a leak.

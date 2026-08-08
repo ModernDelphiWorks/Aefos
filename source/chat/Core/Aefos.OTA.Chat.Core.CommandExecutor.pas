@@ -145,6 +145,7 @@ type
     // because it is Delphi-only (TMCPProvision's resource-backed provisioning).
     procedure _ResolveMcpWiring(const AProfileKind: TExecutorKind;
       var AWiring: TAefosCliMcpWiring);
+    function _LoadStoredBody(const AText: string): string;
     function _PrepareContext(const ACommandName, ASelection: string;
       out ARendered: string; out ACommandBody: string): Boolean;
     procedure _StopMcpServer;
@@ -211,6 +212,7 @@ uses
   Aefos.MCP.ServerMerge,
   Aefos.Provider.Registry,
   Aefos.OTA.Chat.Core.BuiltInCommands,
+  Aefos.OTA.Chat.Core.ChatCommand,
   Aefos.OTA.Chat.Core.ModelFallbackPolicy,
   Aefos.OTA.Chat.UI.Options.Binding,
   Aefos.OTA.Options.AIFlow;
@@ -850,6 +852,44 @@ begin
   end;
 end;
 
+// Loads a stored command's body, accepting "<name> <what the developer wants>".
+//
+// The slash is the whole signal, and it is why the panel now dispatches the text
+// AS TYPED. "/release these notes" is the command plus a request; "release these
+// notes" is a sentence that happens to start with the name of an installed
+// command. Without the slash the two are the same string, and the only safe
+// reading of an identical pair is the literal one.
+//
+// Same shape the built-ins have always had (FindBuiltInCommand splits on the
+// first space) - stored and addon commands simply never got it, so anything
+// typed after the name reached the model as raw text with the COMMAND.md never
+// loaded. Measured live on /analyst.
+function TCommandExecutor._LoadStoredBody(const AText: string): string;
+var
+  LText, LName, LArgs: string;
+  LSpace: Integer;
+begin
+  LText := Trim(AText);
+  if not LText.StartsWith('/') then
+    // No slash: the caller means this exact name (the picker's path) or it is
+    // free text. Unchanged behaviour - LoadBody raises and the caller falls back.
+    Exit(FRegistry.LoadBody(LText));
+  LText := Trim(Copy(LText, 2, MaxInt));
+  LArgs := '';
+  LSpace := Pos(' ', LText);
+  if LSpace > 0 then
+  begin
+    LArgs := Trim(Copy(LText, LSpace + 1, MaxInt));
+    LName := Copy(LText, 1, LSpace - 1);
+  end
+  else
+    LName := LText;
+  Result := FRegistry.LoadBody(LName);
+  if LArgs <> '' then
+    Result := Result + sLineBreak + sLineBreak +
+      'The developer''s initial request: ' + LArgs;
+end;
+
 function TCommandExecutor._PrepareContext(const ACommandName, ASelection: string;
   out ARendered: string; out ACommandBody: string): Boolean;
 var
@@ -857,8 +897,15 @@ var
   LLastRoot: string;
   LUserText: string;
   LBuiltin: TBuiltInCommand;
+  LBare: string;
 begin
   Result := False;
+  // The panel dispatches the text AS TYPED so the slash survives to
+  // _LoadStoredBody, which is the only thing that needs it. Everything else here
+  // wants the bare text: the built-in table matches on names without one, and
+  // the free-chat fallback must not echo a slash the user's prompt did not mean
+  // as a command.
+  LBare := StripLeadingSlash(Trim(ACommandName));
   try
     // No active project (e.g. the agent just closed them all) must NOT abort the
     // dispatch — the chat should still converse/act. Degrade each project-bound
@@ -870,7 +917,7 @@ begin
         ; // no project/commands folder yet — nothing to preinstall, carry on
     end;
     try
-      if FindBuiltInCommand(ACommandName, LBuiltin, LUserText) and
+      if FindBuiltInCommand(LBare, LBuiltin, LUserText) and
          (LBuiltin.Kind = bikAgentic) then
       begin
         // Built-in agentic command (e.g. /new-project): inject its prompt-guide
@@ -883,7 +930,7 @@ begin
             'The developer''s initial request: ' + LUserText;
       end
       else
-        ACommandBody := FRegistry.LoadBody(ACommandName);
+        ACommandBody := _LoadStoredBody(ACommandName);
     except
       // Free-form chat fallback: ANY failure to load a command body means the typed
       // text isn't a command, so treat the text itself as the prompt and let the
@@ -893,7 +940,7 @@ begin
       // threw. A plain message or a path then goes straight to the CLI instead of
       // crashing with "Invalid characters in path".
       on Exception do
-        ACommandBody := ACommandName;
+        ACommandBody := LBare;
     end;
     try
       LContext := FBuilder.Build(ASelection);

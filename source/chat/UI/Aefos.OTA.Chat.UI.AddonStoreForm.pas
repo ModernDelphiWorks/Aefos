@@ -259,7 +259,12 @@ end;
 procedure TAefosAddonStoreForm._LoadCatalog;
 begin
   if FBusy then
+  begin
+    // Say so. Refresh puts the button into "Refreshing..." before it posts, and
+    // a silent return here would leave it there for the life of the window.
+    _CallPage('refreshed', '');
     Exit;
+  end;
   FBusy := True;
   TThread.CreateAnonymousThread(
     procedure

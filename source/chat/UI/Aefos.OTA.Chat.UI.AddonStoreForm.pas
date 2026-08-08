@@ -26,6 +26,8 @@ uses
   System.Classes,
   Vcl.Graphics,
   Vcl.Controls,
+  Vcl.Dialogs,
+  Vcl.FileCtrl,
   Vcl.Forms,
   Aefos.WebView.Types,
   Aefos.WebView.Control;
@@ -42,6 +44,7 @@ type
     procedure _LoadCatalog;
     procedure _RunAction(const AAction, ASlug, ASource: string);
     procedure _LoadSources;
+    procedure _BrowseForFolder;
     procedure _RunSourceEdit(const AAction, AName, AKind, ALocation: string);
     procedure _CallPage(const AFunc, AJsonArg: string);
     procedure _PageLog(const AText: string);
@@ -357,6 +360,53 @@ begin
     end).Start;
 end;
 
+// The folder picker behind "Browse...". Typing a store path by hand is the one
+// step of adding a store that can be wrong in a way nothing catches until the
+// catalogue comes back empty - so the window offers the same dialog the rest of
+// the IDE uses.
+//
+// TWO things here are deliberate:
+//
+// 1. It runs through TThread.Queue instead of inline. This is called FROM the
+//    WebView's message callback, and pumping a modal loop inside that callback
+//    is re-entering the control that is mid-dispatch. Queue lets the callback
+//    return first; the dialog then opens from an ordinary message.
+// 2. Cancel answers ANYWAY, with an empty string. A picker that says nothing on
+//    cancel leaves the page unable to tell "cancelled" from "the host never
+//    heard me" - the same silence that cost a morning on the store window.
+procedure TAefosAddonStoreForm._BrowseForFolder;
+begin
+  TThread.Queue(nil,
+    procedure
+    var
+      LDlg: TFileOpenDialog;
+      LPath: string;
+    begin
+      if not Assigned(GStoreForm) then
+        Exit;
+      LPath := '';
+      if Win32MajorVersion >= 6 then
+      begin
+        // Vista+ common item dialog in folder mode: the one the IDE itself uses.
+        LDlg := TFileOpenDialog.Create(nil);
+        try
+          LDlg.Title := 'Choose the folder that holds the addons';
+          LDlg.Options := [fdoPickFolders, fdoPathMustExist, fdoForceFileSystem];
+          if LDlg.Execute(GStoreForm.Handle) then
+            LPath := LDlg.FileName;
+        finally
+          LDlg.Free;
+        end;
+      end
+      else
+        // Pre-Vista fallback. Costs two lines and keeps the oldest supported
+        // Windows from meeting a button that does nothing.
+        SelectDirectory('Choose the folder that holds the addons', '', LPath);
+      if Assigned(GStoreForm) then
+        GStoreForm._CallPage('folder', _JsString(LPath));
+    end);
+end;
+
 // Add / remove / enable / disable. Every one of them ends the same way: ask the
 // CLI again, because the panel draws the FILE rather than what it hoped the edit
 // did. BOTH answers are re-read on this one worker instead of queueing two more:
@@ -423,6 +473,8 @@ begin
       _LoadCatalog
     else if LAction = 'openSources' then
       _LoadSources
+    else if LAction = 'browseFolder' then
+      _BrowseForFolder
     else if LAction = 'sourceAdd' then
       _RunSourceEdit(LAction, _StrOf(LObj, 'name'), _StrOf(LObj, 'kind'),
         _StrOf(LObj, 'location'))

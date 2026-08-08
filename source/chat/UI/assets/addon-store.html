@@ -615,12 +615,16 @@ To publish without packaging, point a store at a folder:
       out += "</div></div>";
     }
     out += '<div class="addform"><h3>Add a store</h3><div class="fields">' +
-      '<input type="text" id="srcname" placeholder="name" autocomplete="off">' +
+      '<input type="text" id="srcname" placeholder="name (no spaces)" autocomplete="off">' +
       '<select id="srckind">' +
       '<option value="path">folder or share</option>' +
       '<option value="aefos">registry over HTTP</option></select>' +
       '<input type="text" id="srcloc" placeholder="\\\\server\\addons  or  ' +
       'https://host/registry.json" autocomplete="off">' +
+      // Typing a path by hand is the one step of adding a store that can be
+      // wrong in a way nothing catches until the catalogue comes back empty.
+      // The host opens the folder picker; only a folder store has one to open.
+      '<button class="ghost" id="srcbrowse">Browse&hellip;</button>' +
       '<button class="primary" id="srcadd">Add</button></div>' +
       '<div class="why">The name is how you pick this store later ' +
       '(<code>--source name</code>), so it travels without spaces. Addons ' +
@@ -744,6 +748,18 @@ To publish without packaging, point a store at a folder:
     if (e.target.id === "backtolist") {
       state.view = "list"; applyView(); return;
     }
+    if (e.target.id === "srcbrowse") {
+      // Only a folder store has a folder to pick. Saying so beats opening a
+      // picker whose result cannot be a registry URL.
+      if (document.getElementById("srckind").value !== "path") {
+        var e1 = document.getElementById("srcerr");
+        e1.textContent = "Browse picks a folder. A registry over HTTP is a URL - paste it.";
+        e1.hidden = false;
+        return;
+      }
+      post({ action: "browseFolder" });
+      return;
+    }
     if (e.target.id === "srcadd") {
       var name = document.getElementById("srcname").value.trim();
       var loc = document.getElementById("srcloc").value.trim();
@@ -822,6 +838,20 @@ To publish without packaging, point a store at a folder:
       el.scrollTop = el.scrollHeight;
     },
     done: function () { state.busy = null; renderList(); },
+
+    // The folder the host's picker came back with. Fills the field the user was
+    // about to type into by hand - and clears whatever complaint was on screen,
+    // because the complaint was almost certainly "somewhere to read" and it has
+    // just been answered.
+    folder: function (path) {
+      if (!path) return;                       // cancelled: leave the form alone
+      var el = document.getElementById("srcloc");
+      if (!el) return;                         // panel closed while picking
+      el.value = path;
+      var err = document.getElementById("srcerr");
+      if (err) err.hidden = true;
+      el.focus();
+    },
 
     // The store list, straight from `aefos sources --json`. The panel never
     // keeps its own copy of the truth: every edit goes to the CLI and comes

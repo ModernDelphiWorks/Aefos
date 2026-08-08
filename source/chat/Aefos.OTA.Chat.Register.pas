@@ -2941,9 +2941,12 @@ begin
   // EvalChatPanelScript). Inspector mirrors live MCP → same 120 tools.
   RegisterChatInspectorTools(LServer, _BuildChatInspectorFacade, nil,
     LAuditLog);
-  // Python tools (drop-a-folder): each pytools\<tool>\tool.json becomes a live
-  // MCP tool, consent + audit gated. Empty/missing root registers nothing.
-  RegisterPyTools(LServer, GWorkspaceFacade, nil, LAuditLog, _PyToolsRoot);
+  // Python tools: each <tool>\tool.json becomes a live MCP tool, consent + audit
+  // gated. TWO sources now - the user's own pytools folder (still where new ones
+  // are created) and the tools shipped by installed addons, namespaced
+  // <slug>__. Empty/missing roots register nothing. See PyToolRoots.
+  RegisterPyTools(LServer, GWorkspaceFacade, nil, LAuditLog,
+    PyToolRoots(_PyToolsRoot));
   // Project-wide text/encoding tools (ReplaceInProject / FixEncoding) wrapping
   // the rtl-pure Aefos.Tools engine; consent + audit gated.
   RegisterProjectTextTools(LServer, GWorkspaceFacade, nil, LAuditLog);

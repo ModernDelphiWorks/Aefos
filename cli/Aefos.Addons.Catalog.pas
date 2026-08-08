@@ -271,20 +271,23 @@ begin
             Inc(LCount);
           end;
           SetLength(Result.Rows, LCount);
-          // A store is the folder that CONTAINS addons, one per subfolder. Point
-          // it at an addon itself - the obvious mistake, and the one a folder
-          // picker practically invites - and every subfolder is that bundle's
-          // own commands/, payload/, tools/, so the store reads as EMPTY.
-          // Measured live: the maintainer browsed to the bundle, got a silent
-          // "Custom 0", and had no way to tell that from a store with nothing
-          // published in it. Say which one it is, and name the folder to use.
-          if (LCount = 0) and
-             TFile.Exists(TPath.Combine(ASource.Location, 'addon.json')) then
-            raise EAddonError.CreateFmt(
-              'folder "%s" IS an addon, not a store. A store is the folder that ' +
-              'holds addons - point it at "%s".',
-              [ASource.Location,
-               ExtractFileDir(ExcludeTrailingPathDelimiter(ASource.Location))]);
+          // A store is normally the folder that CONTAINS addons, one per
+          // subfolder. But pointing it AT an addon is what a folder picker
+          // invites - what you see and click is the bundle, not its parent -
+          // and the intent is not ambiguous: the folder carries an addon.json,
+          // so it is that addon you want.
+          //
+          // It used to refuse and tell you to point at the parent. That was the
+          // computer being pedantic with information it already had: it can see
+          // the manifest. So a folder that IS an addon is read as a store of
+          // exactly one - which is also what a team with a single bundle to
+          // share would naturally set up.
+          if (LCount = 0) and _EntryFromDir(ASource.Location, LEntry) then
+          begin
+            SetLength(Result.Rows, 1);
+            Result.Rows[0].Source := ASource.Name;
+            Result.Rows[0].Entry := LEntry;
+          end;
         end;
     else
       // Named in the config format from the start so adding it later needs no

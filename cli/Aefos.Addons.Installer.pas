@@ -88,7 +88,6 @@ uses
   Generics.Collections,
   Aefos.Addons.Paths,
   Aefos.Addons.Manifest,
-  Aefos.Addons.PluginFormat,
   Aefos.Addons.Sources,
   Aefos.Addons.Catalog,
   Aefos.Addons.Ledger,
@@ -607,7 +606,6 @@ var
   LEntry: TAddonRegistryEntry;
   LManifest: TAddonManifest;
   LTempZip, LTempDir, LBundleDir, LStoreDir, LManifestPath, LShortSha: string;
-  LFormat: TPluginFormat;
   LFiles, LRoots, LScratch: TList<string>;
   LArts: TAddonArtifacts;
   LItem: TInstalledAddon;
@@ -702,49 +700,29 @@ begin
         raise EAddonIntegrity.CreateFmt(
           'archive for "%s" has no top-level "%s\" folder.', [ASlug, ASlug]);
     end;
-    // An addon is a directory under a JSON manifest, and Aefos is not the only
-    // one packaging that shape. addon.json stays native and keeps priority;
-    // when it is absent the bundle may still be a perfectly good agent plugin -
-    // Agent Plugins 1.0, Copilot or Claude, which differ from one another only
-    // in where two files sit. Reading those costs a detection table and buys
-    // every bundle already published elsewhere, including the marketplace a
-    // user's employer keeps.
-    //
-    // Nothing is renamed by this: what gets installed is still an addon, still
-    // recorded in the same ledger, still removed by the same uninstall. Only
-    // the manifest it was read from differs.
-    LFormat := TAddonPluginFormat.Detect(LBundleDir);
-    if LFormat = pfAefos then
-    begin
-      LManifestPath := TPath.Combine(LBundleDir, 'addon.json');
-      LManifest := TAddonManifestParser.ParseManifest(
-        TFile.ReadAllText(LManifestPath, TEncoding.UTF8));
-      if not SameText(LManifest.Slug, ASlug) then
-        raise EAddonManifest.CreateFmt(
-          'bundle slug "%s" does not match "%s".', [LManifest.Slug, ASlug]);
-      // Version cross-check only when BOTH sides carry one. Under evergreen an
-      // empty version on either side is legitimate; the sha256 verification above
-      // already guarantees the bytes match. The slug guard stays unconditional.
-      if (LManifest.Version <> '') and (LEntry.Version <> '') and
-         not SameText(LManifest.Version, LEntry.Version) then
-        raise EAddonManifest.CreateFmt(
-          'bundle version "%s" does not match registry "%s".',
-          [LManifest.Version, LEntry.Version]);
-    end
-    else if LFormat = pfNone then
+    // ONE format, ours. Aefos reads addon.json and nothing else (decision
+    // 2026-08-08): a bundle packaged for another ecosystem is converted to this
+    // contract once, at authoring time, instead of being re-interpreted on every
+    // install. The conversion has a better owner than a detection table in here
+    // - the addon-author agent, which reads meta\aefos-addons-contract.md.
+    LManifestPath := TPath.Combine(LBundleDir, 'addon.json');
+    if not TFile.Exists(LManifestPath) then
       raise EAddonManifest.CreateFmt(
-        'bundle "%s" carries no manifest Aefos can read (addon.json, ' +
-        'plugin.json or .claude-plugin\plugin.json).', [ASlug])
-    else
-    begin
-      ALog(Format('Reading as %s (this bundle has no addon.json) ...',
-        [TAddonPluginFormat.FormatName(LFormat)]));
-      // A foreign bundle carries no slug of ours to cross-check against, so the
-      // registry entry is the only authority on identity - which is exactly what
-      // the sha256 above already verified.
-      LManifest := TAddonPluginFormat.Adopt(LBundleDir, ASlug, LFormat, ALog);
-      LManifest.RequiresAefos := LEntry.RequiresAefos;
-    end;
+        'bundle "%s" carries no addon.json - see docs\addons-contract.md for ' +
+        'the format Aefos installs.', [ASlug]);
+    LManifest := TAddonManifestParser.ParseManifest(
+      TFile.ReadAllText(LManifestPath, TEncoding.UTF8));
+    if not SameText(LManifest.Slug, ASlug) then
+      raise EAddonManifest.CreateFmt(
+        'bundle slug "%s" does not match "%s".', [LManifest.Slug, ASlug]);
+    // Version cross-check only when BOTH sides carry one. Under evergreen an
+    // empty version on either side is legitimate; the sha256 verification above
+    // already guarantees the bytes match. The slug guard stays unconditional.
+    if (LManifest.Version <> '') and (LEntry.Version <> '') and
+       not SameText(LManifest.Version, LEntry.Version) then
+      raise EAddonManifest.CreateFmt(
+        'bundle version "%s" does not match registry "%s".',
+        [LManifest.Version, LEntry.Version]);
 
     _RequireConsent(LEntry, LManifest, AOptions, ALog);
 

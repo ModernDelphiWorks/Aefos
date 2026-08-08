@@ -97,6 +97,51 @@ Canonical tree — every folder is **optional** except `addon.json`:
 The zip MUST contain exactly one top-level `<slug>/` folder matching the
 registry slug (the CLI validates this before extracting).
 
+### 3.2 Several commands / several skills in one bundle
+
+`command/` and `skill/` above are the **single** form: one of each. A bundle
+that carries **more than one** uses the plural folder instead, a directory per
+artifact:
+
+```
+<slug>/
+├── addon.json
+├── commands/                  # instead of command/
+│   ├── build/
+│   │   ├── COMMAND.md         # required — the trigger body
+│   │   └── references/…       # optional, travels with its command
+│   └── review/COMMAND.md
+└── skills/                    # instead of skill/
+    ├── test-runner/
+    │   ├── SKILL.md
+    │   └── okf/…
+    └── lint/SKILL.md
+```
+
+| bundle | installs to | trigger |
+|---|---|---|
+| `command/COMMAND.md` | `~/.aefos/commands/<slug>/` | `/<slug>` |
+| `commands/<name>/` | `~/.aefos/commands/<slug>.<name>/` | `/<slug>.<name>` |
+| `skill/` | `~/.aefos/skills/<slug>/` | — |
+| `skills/<name>/` | `~/.aefos/skills/<slug>.<name>/` | — |
+
+Rules that are not arbitrary:
+
+- **The plural is a folder per command, never a loose `.md`.** The chat's
+  command registry keys a command by its *directory* name and loads
+  `<dir>/COMMAND.md`; loose files would install commands the picker never shows.
+- **`<slug>.` prefix on the plural form.** `commands/` and `skills/` are flat,
+  shared roots. Two addons each shipping a `review` would otherwise overwrite
+  one another, and which survived would depend on install order.
+- **`artifacts` does not change.** `"command": true` covers both layouts — the
+  plural is discovered on disk, so the manifest cannot disagree with the bundle
+  about how many there are.
+- **Declared and empty fails the install.** `"command": true` with neither
+  `command/COMMAND.md` nor any `commands/<name>/` aborts instead of recording a
+  no-op as installed.
+- **Reinstall clean-replaces**, including artifacts the new version dropped:
+  install sweeps `<root>/<slug>.*` before laying the new set down.
+
 ### 3.1 `templates/` — carry-along scaffolds (optional, NOT a separate addon type)
 
 `templates/` is **not** an addon type — it is an **optional folder** an addon may
@@ -138,8 +183,8 @@ is no global, un-scoped template namespace to collide.
   "trust": "official",
   "requirements": { "aefos_version": ">=0.30.0" },
   "artifacts": {
-    "command":   true,        // command/COMMAND.md present -> ~/.aefos/commands/<slug>/
-    "skill":     true,        // skill/ present             -> ~/.aefos/skills/<slug>/
+    "command":   true,        // command/COMMAND.md OR commands/<name>/ (§3.2)
+    "skill":     true,        // skill/ OR skills/<name>/             (§3.2)
     "mcp":       false,        // mcp/server.json present   -> aggregated (§5)
     "tools":     false,        // tools/ present            -> ~/.aefos/addons/<slug>/tools/
     "templates": false         // templates/ present (§3.1) -> ~/.aefos/templates/<slug>/

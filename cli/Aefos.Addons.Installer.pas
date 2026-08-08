@@ -356,11 +356,139 @@ end;
 procedure _RemoveSlugDirs(const ASlug: string);
 var
   LDir: string;
+  LNamed: TArray<string>;
+  LIndex: Integer;
 begin
   for LDir in [TAddonPaths.CommandDir(ASlug), TAddonPaths.SkillDir(ASlug), TAddonPaths.TemplateDir(ASlug),
     TAddonPaths.AddonDir(ASlug)] do
     if TDirectory.Exists(LDir) then
       TDirectory.Delete(LDir, True);
+  // A multi-artifact bundle spreads over <root>\<slug>.<name>, which is not one
+  // directory this can name up front. Sweeping the pattern is what makes a
+  // reinstall clean-replace: an addon that DROPPED a command or skill in its
+  // new version would otherwise leave the old one behind, still loaded, forever.
+  for LDir in [TAddonPaths.CommandsRoot, TAddonPaths.SkillsRoot] do
+  begin
+    if not TDirectory.Exists(LDir) then
+      Continue;
+    LNamed := TDirectory.GetDirectories(LDir, ASlug + '.*');
+    for LIndex := 0 to High(LNamed) do
+      if TDirectory.Exists(LNamed[LIndex]) then
+        TDirectory.Delete(LNamed[LIndex], True);
+  end;
+end;
+
+// The trigger names the chat will really show, taken from the directories that
+// were laid down under commands\ rather than from the slug. An install[]-mapped
+// bundle is covered by the same walk, so the announcement follows whatever the
+// mapping chose to create.
+function _CommandNamesFrom(const ARoots: TList<string>): string;
+var
+  LIndex: Integer;
+  LParent: string;
+begin
+  Result := '';
+  LParent := ExcludeTrailingPathDelimiter(TAddonPaths.CommandsRoot);
+  for LIndex := 0 to ARoots.Count - 1 do
+    if SameText(ExcludeTrailingPathDelimiter(ExtractFileDir(
+      ExcludeTrailingPathDelimiter(ARoots[LIndex]))), LParent) then
+    begin
+      if Result <> '' then
+        Result := Result + ', ';
+      Result := Result + '/' +
+        ExtractFileName(ExcludeTrailingPathDelimiter(ARoots[LIndex]));
+    end;
+end;
+
+// Lays down the addon's command(s). TWO bundle layouts are accepted on purpose:
+//
+//   command\COMMAND.md      one command - every addon in the gallery today
+//                           -> commands\<slug>\COMMAND.md        (/<slug>)
+//   commands\<name>\        SEVERAL commands, a folder each
+//                           -> commands\<slug>.<name>\COMMAND.md (/<slug>.<name>)
+//
+// The plural is a FOLDER per command, not a file per command, because that is
+// what the chat's command registry reads: it keys a command by its directory
+// name and loads <dir>\COMMAND.md, with an optional references\ beside it
+// (Aefos.OTA.Chat.Core.CommandRegistry). Copying loose .md files here would
+// install commands the picker never shows - present on disk, dead in the IDE.
+procedure _InstallCommands(const ABundleDir, ASlug: string;
+  const AFiles, ARoots: TList<string>; const ALog: TAddonLog);
+var
+  LPluralDir, LTargetDir: string;
+  LDirs: TArray<string>;
+  LIndex, LBefore: Integer;
+begin
+  LBefore := AFiles.Count;
+  LPluralDir := TPath.Combine(ABundleDir, 'commands');
+  if TDirectory.Exists(LPluralDir) then
+  begin
+    LDirs := TDirectory.GetDirectories(LPluralDir);
+    for LIndex := 0 to High(LDirs) do
+    begin
+      LTargetDir := TAddonPaths.CommandDirNamed(ASlug, ExtractFileName(LDirs[LIndex]));
+      // The whole folder, so an optional references\ travels with its command.
+      _CopyTree(LDirs[LIndex], LTargetDir, AFiles);
+      ARoots.Add(LTargetDir);
+      ALog('  + command  ' + LTargetDir);
+    end;
+  end
+  else
+  begin
+    LTargetDir := TAddonPaths.CommandDir(ASlug);
+    _CopyOneFile(TPath.Combine(ABundleDir, 'command\COMMAND.md'),
+      TPath.Combine(LTargetDir, 'COMMAND.md'), AFiles);
+    ARoots.Add(LTargetDir);
+    ALog('  + command  ' + LTargetDir);
+  end;
+  // Declared and empty is never a success - it means addon.json disagrees with
+  // the bundle, and a silent no-op would be recorded in the ledger as installed.
+  if AFiles.Count = LBefore then
+    raise EAddonIntegrity.CreateFmt(
+      'addon "%s" declares a command but the bundle carries neither ' +
+      'command\COMMAND.md nor any commands\<name>\.', [ASlug]);
+end;
+
+// Lays down the addon's skill(s), same two-layout rule as the commands above:
+//
+//   skill\                one skill  -> skills\<slug>\
+//   skills\<name>\        SEVERAL    -> skills\<slug>.<name>\
+//
+// The prefix on the plural form is what keeps two addons from overwriting each
+// other in the flat skills root (see TAddonPaths.SkillDirNamed).
+procedure _InstallSkills(const ABundleDir, ASlug: string;
+  const AFiles, ARoots: TList<string>; const ALog: TAddonLog);
+var
+  LPluralDir, LTargetDir: string;
+  LDirs: TArray<string>;
+  LIndex, LBefore: Integer;
+begin
+  LBefore := AFiles.Count;
+  LPluralDir := TPath.Combine(ABundleDir, 'skills');
+  if TDirectory.Exists(LPluralDir) then
+  begin
+    LDirs := TDirectory.GetDirectories(LPluralDir);
+    for LIndex := 0 to High(LDirs) do
+    begin
+      // ExtractFileName over a directory path with no trailing separator is the
+      // folder's own name - the skill name the bundle chose.
+      LTargetDir := TAddonPaths.SkillDirNamed(ASlug, ExtractFileName(LDirs[LIndex]));
+      _CopyTree(LDirs[LIndex], LTargetDir, AFiles);
+      ARoots.Add(LTargetDir);
+      ALog('  + skill    ' + LTargetDir);
+    end;
+  end
+  else
+  begin
+    LTargetDir := TAddonPaths.SkillDir(ASlug);
+    _CopyTree(TPath.Combine(ABundleDir, 'skill'), LTargetDir, AFiles);
+    ARoots.Add(LTargetDir);
+    ALog('  + skill    ' + LTargetDir);
+  end;
+  if AFiles.Count = LBefore then
+    raise EAddonIntegrity.CreateFmt(
+      'addon "%s" declares a skill but the bundle carries neither skill\ ' +
+      'nor any skills\<name>\.', [ASlug]);
 end;
 
 procedure _RequireConsent(const AEntry: TAddonRegistryEntry;
@@ -483,6 +611,7 @@ var
   LFiles, LRoots, LScratch: TList<string>;
   LArts: TAddonArtifacts;
   LItem: TInstalledAddon;
+  LCommands: string;
 begin
   if not TAddonPaths.IsValidSlug(ASlug) then
     raise EAddonError.CreateFmt('invalid addon slug "%s".', [ASlug]);
@@ -641,18 +770,9 @@ begin
         _RemoveSlugDirs(ASlug);
         LArts := LManifest.Artifacts;
         if LArts.HasCommand then
-        begin
-          _CopyOneFile(TPath.Combine(LBundleDir, 'command\COMMAND.md'),
-            TPath.Combine(TAddonPaths.CommandDir(ASlug), 'COMMAND.md'), LFiles);
-          LRoots.Add(TAddonPaths.CommandDir(ASlug));
-          ALog('  + command  ' + TAddonPaths.CommandDir(ASlug));
-        end;
+          _InstallCommands(LBundleDir, ASlug, LFiles, LRoots, ALog);
         if LArts.HasSkill then
-        begin
-          _CopyTree(TPath.Combine(LBundleDir, 'skill'), TAddonPaths.SkillDir(ASlug), LFiles);
-          LRoots.Add(TAddonPaths.SkillDir(ASlug));
-          ALog('  + skill    ' + TAddonPaths.SkillDir(ASlug));
-        end;
+          _InstallSkills(LBundleDir, ASlug, LFiles, LRoots, ALog);
         if LArts.HasMcp then
         begin
           // Resolve ${ADDON_ROOT} to the absolute install dir so a raw MCP
@@ -694,6 +814,10 @@ begin
       LItem.Files := LFiles.ToArray;
       LItem.Roots := LRoots.ToArray;
       TAddonLedger.Save(TAddonLedger.Upsert(TAddonLedger.Load, LItem));
+      // Read the trigger names off what was actually laid down, while the roots
+      // are still alive - a multi-command bundle installs /<slug>.<name>, so
+      // announcing "/<slug>" would name a command that does not exist.
+      LCommands := _CommandNamesFrom(LRoots);
     finally
       LRoots.Free;
       LFiles.Free;
@@ -706,8 +830,8 @@ begin
     end;
 
     ALog(Format('Installed %s %s.', [ASlug, _VerLabel(LEntry.Version)]));
-    if LManifest.Artifacts.HasCommand then
-      ALog(Format('  /%s is now available in Aefos chat.', [ASlug]));
+    if LCommands <> '' then
+      ALog('  Now available in Aefos chat: ' + LCommands);
   finally
     try
       // LTempDir is always OURS - a folder bundle was copied into it, never

@@ -57,6 +57,12 @@ type
     class function LedgerPath: string; static;
     { ~/.aefos\addons\mcp-servers.json - the aggregate the plugin merges. }
     class function McpAggregatePath: string; static;
+    { ~/.aefos\addons\command-roots.json - the folders the plugin should read
+      commands from BESIDES ~/.aefos\commands. Written by install for a LINKED
+      addon (one taken from a folder store and never copied), so the chat sees
+      the commands where they already live. Same arrangement as the MCP
+      aggregate: the CLI writes it, the plugin reads it, neither guesses. }
+    class function CommandRootsPath: string; static;
   end;
 
 implementation
@@ -156,6 +162,11 @@ end;
 class function TAddonPaths.McpAggregatePath: string;
 begin
   Result := TPath.Combine(AddonsRoot, 'mcp-servers.json');
+end;
+
+class function TAddonPaths.CommandRootsPath: string;
+begin
+  Result := TPath.Combine(AddonsRoot, 'command-roots.json');
 end;
 
 end.

@@ -36,6 +36,7 @@ uses
   System.StrUtils,   // StartsText - the stale-menu match is by prefix now
   System.Classes,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.JSON,
   Vcl.Forms,
   Vcl.Controls,
@@ -263,7 +264,7 @@ begin
   try
     try
       LJson := TJSONObject.ParseJSONValue(
-        TFile.ReadAllText(LManifest, TEncoding.UTF8)) as TJSONObject;
+        TAefosText.ReadAllUtf8(LManifest)) as TJSONObject;
     except
       LJson := nil;
     end;
@@ -283,7 +284,7 @@ begin
       FMemoSchema.Text := '';
     LCodePath := TPath.Combine(LDir, LEntry);
     if TFile.Exists(LCodePath) then
-      FMemoCode.Text := TFile.ReadAllText(LCodePath, TEncoding.UTF8)
+      FMemoCode.Text := TAefosText.ReadAllUtf8(LCodePath)
     else
       FMemoCode.Text := '';
   finally

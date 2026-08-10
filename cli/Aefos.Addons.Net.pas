@@ -168,7 +168,7 @@ begin
       LSrc := TPath.GetFullPath(LSrc);
     if not TFile.Exists(LSrc) then
       raise EAddonError.CreateFmt('local registry not found: %s', [LSrc]);
-    Exit(TFile.ReadAllText(LSrc, TEncoding.UTF8));
+    Exit(TAefosText.ReadAllUtf8(LSrc));
   end;
   if not TAefosHttp.TryGetText(AUrl, LStatus, LBody, LError) then
     raise EAddonError.CreateFmt('download failed (%s): %s', [AUrl, LError]);

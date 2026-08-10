@@ -114,7 +114,64 @@ type
 
 {$ENDIF}
 
+type
+  { UTF-8 text reads that answer the same on all eight compilers.
+
+    MEASURED 2026-08-10 against the six IDEs in the build VM: on Delphi 10
+    Seattle (17.0) and 10.1 Berlin (18.0), System.IOUtils.TFile.ReadAllText(path,
+    TEncoding.UTF8) DISCARDS THE FIRST THREE BYTES of a file that has no BOM --
+    it charges the preamble whether or not the file paid it. 10.2 Tokyo (19.0)
+    and up return the file whole. The one-argument overload reads it whole
+    everywhere but decodes as ANSI when there is no BOM, so it is not the answer
+    either.
+
+    That is silent and it bites twice. The addon aggregate is written UTF-8
+    without a BOM on purpose, so on those two IDEs an installed MCP addon
+    disappeared from /MCP and from the .mcp.json handed to the CLI (v1.5.1). And
+    a .pas file usually has no BOM either, so every code tool that reads one was
+    losing the first three characters of `unit` on Seattle and Berlin.
+
+    So: read the bytes, strip a UTF-8 BOM only when one is actually there, decode.
+    Byte-identical to what the FPC branch below already did, and to what
+    Aefos.MCP.AddonGateway hand-rolled -- which is why the in-IDE tools kept
+    working while the config leg went silent. One implementation now. }
+  TAefosText = record
+  public
+    { The file's text decoded as UTF-8, with a leading BOM removed when present.
+      Raises like TFile.ReadAllText when the file cannot be opened. }
+    class function ReadAllUtf8(const APath: string): string; static;
+  end;
+
 implementation
+
+{$IFNDEF FPC}
+uses
+  System.SysUtils,
+  System.Classes;
+{$ENDIF}
+
+{ TAefosText }
+
+class function TAefosText.ReadAllUtf8(const APath: string): string;
+var
+  LStream: TFileStream;
+  LBytes: TBytes;
+  LStart: Integer;
+begin
+  LStream := TFileStream.Create(APath, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(LBytes, LStream.Size);
+    if Length(LBytes) > 0 then
+      LStream.ReadBuffer(LBytes[0], Length(LBytes));
+  finally
+    LStream.Free;
+  end;
+  LStart := 0;
+  if (Length(LBytes) >= 3) and (LBytes[0] = $EF) and (LBytes[1] = $BB) and
+    (LBytes[2] = $BF) then
+    LStart := 3;
+  Result := TEncoding.UTF8.GetString(LBytes, LStart, Length(LBytes) - LStart);
+end;
 
 {$IFDEF FPC}
 

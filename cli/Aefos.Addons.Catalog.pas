@@ -85,6 +85,7 @@ implementation
 uses
   Classes,
   IOUtils,
+  Aefos.Compat.IO,
   Types,
   Aefos.Compat.Json,
   Aefos.Compat.JsonFormat,
@@ -138,7 +139,7 @@ begin
   AEntry.KindName := AEntry.Kind.ToStr;
   LJson := '';
   try
-    LJson := TFile.ReadAllText(LManifestPath, TEncoding.UTF8);
+    LJson := TAefosText.ReadAllUtf8(LManifestPath);
   except
     LJson := '';
   end;

@@ -46,6 +46,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.IOUtils,
+  Aefos.Compat.IO,
   ToolsAPI,
   Aefos.MCP.OTA.FacadeShared,
   Aefos.MCP.OTA.UnitCreatePolicy;
@@ -293,7 +294,7 @@ begin
   Result := False;
   if not TFile.Exists(ADProjPath) then Exit;
   try
-    LText := TFile.ReadAllText(ADProjPath, TEncoding.UTF8);
+    LText := TAefosText.ReadAllUtf8(ADProjPath);
   except
     Exit;
   end;

@@ -80,8 +80,8 @@ type
 implementation
 
 uses
-  System.IOUtils;
-
+  System.IOUtils,
+  Aefos.Compat.IO;
 constructor TCommandReplicator.Create(const ARegistry: ICommandRegistry;
   const AProjectRootResolver: TFunc<string>;
   const AProfile: IExecutorProfile);
@@ -114,7 +114,7 @@ var
 begin
   // Read tolerating a BOM, convert, write UTF-8 without BOM (R-3):
   // TEncoding.UTF8.GetBytes emits no preamble.
-  LCanonical := TFile.ReadAllText(ACanonicalPath, TEncoding.UTF8);
+  LCanonical := TAefosText.ReadAllUtf8(ACanonicalPath);
   LConverted := FProfile.ConvertCommand(LCanonical);
   TFile.WriteAllBytes(ATargetFile, TEncoding.UTF8.GetBytes(LConverted));
 end;

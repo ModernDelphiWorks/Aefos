@@ -233,7 +233,7 @@ begin
   if not TFile.Exists(LPath) then
     Exit(nil);
   try
-    Result := TAddonLedger.Deserialize(TFile.ReadAllText(LPath, TEncoding.UTF8));
+    Result := TAddonLedger.Deserialize(TAefosText.ReadAllUtf8(LPath));
   except
     on E: Exception do
       Result := nil; // an unreadable ledger reads as "nothing installed"

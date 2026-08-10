@@ -32,6 +32,7 @@ uses
   System.SysUtils,
   System.Types,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.JSON,
   System.DateUtils,
   System.Generics.Collections,
@@ -92,7 +93,7 @@ begin
   try
     if not TFile.Exists(APath) then
       Exit(False);
-    LText := TFile.ReadAllText(APath, TEncoding.UTF8);
+    LText := TAefosText.ReadAllUtf8(APath);
     LValue := TJSONObject.ParseJSONValue(LText);
     if LValue = nil then
       Exit(False);

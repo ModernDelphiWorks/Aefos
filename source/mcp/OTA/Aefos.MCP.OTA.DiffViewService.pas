@@ -82,6 +82,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.DateUtils,
   Winapi.ActiveX,
   ToolsAPI,
@@ -407,7 +408,7 @@ begin
         LReason := 'file-not-found';
         Exit;
       end;
-      LText := TFile.ReadAllText(LFile, TEncoding.UTF8);
+      LText := TAefosText.ReadAllUtf8(LFile);
       LOk := True;
     end);
   AFileName := LFile;

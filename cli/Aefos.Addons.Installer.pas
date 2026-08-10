@@ -379,7 +379,7 @@ var
 begin
   if not TFile.Exists(ASrcFile) then
     Exit;
-  LJson := TFile.ReadAllText(ASrcFile, TEncoding.UTF8);
+  LJson := TAefosText.ReadAllUtf8(ASrcFile);
   LJson := TAddonMcpRewrite.RewriteRootToken(LJson, AAddonRootAbs);
   ForceDirectories(ExtractFileDir(ADstFile));
   TFile.WriteAllBytes(ADstFile, TEncoding.UTF8.GetBytes(LJson));
@@ -453,7 +453,7 @@ begin
       if not TFile.Exists(LFragPath) then
         Continue;
       try
-        LFrag := TFile.ReadAllText(LFragPath, TEncoding.UTF8);
+        LFrag := TAefosText.ReadAllUtf8(LFragPath);
       except
         Continue;
       end;
@@ -860,7 +860,7 @@ begin
         'bundle "%s" carries no addon.json - see docs\addons-contract.md for ' +
         'the format Aefos installs.', [ASlug]);
     LManifest := TAddonManifestParser.ParseManifest(
-      TFile.ReadAllText(LManifestPath, TEncoding.UTF8));
+      TAefosText.ReadAllUtf8(LManifestPath));
     if not SameText(LManifest.Slug, ASlug) then
       raise EAddonManifest.CreateFmt(
         'bundle slug "%s" does not match "%s".', [LManifest.Slug, ASlug]);

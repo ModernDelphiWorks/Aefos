@@ -99,6 +99,7 @@ implementation
 uses
   System.Classes,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.RegularExpressions,
   System.Generics.Collections;
 
@@ -247,7 +248,7 @@ var
 begin
   if not TFile.Exists(APath) then
     Exit;
-  LText := TFile.ReadAllText(APath, TEncoding.UTF8);
+  LText := TAefosText.ReadAllUtf8(APath);
   LText := StringReplace(LText, AOldToken, ANewToken,
     [rfReplaceAll, rfIgnoreCase]);
   TFile.WriteAllText(APath, LText, TEncoding.UTF8);
@@ -453,7 +454,7 @@ begin
 
       // Rewrite the `unit X;` clause in the renamed source.
       TFile.WriteAllText(LNewPas,
-        _RewriteUnitClause(TFile.ReadAllText(LNewPas, TEncoding.UTF8),
+        _RewriteUnitClause(TAefosText.ReadAllUtf8(LNewPas),
           LOldBase, ANewUnitName), TEncoding.UTF8);
 
       if LHasDfm then

@@ -48,6 +48,7 @@ implementation
 uses
   System.SysUtils,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.JSON,
   Aefos.Tools.Templates,
   Aefos.Tools.Project,
@@ -208,7 +209,7 @@ begin
         LJson := nil;
         try
           try
-            LRaw := TFile.ReadAllText(LManifest, TEncoding.UTF8);
+            LRaw := TAefosText.ReadAllUtf8(LManifest);
             LJson := TJSONObject.ParseJSONValue(LRaw) as TJSONObject;
           except
             LJson := nil;

@@ -206,6 +206,7 @@ implementation
 
 uses
   System.IOUtils,
+  Aefos.Compat.IO,
   System.JSON,
   System.Generics.Collections,
   Aefos.MCP.Provision,
@@ -358,7 +359,7 @@ begin
   if not TFile.Exists(LPath) then
     Exit;
   try
-    Result := Trim(TFile.ReadAllText(LPath, TEncoding.UTF8));
+    Result := Trim(TAefosText.ReadAllUtf8(LPath));
   except
     // A locked/garbled memory file must never break a dispatch.
     Result := '';
@@ -389,7 +390,7 @@ begin
   if not TFile.Exists(LPath) then
     Exit;
   try
-    Result := Trim(TFile.ReadAllText(LPath, TEncoding.UTF8));
+    Result := Trim(TAefosText.ReadAllUtf8(LPath));
     if Result = '' then
       Result := '{}';
   except

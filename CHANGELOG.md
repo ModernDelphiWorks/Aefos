@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Dates are in `YYYY-MM-DD`.
 
+## [1.5.1] - 2026-08-10
+
+**Two things the addon store and the MCP list disagreed about.** Both were found
+on a machine running Delphi 10 Seattle and Delphi 13 side by side, one day after
+1.5.0 reached it.
+
+### Fixed
+
+**On Seattle and Berlin, an installed MCP addon was invisible — and the agent
+could not reach it.** The Desktop MCP was missing from `/MCP` on Delphi 10 while
+the same user profile's Delphi 13 listed it, reading the very same file.
+
+The cause is in the old RTL: on **10 Seattle (17.0)** and **10.1 Berlin (18.0)**,
+`TFile.ReadAllText(path, TEncoding.UTF8)` discards the first three bytes of a
+file that carries no BOM — it charges the preamble whether or not the file paid
+it. **10.2 Tokyo (19.0)** and up return the file whole (measured on all six).
+The addon aggregate is written UTF-8 *without* a BOM on purpose, so on those two
+IDEs it arrived with its opening brace gone, failed to parse, and degraded to
+"no servers" — in the modal **and** in the `.mcp.json` handed to the CLI, which
+is how the agent lost the addon's tools there.
+
+It now reads the bytes and strips a BOM only when one is present — the method
+the in-IDE gateway already used, which is why the tools inside the IDE kept
+working while the config leg went silent.
+
+**The store said "Update" on a current addon, forever.** The installer seeds the
+Desktop MCP offline from a copy this repository builds, and the catalogue decided
+the button by comparing sha256 with the gallery. Two honest builds of the same
+version have two different sha256, so every freshly installed machine was told
+to update an addon that was already the newest release.
+
+The button now answers the question a user actually reads in it — *is there a
+newer release?* — by version. `aefos update <slug>` still compares sha256, so a
+re-published bundle can be pulled deliberately; only the catalogue stops calling
+a rebuild an upgrade.
+
 ## [1.5.0] - 2026-08-10
 
 **Every RAD Studio from Delphi 10 Seattle up, and an addon store inside the IDE.**
@@ -592,7 +628,8 @@ debugger**, and it can run entirely on **local models** — no cloud, no key.
 - Published a machine-readable **SBOM** (CycloneDX 1.5) and a **security disclosure
   policy** (coordinated vulnerability disclosure).
 
-[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.5.1...HEAD
+[1.5.1]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.2.0...v1.3.0

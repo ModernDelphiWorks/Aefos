@@ -45,7 +45,7 @@
 ; ============================================================================
 
 #define AppName    "Aefos"
-#define AppVer     "1.5.0"
+#define AppVer     "1.5.1"
 #define Publisher  "ModernDelphiWorks"
 ; The BPLs are STAGED into .\bpl\<ver> by build-installer.ps1 (per Delphi version).
 #define BplSrc     "bpl"

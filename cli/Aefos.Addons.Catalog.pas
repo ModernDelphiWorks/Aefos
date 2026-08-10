@@ -427,6 +427,30 @@ begin
   LEntry := ARow.Entry;
   TAddonCatalog.EnsureIdentity(LEntry);
   if LItem.DecideUpdate(LEntry) = uaUpToDate then
+  begin
+    AObj.AddPair('state', 'installed');
+    Exit;
+  end;
+  // Same version, different bytes is NOT an update - it is another BUILD of the
+  // same release, and the store must not nag about it forever.
+  //
+  // The installer seeds the Desktop MCP offline from a dist this tree packed
+  // (scripts\pack-desktop-addon.ps1 deliberately ships the exe WE built, not one
+  // downloaded from the gallery - see its own comment). Two honest builds of
+  // v0.4.1 have two different sha256, so every freshly installed machine showed
+  // "Update" on an addon that was current, on every IDE, forever. Reported from
+  // a Delphi 10 + Delphi 13 machine where both said Update while the gallery
+  // served the very same version.
+  //
+  // So the BUTTON asks the user-facing question - "is there a newer release?" -
+  // and answers it by version. Identity stays sha256 everywhere it matters:
+  // `aefos update <slug>` still goes through DecideUpdate untouched, so a
+  // re-published bundle can still be pulled deliberately; this only stops the
+  // catalogue from calling a lateral rebuild an upgrade. A version that is
+  // missing on either side leaves the sha answer as it was, because then there
+  // is nothing better to compare.
+  if (Trim(LItem.Version) <> '') and (Trim(LEntry.Version) <> '') and
+     (TAddonVersion.Compare(LItem.Version, LEntry.Version) >= 0) then
     AObj.AddPair('state', 'installed')
   else
     AObj.AddPair('state', 'update');

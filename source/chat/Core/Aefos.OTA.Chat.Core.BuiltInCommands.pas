@@ -313,11 +313,13 @@ begin
     Modal('mcp', 'MCP servers'),
     Modal('inspector', 'MCP Tool Inspector'),
     Modal('command', 'Create/edit a command'),
-    // Named for what it DOES. "addons" is a noun - it says what the window is
-    // about and not that anything gets installed, or by whom. /addons and
-    // /store still work (see ChatPanel._DispatchCommand); only one of the three
+    // Named for what it IS, not for what it does. "addons" is a noun - it says
+    // what the window is about, and it is the word Aefos uses everywhere else
+    // (the store, the contract, ~/.aefos/addons), so the command carries the
+    // product's own identity instead of a generic verb. /install and /store
+    // still answer (see ChatPanel._DispatchCommand); only one of the three
     // belongs in the picker.
-    Modal('install', 'Install addons from the Aefos store'),
+    Modal('addons', 'Browse and install addons from the Aefos store'),
     // Agentic built-ins (dispatched with a guide).
     LNewProject,
     LSuggest,

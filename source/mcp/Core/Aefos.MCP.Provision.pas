@@ -195,6 +195,48 @@ begin
   Result := TPath.Combine(GetEnvironmentVariable('USERPROFILE'), '.aefos');
 end;
 
+// UTF-8 text that reads the same on all eight compilers.
+//
+// MEASURED 2026-08-10 against the six IDEs in the build VM: on 10 Seattle (17.0)
+// and 10.1 Berlin (18.0), System.IOUtils.TFile.ReadAllText(path, TEncoding.UTF8)
+// DISCARDS THE FIRST THREE BYTES of a file that carries no BOM -- it charges the
+// preamble whether or not the file paid it. 10.2 Tokyo (19.0) and up return the
+// file whole. The one-argument overload is fine everywhere, but it decodes as
+// ANSI when there is no BOM, so it is not the answer either.
+//
+// Every file this unit reads is written UTF-8 WITHOUT a BOM on purpose (a BOM
+// makes some JSON readers choke), so on those two IDEs the addon aggregate came
+// back as `"mcpServers": ...` with its opening brace gone, failed to parse, and
+// degraded to "no servers": the installed Desktop MCP disappeared from /MCP and
+// from the .mcp.json handed to the CLI, while the store still -- correctly --
+// listed it as installed. Reported from a Delphi 10 Seattle machine where the
+// same profile's Delphi 13 showed it fine.
+//
+// So: read the bytes, strip a BOM only when one is really there, decode as UTF-8.
+// Same answer on 17.0 as on 37.0. Aefos.MCP.AddonGateway already reads the
+// aggregate this way, which is why the in-IDE tools kept working while the
+// config leg went silent -- the two legs disagreed, and only one was right.
+function _ReadAllUtf8(const APath: string): string;
+var
+  LStream: TFileStream;
+  LBytes: TBytes;
+  LStart: Integer;
+begin
+  LStream := TFileStream.Create(APath, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(LBytes, LStream.Size);
+    if Length(LBytes) > 0 then
+      LStream.ReadBuffer(LBytes[0], Length(LBytes));
+  finally
+    LStream.Free;
+  end;
+  LStart := 0;
+  if (Length(LBytes) >= 3) and (LBytes[0] = $EF) and (LBytes[1] = $BB) and
+    (LBytes[2] = $BF) then
+    LStart := 3;
+  Result := TEncoding.UTF8.GetString(LBytes, LStart, Length(LBytes) - LStart);
+end;
+
 // The 'aefos' server object:
 //   powershell -ExecutionPolicy Bypass -NonInteractive -File <bridge> -Session <s>.
 // Bypass is REQUIRED: the default client-Windows policy is Restricted, which
@@ -233,7 +275,7 @@ begin
   if not TFile.Exists(LPath) then
     Exit;
   try
-    Result := Trim(TFile.ReadAllText(LPath, TEncoding.UTF8));
+    Result := Trim(_ReadAllUtf8(LPath));
   except
     // Locked/garbled aggregate => contributes nothing; never breaks a caller.
     Result := '';
@@ -250,7 +292,7 @@ begin
   Result := nil;
   if TFile.Exists(APath) then
   begin
-    LRaw := TFile.ReadAllText(APath, TEncoding.UTF8);
+    LRaw := _ReadAllUtf8(APath);
     LVal := TJSONObject.ParseJSONValue(LRaw);
     if LVal is TJSONObject then
       Result := TJSONObject(LVal)
@@ -280,7 +322,7 @@ begin
   LRaw := '';
   if TFile.Exists(LPath) then
     try
-      LRaw := TFile.ReadAllText(LPath, TEncoding.UTF8);
+      LRaw := _ReadAllUtf8(LPath);
     except
       LRaw := '';  // unreadable => provision a fresh doc
     end;

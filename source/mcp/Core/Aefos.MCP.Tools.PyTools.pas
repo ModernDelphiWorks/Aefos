@@ -81,6 +81,7 @@ implementation
 uses
   System.SysUtils,
   System.IOUtils,      // System.Types is in the interface uses (TStringDynArray)
+  Aefos.Compat.IO,     // TAefosText.ReadAllUtf8 -- see that unit's comment
   System.JSON,
   Aefos.Tools.Process,
   Aefos.Tools.PyTool,
@@ -331,7 +332,7 @@ begin
     LJson := nil;
     try
       try
-        LRaw := TFile.ReadAllText(LManifest, TEncoding.UTF8);
+        LRaw := TAefosText.ReadAllUtf8(LManifest);
         LJson := TJSONObject.ParseJSONValue(LRaw) as TJSONObject;
       except
         LJson := nil;

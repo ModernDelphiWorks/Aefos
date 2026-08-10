@@ -29,6 +29,7 @@ uses
   System.StrUtils,
   System.Classes,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.Generics.Collections,
   System.Variants,
   System.NetEncoding,
@@ -1816,7 +1817,7 @@ begin
   if (AFilePath <> '') and TFile.Exists(AFilePath) then
   begin
     try
-      ASource := TFile.ReadAllText(AFilePath, TEncoding.UTF8);
+      ASource := TAefosText.ReadAllUtf8(AFilePath);
       Result := ASource <> '';
     except
       ASource := '';
@@ -1948,7 +1949,7 @@ function _TryReadUnitText(const APath: string; out AText: string): Boolean;
 begin
   Result := False;
   try
-    AText := TFile.ReadAllText(APath, TEncoding.UTF8);
+    AText := TAefosText.ReadAllUtf8(APath);
     Result := True;
   except
     AText := '';
@@ -2125,7 +2126,7 @@ begin
   AChanged := False;
   if not TFile.Exists(ADProjPath) then
     Exit;
-  LSnapshot := TFile.ReadAllText(ADProjPath, TEncoding.UTF8);
+  LSnapshot := TAefosText.ReadAllUtf8(ADProjPath);
   try
     LDoc := TXMLDocument.Create(nil);
     LDoc.LoadFromFile(ADProjPath);
@@ -3497,7 +3498,7 @@ begin
         LJson := nil;
         try
           try
-            LRaw := TFile.ReadAllText(LManifest, TEncoding.UTF8);
+            LRaw := TAefosText.ReadAllUtf8(LManifest);
             LJson := TJSONObject.ParseJSONValue(LRaw) as TJSONObject;
           except
             LJson := nil;

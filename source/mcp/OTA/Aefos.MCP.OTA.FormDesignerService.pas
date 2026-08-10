@@ -87,6 +87,7 @@ uses
   System.Rtti,
   System.TypInfo,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.NetEncoding,
   System.Generics.Collections,
   Vcl.Controls,
@@ -643,7 +644,7 @@ begin
       AIsBinary := True;
     end
     else
-      AContent := TFile.ReadAllText(LDFMPath, TEncoding.UTF8);
+      AContent := TAefosText.ReadAllUtf8(LDFMPath);
     Result := True;
   except
     AContent  := '';
@@ -739,7 +740,7 @@ begin
           LOldDfm := '';
       if LOldDfm = '' then
         try
-          LOldDfm := TFile.ReadAllText(LDfmPath, TEncoding.UTF8);
+          LOldDfm := TAefosText.ReadAllUtf8(LDfmPath);
         except
           LOldDfm := '';
         end;

@@ -121,6 +121,7 @@ implementation
 uses
   Classes,
   IOUtils,
+  Aefos.Compat.IO,
   Aefos.Compat.Json,
   Aefos.Compat.JsonFormat,
   Aefos.Addons.Paths;
@@ -217,7 +218,7 @@ begin
   if not TFile.Exists(LPath) then
     Exit;
   try
-    LText := TFile.ReadAllText(LPath, TEncoding.UTF8);
+    LText := TAefosText.ReadAllUtf8(LPath);
   except
     Exit;                               // unreadable config => official alone
   end;

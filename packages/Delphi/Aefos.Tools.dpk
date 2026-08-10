@@ -34,6 +34,14 @@ requires
   rtl;
 
 contains
+  // The IO shim lives in the ROOT package on purpose. It carries TAefosText,
+  // whose ReadAllUtf8 is the only UTF-8 read that behaves the same on all eight
+  // compilers, and every other Aefos package requires this one (directly or
+  // through Aefos.MCP.Core) - so one copy here reaches all of them. It used to
+  // sit in Aefos.MCP.Core, which is DOWNSTREAM of this package: units here could
+  // not see it (F2613), which is why the read bug had to be fixed one unit at a
+  // time until now.
+  Aefos.Compat.IO in '..\..\source\compat\Aefos.Compat.IO.pas',
   Aefos.Tools.Text in '..\..\source\mcp\Tools\Aefos.Tools.Text.pas',
   Aefos.Tools.Templates in '..\..\source\mcp\Tools\Aefos.Tools.Templates.pas',
   Aefos.Tools.Files in '..\..\source\mcp\Tools\Aefos.Tools.Files.pas',

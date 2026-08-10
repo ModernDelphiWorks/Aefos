@@ -26,6 +26,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.JSON,
   {$ENDIF}
   Aefos.Provider.Ollama.Core;
@@ -111,7 +112,7 @@ begin
     Exit;
   end;
   LRoot := TJSONObject.ParseJSONValue(
-    TFile.ReadAllText(LPath, TEncoding.UTF8));
+    TAefosText.ReadAllUtf8(LPath));
   try
     if not (LRoot is TJSONObject) then
     begin

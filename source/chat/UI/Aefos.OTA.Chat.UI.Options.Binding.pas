@@ -334,7 +334,7 @@ begin
   if TFile.Exists(_ApiKeysConfigPath) then
     try
       LVal := TJSONObject.ParseJSONValue(
-        TFile.ReadAllText(_ApiKeysConfigPath, TEncoding.UTF8));
+        TAefosText.ReadAllUtf8(_ApiKeysConfigPath));
       if LVal is TJSONObject then
         Result := TJSONObject(LVal)
       else if LVal <> nil then

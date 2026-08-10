@@ -159,7 +159,7 @@ begin
   if TFile.Exists(_ModelsConfigPath) then
     try
       LVal := TJSONObject.ParseJSONValue(
-        TFile.ReadAllText(_ModelsConfigPath, TEncoding.UTF8));
+        TAefosText.ReadAllUtf8(_ModelsConfigPath));
       if LVal is TJSONObject then
         Result := TJSONObject(LVal)
       else

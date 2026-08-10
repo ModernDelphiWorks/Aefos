@@ -48,6 +48,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.Generics.Collections,
   ToolsAPI,
   Aefos.MCP.PasParser,
@@ -89,7 +90,7 @@ begin
   end;
   if LFilePath = '' then Exit;
   try
-    LSource := TFile.ReadAllText(LFilePath, TEncoding.UTF8);
+    LSource := TAefosText.ReadAllUtf8(LFilePath);
   except
     LSource := '';
   end;
@@ -145,7 +146,7 @@ begin
   if LFilePath = '' then Exit;
   if LSource = '' then
     try
-      LSource := TFile.ReadAllText(LFilePath, TEncoding.UTF8);
+      LSource := TAefosText.ReadAllUtf8(LFilePath);
     except
       LSource := '';
     end;
@@ -197,7 +198,7 @@ begin
     for LFor := 0 to High(LPaths) do
     begin
       try
-        LSource := TFile.ReadAllText(LPaths[LFor], TEncoding.UTF8);
+        LSource := TAefosText.ReadAllUtf8(LPaths[LFor]);
       except
         Continue;
       end;
@@ -252,7 +253,7 @@ begin
   if LFilePath = '' then Exit;
   if LSource = '' then
     try
-      LSource := TFile.ReadAllText(LFilePath, TEncoding.UTF8);
+      LSource := TAefosText.ReadAllUtf8(LFilePath);
     except
       LSource := '';
     end;
@@ -280,7 +281,7 @@ begin
   for LFor := 0 to High(APaths) do
   begin
     try
-      LSource := TFile.ReadAllText(APaths[LFor], TEncoding.UTF8);
+      LSource := TAefosText.ReadAllUtf8(APaths[LFor]);
     except
       Continue;
     end;

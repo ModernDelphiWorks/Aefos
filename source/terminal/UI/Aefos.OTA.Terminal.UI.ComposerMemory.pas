@@ -43,6 +43,7 @@ implementation
 uses
   System.SysUtils,
   System.IOUtils,
+  Aefos.Compat.IO,
   Vcl.Graphics;
 
 function GlobalMemoryPath: string;
@@ -60,7 +61,7 @@ begin
   if not TFile.Exists(LPath) then
     Exit;
   try
-    Result := TFile.ReadAllText(LPath, TEncoding.UTF8);
+    Result := TAefosText.ReadAllUtf8(LPath);
   except
     // A locked / garbled memory file must never break the editor.
     Result := '';

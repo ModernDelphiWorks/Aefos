@@ -84,6 +84,7 @@ uses
   System.SysUtils,
   System.StrUtils,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.Generics.Collections;
 
 { TToolTemplateVar }
@@ -180,7 +181,7 @@ begin
   if not TFile.Exists(LPath) then
     Exit(tplUnknownTemplate);
   try
-    AContent := TFile.ReadAllText(LPath, TEncoding.UTF8);
+    AContent := TAefosText.ReadAllUtf8(LPath);
   except
     Exit(tplReadError);
   end;

@@ -50,6 +50,7 @@ uses
   System.Classes,
   System.Generics.Collections,
   System.IOUtils,
+  Aefos.Compat.IO,
   ToolsAPI,
   Aefos.Harness.View,         // WithLiveSource (S2 code-mutation seam, silent apply)
   Aefos.MCP.Types,            // TMCPDiffDecision
@@ -388,7 +389,7 @@ begin
   end;
   if LFilePath = '' then Exit;
   try
-    LSource := TFile.ReadAllText(LFilePath, TEncoding.UTF8);
+    LSource := TAefosText.ReadAllUtf8(LFilePath);
   except
     LSource := '';
   end;

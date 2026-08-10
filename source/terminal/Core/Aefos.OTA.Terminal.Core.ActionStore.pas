@@ -102,7 +102,7 @@ uses
   Aefos.Compat.IO, Generics.Collections,
   LCLProc, LCLType;
   {$ELSE}
-  System.IOUtils, System.Generics.Collections,
+  System.IOUtils, Aefos.Compat.IO, System.Generics.Collections,
   Vcl.Menus;
   {$ENDIF}
 
@@ -305,7 +305,7 @@ begin
       // The compat shim has no encoding-less overload; UTF-8 matches the
       // BOM'd file SaveCatalog writes (the shim strips a leading BOM on read).
       {$IFDEF FPC}
-      LContent := TFile.ReadAllText(FFilePath, TEncoding.UTF8);
+      LContent := TAefosText.ReadAllUtf8(FFilePath);
       {$ELSE}
       LContent := TFile.ReadAllText(FFilePath);
       {$ENDIF}
@@ -395,7 +395,7 @@ begin
 
   try
     {$IFDEF FPC}
-    LContent := TFile.ReadAllText(AFilePath, TEncoding.UTF8);
+    LContent := TAefosText.ReadAllUtf8(AFilePath);
     {$ELSE}
     LContent := TFile.ReadAllText(AFilePath);
     {$ENDIF}

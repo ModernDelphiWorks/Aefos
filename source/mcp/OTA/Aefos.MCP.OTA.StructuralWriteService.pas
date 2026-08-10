@@ -49,6 +49,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.IOUtils,
+  Aefos.Compat.IO,
   System.RegularExpressions,
   System.Generics.Collections,
   ToolsAPI,
@@ -123,7 +124,7 @@ var
   LSrc, LNew: string;
 begin
   if not TFile.Exists(AFilePath) then Exit;
-  LSrc := TFile.ReadAllText(AFilePath, TEncoding.UTF8);
+  LSrc := TAefosText.ReadAllUtf8(AFilePath);
   LNew := TRegEx.Replace(LSrc,
     '(?im)^(\s*unit\s+)' + TRegEx.Escape(AOldBase) + '\b',
     '${1}' + ANewName);

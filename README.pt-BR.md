@@ -6,11 +6,11 @@
 
 ***AEFOS** — **A**gent **E**xecution **F**low **O**rchestration **S**ystem.*
 
-**Chat** + **Terminal** de IA na IDE do RAD Studio — Delphi 13, 12 Athens e 11
-Alexandria — movidos pela CLI de IA que você já usa (Claude Code, Codex,
+**Chat** + **Terminal** de IA na IDE do RAD Studio — de **Delphi 10 Seattle ao
+13** — movidos pela CLI de IA que você já usa (Claude Code, Codex,
 GitHub Copilot CLI, Gemini).
 
-[![Versão](https://img.shields.io/badge/vers%C3%A3o-1.4.0-brightgreen)](CHANGELOG.md)
+[![Versão](https://img.shields.io/badge/vers%C3%A3o-1.5.0-brightgreen)](CHANGELOG.md)
 [![Plataforma](https://img.shields.io/badge/plataforma-Windows-0078D6)](#requisitos)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL%20v3-blue)](LICENSE)
 [![CRA-ready](https://img.shields.io/badge/CRA--ready-SBOM%20%2B%20Pol%C3%ADtica%20de%20Seguran%C3%A7a-success)](https://www.pubpascal.dev/packages/aefos)
@@ -118,7 +118,7 @@ Passos completos no [manual](https://moderndelphiworks.github.io/Aefos/).
 
 | Item | Requisito |
 |------|-----------|
-| IDE | RAD Studio **Delphi 13** (BDS 37.0), **Delphi 12 Athens** (BDS 23.0) ou **Delphi 11 Alexandria** (BDS 22.0). *Completion inline (ghost text) exige 12 ou mais novo.* |
+| IDE | Qualquer RAD Studio do **Delphi 10 Seattle** (BDS 17.0) ao **Delphi 13** (BDS 37.0) — Seattle, 10.1 Berlin, 10.2 Tokyo, 10.3 Rio, 10.4 Sydney, 11 Alexandria, 12 Athens, 13. O instalador leva as oito e você escolhe em quais das suas IDEs instalar. *Completion inline (ghost text) exige 12 ou mais novo.* |
 | SO | **Windows** |
 | CLI de IA | Pelo menos uma: Claude Code / Codex / GitHub Copilot CLI / Gemini (traga a sua) |
 | Markdown rico (opcional) | [Runtime do WebView2](https://aka.ms/webview2) |

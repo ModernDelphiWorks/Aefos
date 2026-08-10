@@ -1,7 +1,9 @@
 # Aefos — Installer (Inno Setup)
 
 `Aefos.iss` builds a single `Aefos-Setup-<ver>.exe` that deploys the
-plugin into a target machine's **RAD Studio Delphi 13** IDE: it copies the BPLs,
+plugin into whichever **RAD Studio** the target machine has, from **Delphi 10
+Seattle (BDS 17.0) to Delphi 13 (BDS 37.0)** — it carries one payload per
+version and the user picks: it copies the BPLs,
 puts them on the user PATH, and registers the two design-time packages so they
 show up **already installed** in the IDE.
 
@@ -98,7 +100,8 @@ hardcoded Embarcadero path. The PowerShell helper fills `.\bpl` for you.
 
 ## Install (on the TARGET machine)
 
-Requirements: RAD Studio Delphi 13 (BDS 37.0) installed; **close the IDE first**.
+Requirements: a RAD Studio between Delphi 10 Seattle (BDS 17.0) and Delphi 13
+(BDS 37.0) installed; **close the IDE first**.
 
 1. Run `Aefos-Setup-<ver>.exe` (per-user, no admin needed). It detects the
    `claude` CLI and, if missing, tells you how to install it (official source).

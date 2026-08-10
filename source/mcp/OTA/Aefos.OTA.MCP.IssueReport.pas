@@ -54,7 +54,7 @@ const
   CIssueRepoUrl = 'https://github.com/ModernDelphiWorks/Aefos/issues/new';
   // Fallback only — _PluginVersion reads the module FileVersion first. Kept in
   // sync by scripts/bump-version.ps1 so it never drifts behind a release.
-  CPluginVersionFallback = '1.4.0';
+  CPluginVersionFallback = '1.5.0';
 
 // ── deterministic fact (plugin-supplied, not forgeable by the prose) ─────────
 

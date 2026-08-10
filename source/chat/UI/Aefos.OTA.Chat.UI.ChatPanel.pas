@@ -2701,10 +2701,10 @@ begin
     _OpenMcpModal;
     Exit;
   end;
-  // /install: open the addon store - the catalogue of every configured store,
+  // /addons: open the addon store - the catalogue of every configured store,
   // with an Install button. Never echoed nor dispatched to the executor: it is
-  // a window, not a prompt. /addons and /store answer too, because both are
-  // what someone would try.
+  // a window, not a prompt. /install and /store answer too, because both are
+  // what someone would try (the picker offers only /addons).
   if SameText(LCmd, 'install') or SameText(LCmd, 'addons') or
      SameText(LCmd, 'store') then
   begin

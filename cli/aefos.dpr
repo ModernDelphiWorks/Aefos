@@ -1,4 +1,4 @@
-﻿program aefos;
+program aefos;
 {$IFDEF FPC}{$mode delphiunicode}{$ENDIF}
 
 {$APPTYPE CONSOLE}
@@ -48,8 +48,8 @@ const
   // the running Aefos actually satisfies.
   //
   // Both are rewritten by scripts/bump-version.ps1. Do not edit by hand.
-  CManagerVersion = '1.4.0';
-  CAefosBaseline = '1.4.0';
+  CManagerVersion = '1.5.0';
+  CAefosBaseline = '1.5.0';
 
 var
   GArgv: TArray<string>;

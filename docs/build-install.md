@@ -6,7 +6,7 @@
 
 | Item | Requirement |
 |------|-------------|
-| IDE | RAD Studio **Delphi 13** (BDS 37.0) — minimum and only supported version. Backports are out of scope. |
+| IDE | Any RAD Studio from **Delphi 10 Seattle** (BDS 17.0) to **Delphi 13** (BDS 37.0). The same `.dproj` files build every one of them — the target is chosen by which `rsvars.bat` (`$(BDS)`) drives msbuild. The one list of versions is `scripts\aefos-ide-versions.ps1`. |
 | Platform | **Windows**. Design-time BPLs build for **Win32** (classic 32-bit IDE) and **Win64 Modern** (D13's separate 64-bit IDE); the BPL must match the IDE process bitness. The installer ships Win32. |
 | Rich rendering | **WebView2 runtime** (Microsoft Edge Evergreen). Without it, the Chat panel falls back to plain-text `TRichEdit`. Ships with current Windows 10/11. |
 | AI CLI | A **user-supplied external CLI** — Claude Code (MVP), Codex, Copilot CLI, or Gemini. No CLI is bundled; no credentials are managed. Without one, dispatch does nothing. |

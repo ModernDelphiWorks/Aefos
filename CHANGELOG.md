@@ -6,6 +6,73 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Dates are in `YYYY-MM-DD`.
 
+## [1.5.0] - 2026-08-10
+
+**Every RAD Studio from Delphi 10 Seattle up, and an addon store inside the IDE.**
+The installer now carries eight payloads (17.0 Seattle through 37.0), each built
+against its own compiler, and the chat grew an `/addons` window that browses and
+installs bundles without leaving the IDE.
+
+### Added
+
+**Delphi 10 Seattle, 10.1 Berlin, 10.2 Tokyo, 10.3 Rio and 10.4 Sydney (BDS 17.0
+to 21.0).** Reaching back a decade cost less than it looks: nothing in the RTL
+Aefos uses is newer than XE8, the WebView2 layer is our own COM import rather
+than `Vcl.Edge`, and the source has been free of inline `var` by house rule. What
+did have to change was measured, never guessed — static SQLite is now detected in
+the project instead of assumed from the version, an IDE with no C++ personality is
+named as such instead of failing on a missing `stdint.h`, DFM character escapes
+are written in decimal (Seattle rejects hex), and the BPL staging hook moved to
+`_PostCompileTargets`, inside the `Base` group, where an old IDE's own build
+engine still reads it.
+
+Installed and run on a Delphi 10 Seattle machine, not merely compiled for it.
+
+**The addon store, in the chat.** `/addons` opens a window that lists what an
+Aefos store offers, installs a bundle, and updates one already installed —
+including an MCP addon whose server is running at that moment. There is one
+official store nobody can move, and the user's own stores beside it: add one by
+picking a folder, and a folder that *is* an addon is read as a store of one. A
+Format tab documents the bundle format where the addons are, and an installed
+addon's tools reach every executor, namespaced `<slug>__<tool>`.
+
+`/install` and `/store` still answer, but the command the picker offers is
+`/addons` — the word the product already uses for the store, for the contract and
+for `~/.aefos/addons`.
+
+**One bundle format: `addon.json` v1.** A bundle may carry several commands and
+several skills. The four foreign-plugin readers are gone: reading someone else's
+format made Aefos responsible for four moving contracts it does not own.
+
+### Fixed
+
+**Two RAD Studios were answering for each other's packages.** Every BPL carried
+the same file name on every version, so whichever install came first on `PATH`
+served them all — a Seattle IDE could load Sydney's Core and die as an access
+violation with no visible parent. Each BPL now carries the IDE's own suffix
+(`Aefos.MCP.Core230.bpl` … `370`), each IDE's search path points at its own
+folder, and an unsuffixed BPL is refused from inside the IDE too, where no build
+script can reach. The suffix is gated on `VERxxx`, because `CompilerVersion` is
+not declared inside a `.dpk` and an `{$IF}` on it is silently always true.
+
+**A link in a chat message navigated the chat away**, taking the transcript with
+it. A link now opens the file.
+
+**The store window opened blank, or not at all.** It is shown modeless — a
+WebView2 control never completes its initialization under `ShowModal` — and it
+receives its own user-data folder and its configuration before anything can
+allocate its handle.
+
+**Installing from a folder store copied the bundle** instead of registering it,
+so a change at the source never reached the install.
+
+**The addon manager (`aefos.exe`) did not build below Delphi 12.** Two
+structurally identical `reference to procedure` declarations are two different
+types, which Athens forgives and Delphi 11 does not; the addon stack now declares
+one log type and aliases it everywhere else.
+
+**A published Python tool installed where the loader did not look.**
+
 ## [1.4.0] - 2026-08-05
 
 **Delphi 13's 64-bit IDE is supported.** Aefos now installs into the 64-bit IDE
@@ -525,7 +592,8 @@ debugger**, and it can run entirely on **local models** — no cloud, no key.
 - Published a machine-readable **SBOM** (CycloneDX 1.5) and a **security disclosure
   policy** (coordinated vulnerability disclosure).
 
-[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/ModernDelphiWorks/Aefos/compare/v1.1.0...v1.2.0

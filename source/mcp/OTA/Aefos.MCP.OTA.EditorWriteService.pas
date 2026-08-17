@@ -521,7 +521,7 @@ var
   LDiffReason: string;
   LApprover: IMCPDiffApprover;
   LChanged: Boolean;
-  LBody, LPreview, LOldBlock, LNewBlock: string;
+  LBody, LPreview: string;
   LOffsets, LLengths: TArray<Integer>;
   LTexts: TArray<string>;
   LAt: Integer;
@@ -562,24 +562,36 @@ begin
       LBody := LFound;
     end);
 
+    // WHOLE buffer, not TReviewGate.ChangedSpan — and the first live test is why.
+    //
+    // ChangedSpan reduces a change to one contiguous block, which is right for
+    // the tools it was built for: they change one place, or replace the whole
+    // buffer. This tool routinely changes SEVERAL places far apart, and the
+    // single block then spans everything between them. Fed two insertions 4,000
+    // bytes apart, the applied result was
+    //   original[0..B) + editA + original[A..B) + editB + original[B..]
+    // — the block inserted after the old span instead of replacing it, and the
+    // whole implementation section appeared twice. Caught in the IDE, on a real
+    // unit, by reading the buffer back rather than trusting `applied: true`.
+    //
+    // The whole-buffer form is the one SetEditorFullContent already falls back
+    // to, and its own comment says why it is safe: the range always locates.
+    // The cost is that the gutter shows a wider diff; the alternative is a
+    // localiser mis-anchoring a write, which is not a trade.
     if (LBody <> '') and _PreviewEdits(LBody, AEdits, LPreview) and (LPreview <> LBody) then
-    begin
-      TReviewGate.ChangedSpan(LBody, LPreview, LOldBlock, LNewBlock);
-      if LOldBlock <> '' then
-        case LApprover.ReviewEdit(AUnitPath, LOldBlock, LNewBlock, LDiffReason) of
-          ddApplied:
-            Exit(eoApplied);    // the diff wrote it
-          ddRejected:
-            begin
-              if LDiffReason <> '' then
-                AError := 'change rejected by the user in the inline diff: ' + LDiffReason
-              else
-                AError := 'change rejected by the user in the inline diff';
-              Exit(eoUserRejected);
-            end;
-          // ddUnavailable -> the granular apply below
-        end;
-    end;
+      case LApprover.ReviewEdit(AUnitPath, LBody, LPreview, LDiffReason) of
+        ddApplied:
+          Exit(eoApplied);    // the diff wrote it
+        ddRejected:
+          begin
+            if LDiffReason <> '' then
+              AError := 'change rejected by the user in the inline diff: ' + LDiffReason
+            else
+              AError := 'change rejected by the user in the inline diff';
+            Exit(eoUserRejected);
+          end;
+        // ddUnavailable -> the granular apply below
+      end;
   end;
 
   // The silent path, and the reason this tool exists: ONE undoable write that

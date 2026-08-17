@@ -328,6 +328,7 @@ function _ParamInt(const AParams: TJSONObject; const AName: string;
   const ADefault: Integer): Integer;
 var
   LValue: TJSONValue;
+  LNumber: Double;
 begin
   Result := ADefault;
   if not Assigned(AParams) then Exit;
@@ -335,7 +336,18 @@ begin
   if not Assigned(LValue) then Exit;
   if not (LValue is TJSONNumber) then
     raise EMCPInvalidParams.Create(AName + ' must be a number');
-  Result := TJSONNumber(LValue).AsInt;
+  // NOT AsInt. It is StrToInt underneath, so `12.0` — which any caller doing
+  // float maths or a `json.dumps(12.0)` produces — raises EConvertError and the
+  // server reports -32603 internal error for a number that is perfectly usable.
+  // A review found it. Read it as a double, then insist it really is a whole
+  // number in range: 12.0 is an offset, 12.5 is a bug in the caller and should
+  // be told so by name.
+  LNumber := TJSONNumber(LValue).AsDouble;
+  if (LNumber < Low(Integer)) or (LNumber > High(Integer)) then
+    raise EMCPInvalidParams.Create(AName + ' is out of range for an integer');
+  if Frac(LNumber) <> 0 then
+    raise EMCPInvalidParams.Create(AName + ' must be a whole number');
+  Result := Trunc(LNumber);
 end;
 
 { TMCPToolsRegistrar }
@@ -995,7 +1007,7 @@ function TMCPToolsRegistrar._HandleApplyTextEdits(const AParams: TJSONObject;
 var
   LUnitPath, LBaseHash, LBody, LNewBody, LCurrentHash, LError: string;
   LEditsJson: TJSONArray;
-  LItem: TJSONValue;
+  LItem, LValue: TJSONValue;
   LObj: TJSONObject;
   LEdits: TSourceEdits;
   LAt: Integer;
@@ -1004,9 +1016,18 @@ begin
   LUnitPath := _ParamStr(AParams, 'unit_path');
   LBaseHash := _ParamStr(AParams, 'base_hash');
 
+  // `as` is wrong here and a review proved it: on a nil it is safe, but on a
+  // JSON value of the WRONG kind — `"edits": {}` — it raises EInvalidCast, which
+  // the server reports as -32603 internal error. A caller that sent the wrong
+  // shape gets told the server broke. `is` keeps the refusal ours.
   LEditsJson := nil;
   if Assigned(AParams) then
-    LEditsJson := AParams.GetValue('edits') as TJSONArray;
+  begin
+    LValue := AParams.GetValue('edits');
+    if (LValue <> nil) and not (LValue is TJSONArray) then
+      raise EMCPInvalidParams.Create('ApplyTextEdits: edits must be an array');
+    LEditsJson := TJSONArray(LValue);
+  end;
   if not Assigned(LEditsJson) then
     raise EMCPInvalidParams.Create('ApplyTextEdits: edits must be an array');
   if LEditsJson.Count = 0 then

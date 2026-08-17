@@ -84,6 +84,64 @@ type
       out AError: string): TMCPEditOutcome;
   end;
 
+// Refuse an edit set that is malformed, BEFORE any path looks at it.
+//
+// This exists because the same rules were being applied twice with different
+// strictness, and a review found the gap: the harness refuses a negative Length
+// ('negative-edit'), `_PreviewEdits` did not — it only compared against the
+// cursor and the buffer end. And the review approver is NON-BLOCKING: it writes
+// the preview into the live buffer and returns ddApplied immediately, before a
+// human sees anything. So `{offset: 5, length: -3}` went straight through the
+// reviewed path and corrupted the buffer, while the byte-range writer behind it
+// would have refused the identical input. Proven by extracting the algorithm and
+// running it: on "Hello, World!" it produced "HelloXllo, World!".
+//
+// The lesson is not "add a check to the preview". Two validators drift; the fix
+// is that nothing downstream validates at all, because nothing malformed reaches
+// it. The harness keeps its own checks — it is a public seam with other callers
+// — but this is the gate for this tool.
+//
+// Range is deliberately NOT checked here. The only bound that means anything is
+// the LIVE buffer's, and that is the harness's job, at the moment of writing.
+function _RefuseMalformedEdits(const AEdits: TSourceEdits;
+  out AReason: string): Boolean;
+var
+  LSorted: TSourceEdits;
+  LAt, LScan: Integer;
+  LSwap: TSourceEdit;
+begin
+  AReason := '';
+  Result := False;
+
+  for LAt := 0 to High(AEdits) do
+    if (AEdits[LAt].Offset < 0) or (AEdits[LAt].Length < 0) then
+    begin
+      AReason := 'negative-edit';
+      Exit;
+    end;
+
+  LSorted := Copy(AEdits, 0, Length(AEdits));
+  for LAt := 1 to High(LSorted) do
+  begin
+    LSwap := LSorted[LAt];
+    LScan := LAt - 1;
+    while (LScan >= 0) and (LSorted[LScan].Offset > LSwap.Offset) do
+    begin
+      LSorted[LScan + 1] := LSorted[LScan];
+      Dec(LScan);
+    end;
+    LSorted[LScan + 1] := LSwap;
+  end;
+  for LAt := 1 to High(LSorted) do
+    if LSorted[LAt].Offset < LSorted[LAt - 1].Offset + LSorted[LAt - 1].Length then
+    begin
+      AReason := 'overlapping-edits';
+      Exit;
+    end;
+
+  Result := True;
+end;
+
 // What the buffer becomes once the edits land, computed without touching it.
 //
 // Two callers need it and neither can write first: the inline diff has to SHOW
@@ -541,6 +599,14 @@ begin
   if Length(AEdits) = 0 then
   begin
     AError := 'ApplyTextEdits: no edits';
+    Exit(eoUnitNotOpen);
+  end;
+
+  // Before the review path and before the write, because the review path writes
+  // without waiting for a human. See _RefuseMalformedEdits.
+  if not _RefuseMalformedEdits(AEdits, LDiffReason) then
+  begin
+    AError := 'ApplyTextEdits: ' + LDiffReason;
     Exit(eoUnitNotOpen);
   end;
 

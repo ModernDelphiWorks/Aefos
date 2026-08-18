@@ -43,7 +43,16 @@ jobs:
           branch: cla-signatures
           # The copyright holder does not sign an agreement with himself, and
           # bots have no copyright to grant.
-          allowlist: isaquepinheiro,dependabot[bot],github-actions[bot]
+          #
+          # `claude` is here for the same reason as the other two. Commits
+          # written with an AI assistant carry a Co-Authored-By trailer, which
+          # GitHub resolves to that account and the action then counts as a
+          # committer. The authorship and the copyright are the human author's;
+          # the tool has nothing to license and no way to comment a signature,
+          # so without this every such pull request is blocked by a signature
+          # that can never arrive. This allowlists the TOOL, never a person: a
+          # human contributor still signs, exactly as CLA.md describes.
+          allowlist: isaquepinheiro,claude,dependabot[bot],github-actions[bot]
           custom-notsigned-prcomment: >-
             Thank you for the pull request. Before it can be merged, please sign the
             [Contributor License Agreement](https://github.com/ModernDelphiWorks/Aefos/blob/main/CLA.md).

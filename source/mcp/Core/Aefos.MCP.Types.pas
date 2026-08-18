@@ -129,6 +129,35 @@ type
       out ABase64, APngPath, AReason: string): Boolean;
   end;
 
+  // One replacement of a byte range in a source buffer.
+  //
+  // A RANGE, not an insertion. The first producer of these only ever inserts,
+  // and shaping the record to that one producer would carve its shape into a
+  // contract shared by everything — the coupling running backwards, from one
+  // tool into the whole surface. `Length = 0` is an insertion, so the general
+  // form costs one field and buys every other producer: a rename, a formatter,
+  // a quick-fix, a refactor of our own.
+  //
+  // Offset and Length count **UTF-8 bytes**, not characters. That is what an
+  // IOTAEditWriter position is, and what an engine that read the same bytes
+  // computed against; converting to characters would create a second coordinate
+  // system for the two ends to disagree in, and they would disagree exactly on
+  // the files that have accents in them.
+  //
+  // It lives HERE and not beside the seam that applies it because
+  // `Aefos.MCP.Core` requires rtl only — it links into headless hosts, and
+  // widening that is a defect and not a fix (ESP C-2). The harness cannot see
+  // this unit either (it builds first), so the seam takes the same data as
+  // parallel arrays and the service converts once. That is the price of the
+  // package boundary, paid in one place on purpose.
+  TSourceEdit = record
+    Offset: Integer;   // where the replaced range starts, in UTF-8 bytes
+    Length: Integer;   // how many bytes it replaces; 0 inserts
+    Text: string;      // what goes in its place; empty deletes
+  end;
+
+  TSourceEdits = TArray<TSourceEdit>;
+
   // Outcome of an EditUnit apply against the IDE editor buffer (ADR-061/062).
   TMCPEditOutcome = (
     eoApplied,         // anchored replacement applied; buffer left dirty
@@ -576,6 +605,10 @@ type
       out AOccurrences: TArray<TMCPCursorInfo>): Boolean;
     function ReplaceInEditor(const AFind, AReplace: string; const AAll: Boolean;
       out ACount: Integer): Boolean;
+    // Apply byte-range replacements to one unit in a single undoable write —
+    // the shape a code action produces. See IMCPEditorWriteService.ApplyTextEdits.
+    function ApplyTextEdits(const AUnitPath: string; const AEdits: TSourceEdits;
+      out AError: string): TMCPEditOutcome;
     function FindInProject(const AText: string; const ACaseSensitive: Boolean;
       out AOccurrences: TArray<TMCPCursorInfo>): Boolean;
     function SaveActiveFile(out AChanged: Boolean): Boolean;

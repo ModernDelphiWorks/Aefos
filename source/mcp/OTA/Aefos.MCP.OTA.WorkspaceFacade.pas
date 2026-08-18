@@ -128,6 +128,8 @@ type
     // Write sentinels — honest stubs; real mutations are D3+ (BR13)
     function EditUnit(const AUnitPath, AOldText, ANewText: string;
       out AError: string): TMCPEditOutcome;
+    function ApplyTextEdits(const AUnitPath: string; const AEdits: TSourceEdits;
+      out AError: string): TMCPEditOutcome;
     function DeleteUnit(const AUnitPath: string;
       out AError: string): TMCPFileActionOutcome;
     function OverwriteFile(const AFilePath, AContent: string;
@@ -512,6 +514,16 @@ function TMCPWorkspaceFacade.EditUnit(const AUnitPath, AOldText,
   ANewText: string; out AError: string): TMCPEditOutcome;
 begin
   Result := FEditorWrite.EditUnit(AUnitPath, AOldText, ANewText, AError);
+end;
+
+// Byte-range replacements in ONE undoable write, delegated whole to the editor
+// write service. The facade adds nothing here on purpose — the offsets, the
+// overlap refusal and the live-buffer bound all belong to the seam that applies
+// them, not to a pass-through.
+function TMCPWorkspaceFacade.ApplyTextEdits(const AUnitPath: string;
+  const AEdits: TSourceEdits; out AError: string): TMCPEditOutcome;
+begin
+  Result := FEditorWrite.ApplyTextEdits(AUnitPath, AEdits, AError);
 end;
 
 function TMCPWorkspaceFacade.DeleteUnit(const AUnitPath: string;

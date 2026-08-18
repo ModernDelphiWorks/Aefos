@@ -1,4 +1,4 @@
-unit Aefos.MCP.OTA.EditorWriteService;
+﻿unit Aefos.MCP.OTA.EditorWriteService;
 
 {
   Editor buffer-write tools, extracted from the TMCPWorkspaceFacade god-object as a
@@ -27,7 +27,8 @@ unit Aefos.MCP.OTA.EditorWriteService;
 interface
 
 uses
-  Aefos.MCP.Types;
+  Aefos.MCP.Types;   // TSourceEdits lives here: MCP.Core requires rtl only, and
+                     // the harness that applies the edits builds before it
 
 type
   IMCPEditorWriteService = interface
@@ -38,6 +39,20 @@ type
     function SetEditorFullContent(const ASource: string): Boolean;
     function ReplaceInEditor(const AFind, AReplace: string; const AAll: Boolean;
       out ACount: Integer): Boolean;
+    // Apply byte-range replacements to one unit in a single undoable write.
+    //
+    // The shape a code action produces, and the one nothing here accepted: a
+    // list of positions and text. Every other write in this service is anchored
+    // find/replace or whole-buffer, so an offset-based producer had to be talked
+    // down into one of those — `SetEditorFullContent` would work and would be
+    // wrong, because it destroys granular undo, marks every line changed, and
+    // overwrites anything typed between the read and the write.
+    //
+    // Says nothing about who produced the edits, deliberately. The first
+    // consumer is an out-of-process engine, but a rename, a formatter or a
+    // quick-fix of our own emit the same shape.
+    function ApplyTextEdits(const AUnitPath: string; const AEdits: TSourceEdits;
+      out AError: string): TMCPEditOutcome;
   end;
 
 // Factory — the facade calls this once in its constructor.
@@ -65,7 +80,123 @@ type
     function SetEditorFullContent(const ASource: string): Boolean;
     function ReplaceInEditor(const AFind, AReplace: string; const AAll: Boolean;
       out ACount: Integer): Boolean;
+    function ApplyTextEdits(const AUnitPath: string; const AEdits: TSourceEdits;
+      out AError: string): TMCPEditOutcome;
   end;
+
+// Refuse an edit set that is malformed, BEFORE any path looks at it.
+//
+// This exists because the same rules were being applied twice with different
+// strictness, and a review found the gap: the harness refuses a negative Length
+// ('negative-edit'), `_PreviewEdits` did not — it only compared against the
+// cursor and the buffer end. And the review approver is NON-BLOCKING: it writes
+// the preview into the live buffer and returns ddApplied immediately, before a
+// human sees anything. So `{offset: 5, length: -3}` went straight through the
+// reviewed path and corrupted the buffer, while the byte-range writer behind it
+// would have refused the identical input. Proven by extracting the algorithm and
+// running it: on "Hello, World!" it produced "HelloXllo, World!".
+//
+// The lesson is not "add a check to the preview". Two validators drift; the fix
+// is that nothing downstream validates at all, because nothing malformed reaches
+// it. The harness keeps its own checks — it is a public seam with other callers
+// — but this is the gate for this tool.
+//
+// Range is deliberately NOT checked here. The only bound that means anything is
+// the LIVE buffer's, and that is the harness's job, at the moment of writing.
+function _RefuseMalformedEdits(const AEdits: TSourceEdits;
+  out AReason: string): Boolean;
+var
+  LSorted: TSourceEdits;
+  LAt, LScan: Integer;
+  LSwap: TSourceEdit;
+begin
+  AReason := '';
+  Result := False;
+
+  for LAt := 0 to High(AEdits) do
+    if (AEdits[LAt].Offset < 0) or (AEdits[LAt].Length < 0) then
+    begin
+      AReason := 'negative-edit';
+      Exit;
+    end;
+
+  LSorted := Copy(AEdits, 0, Length(AEdits));
+  for LAt := 1 to High(LSorted) do
+  begin
+    LSwap := LSorted[LAt];
+    LScan := LAt - 1;
+    while (LScan >= 0) and (LSorted[LScan].Offset > LSwap.Offset) do
+    begin
+      LSorted[LScan + 1] := LSorted[LScan];
+      Dec(LScan);
+    end;
+    LSorted[LScan + 1] := LSwap;
+  end;
+  for LAt := 1 to High(LSorted) do
+    if LSorted[LAt].Offset < LSorted[LAt - 1].Offset + LSorted[LAt - 1].Length then
+    begin
+      AReason := 'overlapping-edits';
+      Exit;
+    end;
+
+  Result := True;
+end;
+
+// What the buffer becomes once the edits land, computed without touching it.
+//
+// Two callers need it and neither can write first: the inline diff has to SHOW
+// the result before the user approves it, and the review-rejected path has to
+// leave the buffer alone. Sorting and the overlap check live in the harness
+// (`ILiveSourceContext.ApplyEdits`) and run again there against the LIVE buffer;
+// this is the preview, and a preview that disagrees with the write would be its
+// own bug — so both walk the ranges the same way, low offset first.
+function _PreviewEdits(const ABody: string; const AEdits: TSourceEdits;
+  out APreview: string): Boolean;
+var
+  LBytes, LOut: TBytes;
+  LSorted: TSourceEdits;
+  LAt, LScan, LCursor: Integer;
+  LSwap: TSourceEdit;
+  LText: TBytes;
+begin
+  Result := False;
+  APreview := '';
+  LBytes := TEncoding.UTF8.GetBytes(ABody);
+
+  LSorted := Copy(AEdits, 0, Length(AEdits));
+  for LAt := 1 to High(LSorted) do
+  begin
+    LSwap := LSorted[LAt];
+    LScan := LAt - 1;
+    while (LScan >= 0) and (LSorted[LScan].Offset > LSwap.Offset) do
+    begin
+      LSorted[LScan + 1] := LSorted[LScan];
+      Dec(LScan);
+    end;
+    LSorted[LScan + 1] := LSwap;
+  end;
+
+  SetLength(LOut, 0);
+  LCursor := 0;
+  for LAt := 0 to High(LSorted) do
+  begin
+    if (LSorted[LAt].Offset < LCursor)
+       or (LSorted[LAt].Offset + LSorted[LAt].Length > Length(LBytes)) then
+      Exit;   // overlapping or out of range — the harness names which; here we
+              // only decline to preview a set that will not apply
+    LOut := LOut + Copy(LBytes, LCursor, LSorted[LAt].Offset - LCursor);
+    if LSorted[LAt].Text <> '' then
+    begin
+      LText := TEncoding.UTF8.GetBytes(LSorted[LAt].Text);
+      LOut := LOut + LText;
+    end;
+    LCursor := LSorted[LAt].Offset + LSorted[LAt].Length;
+  end;
+  LOut := LOut + Copy(LBytes, LCursor, Length(LBytes) - LCursor);
+
+  APreview := TEncoding.UTF8.GetString(LOut);
+  Result := True;
+end;
 
 function TMCPEditorWriteService.EditUnit(const AUnitPath, AOldText,
   ANewText: string; out AError: string): TMCPEditOutcome;
@@ -439,6 +570,130 @@ begin
     LChanged, LDiffReason);
   ACount := LCount;
   Result := LResult;
+end;
+
+function TMCPEditorWriteService.ApplyTextEdits(const AUnitPath: string;
+  const AEdits: TSourceEdits; out AError: string): TMCPEditOutcome;
+var
+  LOutcome: TMCPEditOutcome;
+  LDiffReason: string;
+  LApprover: IMCPDiffApprover;
+  LChanged: Boolean;
+  LBody, LPreview: string;
+  LOffsets, LLengths: TArray<Integer>;
+  LTexts: TArray<string>;
+  LAt: Integer;
+begin
+  AError := '';
+  LDiffReason := '';
+
+  // A real unit path, always — the same refusal EditUnit makes. The seam's
+  // blank-name contract resolves the ACTIVE editor, and writing a list of
+  // offsets into whatever editor happens to be in front is the one failure
+  // this tool must never have: the offsets were computed against ONE file.
+  if Trim(AUnitPath) = '' then
+  begin
+    AError := 'ApplyTextEdits: a unit path is required';
+    Exit(eoUnitNotOpen);
+  end;
+  if Length(AEdits) = 0 then
+  begin
+    AError := 'ApplyTextEdits: no edits';
+    Exit(eoUnitNotOpen);
+  end;
+
+  // Before the review path and before the write, because the review path writes
+  // without waiting for a human. See _RefuseMalformedEdits.
+  if not _RefuseMalformedEdits(AEdits, LDiffReason) then
+  begin
+    AError := 'ApplyTextEdits: ' + LDiffReason;
+    Exit(eoUnitNotOpen);
+  end;
+
+  // Inline diff review, in parity with EditUnit/SetEditorFullContent: when an
+  // approver is registered the user sees red/green before anything is written.
+  // Showing it needs the result up front, which is what _PreviewEdits is for —
+  // and a set that will not apply is declined here rather than shown.
+  LApprover := TReviewGate.GlobalDiffApprover;
+  if Assigned(LApprover) then
+  begin
+    LBody := '';
+    TThread.Synchronize(nil, procedure
+    var
+      LEditor: IOTASourceEditor;
+      LFound: string;
+    begin
+      if not TFacadeShared.FindSourceForPath(AUnitPath, LEditor, LFound) then Exit;
+      THarnessView.EnsureCodeView(LEditor);  // intent->view: Code before the diff paints
+      LBody := LFound;
+    end);
+
+    // WHOLE buffer, not TReviewGate.ChangedSpan — and the first live test is why.
+    //
+    // ChangedSpan reduces a change to one contiguous block, which is right for
+    // the tools it was built for: they change one place, or replace the whole
+    // buffer. This tool routinely changes SEVERAL places far apart, and the
+    // single block then spans everything between them. Fed two insertions 4,000
+    // bytes apart, the applied result was
+    //   original[0..B) + editA + original[A..B) + editB + original[B..]
+    // — the block inserted after the old span instead of replacing it, and the
+    // whole implementation section appeared twice. Caught in the IDE, on a real
+    // unit, by reading the buffer back rather than trusting `applied: true`.
+    //
+    // The whole-buffer form is the one SetEditorFullContent already falls back
+    // to, and its own comment says why it is safe: the range always locates.
+    // The cost is that the gutter shows a wider diff; the alternative is a
+    // localiser mis-anchoring a write, which is not a trade.
+    if (LBody <> '') and _PreviewEdits(LBody, AEdits, LPreview) and (LPreview <> LBody) then
+      case LApprover.ReviewEdit(AUnitPath, LBody, LPreview, LDiffReason) of
+        ddApplied:
+          Exit(eoApplied);    // the diff wrote it
+        ddRejected:
+          begin
+            if LDiffReason <> '' then
+              AError := 'change rejected by the user in the inline diff: ' + LDiffReason
+            else
+              AError := 'change rejected by the user in the inline diff';
+            Exit(eoUserRejected);
+          end;
+        // ddUnavailable -> the granular apply below
+      end;
+  end;
+
+  // The silent path, and the reason this tool exists: ONE undoable write that
+  // touches only the ranges named. The harness re-checks the offsets against the
+  // LIVE buffer — not against LBody read a moment ago — so a buffer that moved
+  // between the two is refused there rather than written over.
+  // The one conversion the package boundary costs: the seam cannot see
+  // TSourceEdit, so the record array is split here and nowhere else.
+  SetLength(LOffsets, Length(AEdits));
+  SetLength(LLengths, Length(AEdits));
+  SetLength(LTexts,   Length(AEdits));
+  for LAt := 0 to High(AEdits) do
+  begin
+    LOffsets[LAt] := AEdits[LAt].Offset;
+    LLengths[LAt] := AEdits[LAt].Length;
+    LTexts[LAt]   := AEdits[LAt].Text;
+  end;
+
+  LOutcome := eoUnitNotOpen;
+  THarnessView.WithLiveSource(AUnitPath, lsCodeMutation,
+    procedure(const Ctx: ILiveSourceContext)
+    var
+      LReason: string;
+    begin
+      if not Ctx.ApplyEdits(LOffsets, LLengths, LTexts, LReason) then
+      begin
+        Ctx.Fail(LReason);
+        Exit;
+      end;
+      LOutcome := eoApplied;
+    end,
+    LChanged, LDiffReason);
+
+  if (LOutcome <> eoApplied) and (LDiffReason <> '') then
+    AError := 'ApplyTextEdits: ' + LDiffReason;
+  Result := LOutcome;
 end;
 
 function NewMCPEditorWriteService: IMCPEditorWriteService;

@@ -1,4 +1,4 @@
-unit Aefos.Harness.View;
+﻿unit Aefos.Harness.View;
 
 { The IDE Harness (view side) — the named layer that encapsulates RAD Studio's
   Design/Code duality so every live tool draws on the SAME battle-tested
@@ -77,6 +77,27 @@ type
     // Replace the WHOLE buffer with ANewText in one undoable write; True on
     // success (and the transaction then reports AChanged=True).
     function ReplaceWhole(const ANewText: string): Boolean;
+    // Apply a set of byte-range replacements in ONE undoable write, touching
+    // only the ranges named.
+    //
+    // Not ReplaceWhole with the edits pre-applied, and the difference is what
+    // the developer lives with: a whole-buffer write is one undo step for the
+    // entire file, marks every line changed, and loses any other edit made
+    // between the read and the write. This walks the buffer once with
+    // CopyTo/DeleteTo/Insert, so untouched bytes are never rewritten.
+    //
+    // The three arrays are one edit each, by position — the record they came
+    // from lives in Aefos.MCP.Types, which this seam cannot see (it builds
+    // first, and MCP.Core requires rtl only). Mismatched lengths are refused
+    // ('edit-arrays-disagree') rather than trusted.
+    //
+    // Edits may arrive in any order and are sorted here; overlapping ranges
+    // are refused (AReason 'overlapping-edits') because their result would
+    // depend on which one was applied first. An offset past the end of the
+    // buffer is refused ('offset-out-of-range') rather than clamped — a clamp
+    // answers confidently about a position the caller did not mean.
+    function ApplyEdits(const AOffsets, ALengths: TArray<Integer>;
+      const ATexts: TArray<string>; out AReason: string): Boolean;
     // Scroll the top edit view to ALine (1-based) so freshly injected code is
     // on-screen; <=0 is a no-op. (EnsureCodeView with a line.)
     procedure RevealLine(const ALine: Integer);
@@ -529,6 +550,120 @@ begin
     LES.TopView.Paint;
 end;
 
+// Order edits by where they start, and refuse the sets whose result would not
+// be a function of the input.
+//
+// The writer walks the buffer forwards and can never go back, so the edits have
+// to be sorted before it starts. Two edits that overlap have two different
+// results depending on which was applied first, and picking one silently is the
+// species of wrong answer this codebase keeps paying for — so they are refused
+// by name instead. Two edits that merely TOUCH (one ends where the next begins)
+// are fine and stay in offset order.
+function _SortAndCheckEdits(var AOffsets, ALengths: TArray<Integer>;
+  var ATexts: TArray<string>; const ABufferBytes: Integer;
+  out AReason: string): Boolean;
+var
+  LAt, LScan, LSwapOffset, LSwapLength: Integer;
+  LSwapText: string;
+begin
+  AReason := '';
+  Result := False;
+
+  if (Length(AOffsets) <> Length(ALengths))
+     or (Length(AOffsets) <> Length(ATexts)) then
+  begin
+    AReason := 'edit-arrays-disagree';
+    Exit;
+  end;
+
+  for LAt := 0 to High(AOffsets) do
+  begin
+    if (AOffsets[LAt] < 0) or (ALengths[LAt] < 0) then
+    begin
+      AReason := 'negative-edit';
+      Exit;
+    end;
+    // Past the end is refused, never clamped: a clamp answers confidently about
+    // a position the caller did not name.
+    if AOffsets[LAt] + ALengths[LAt] > ABufferBytes then
+    begin
+      AReason := 'offset-out-of-range';
+      Exit;
+    end;
+  end;
+
+  // Insertion sort: an edit set is a handful of items, and this keeps equal
+  // offsets in the order the caller sent them (two insertions at one point are
+  // then concatenated the way the caller wrote them).
+  for LAt := 1 to High(AOffsets) do
+  begin
+    LSwapOffset := AOffsets[LAt];
+    LSwapLength := ALengths[LAt];
+    LSwapText   := ATexts[LAt];
+    LScan := LAt - 1;
+    while (LScan >= 0) and (AOffsets[LScan] > LSwapOffset) do
+    begin
+      AOffsets[LScan + 1] := AOffsets[LScan];
+      ALengths[LScan + 1] := ALengths[LScan];
+      ATexts[LScan + 1]   := ATexts[LScan];
+      Dec(LScan);
+    end;
+    AOffsets[LScan + 1] := LSwapOffset;
+    ALengths[LScan + 1] := LSwapLength;
+    ATexts[LScan + 1]   := LSwapText;
+  end;
+
+  for LAt := 1 to High(AOffsets) do
+    if AOffsets[LAt] < AOffsets[LAt - 1] + ALengths[LAt - 1] then
+    begin
+      AReason := 'overlapping-edits';
+      Exit;
+    end;
+
+  Result := True;
+end;
+
+// Apply the ranges in one undoable write, copying everything they do not name.
+//
+// This is the granular twin of _ReplaceSourceWhole. The writer's position only
+// moves forwards: CopyTo carries the untouched bytes across, DeleteTo drops the
+// replaced range, Insert puts the new text in its place, and a final CopyTo
+// past the end carries the tail. One IOTAEditWriter means one undo step, and
+// the bytes nobody named are never rewritten.
+function _ApplySourceEdits(const ASource: IOTASourceEditor;
+  const AOffsets, ALengths: TArray<Integer>;
+  const ATexts: TArray<string>): Boolean;
+var
+  LWriter: IOTAEditWriter;
+  LAt: Integer;
+  LUtf8: UTF8String;
+begin
+  Result := False;
+  if not Assigned(ASource) then Exit;
+  if Length(AOffsets) = 0 then Exit;
+
+  LWriter := ASource.CreateUndoableWriter;
+  if not Assigned(LWriter) then Exit;
+
+  for LAt := 0 to High(AOffsets) do
+  begin
+    LWriter.CopyTo(AOffsets[LAt]);
+    if ALengths[LAt] > 0 then
+      LWriter.DeleteTo(AOffsets[LAt] + ALengths[LAt]);
+    if ATexts[LAt] <> '' then
+    begin
+      LUtf8 := UTF8Encode(ATexts[LAt]);
+      LWriter.Insert(PAnsiChar(LUtf8));
+    end;
+  end;
+  // Everything after the last edit. MaxInt is the writer's idiom for "the rest".
+  LWriter.CopyTo(MaxInt);
+
+  LWriter := nil;       // commit the edit before forcing the repaint
+  _RepaintTopEditView;  // redraw now, not on the next user click
+  Result := True;
+end;
+
 function _ReplaceSourceWhole(const ASource: IOTASourceEditor;
   const ANewText: string): Boolean;
 var
@@ -566,6 +701,8 @@ type
     function UnitPath: string;
     function ReadBuffer: string;
     function ReplaceWhole(const ANewText: string): Boolean;
+    function ApplyEdits(const AOffsets, ALengths: TArray<Integer>;
+      const ATexts: TArray<string>; out AReason: string): Boolean;
     procedure RevealLine(const ALine: Integer);
     procedure Fail(const AReason: string);
     function Failed: Boolean;
@@ -605,6 +742,44 @@ begin
   Result := _ReplaceSourceWhole(FEditor, ANewText);
   if Result then
     FDidWrite := True;
+end;
+
+function TLiveSourceContext.ApplyEdits(const AOffsets, ALengths: TArray<Integer>;
+  const ATexts: TArray<string>; out AReason: string): Boolean;
+var
+  LOffsets, LLengths: TArray<Integer>;
+  LTexts: TArray<string>;
+  LBufferBytes: Integer;
+begin
+  Result := False;
+  AReason := '';
+  if not Assigned(FEditor) then
+  begin
+    AReason := 'no-source-editor';
+    Exit;
+  end;
+  if Length(AOffsets) = 0 then
+  begin
+    AReason := 'no-edits';
+    Exit;
+  end;
+
+  // The bound every offset is checked against has to be the byte length of the
+  // LIVE buffer, not of the text the caller last read — those differ exactly
+  // when it matters.
+  LBufferBytes := Length(TEncoding.UTF8.GetBytes(ReadBuffer));
+
+  // Copy: sorting is a mutation, and the caller's arrays are not ours to reorder.
+  LOffsets := Copy(AOffsets, 0, Length(AOffsets));
+  LLengths := Copy(ALengths, 0, Length(ALengths));
+  LTexts   := Copy(ATexts,   0, Length(ATexts));
+  if not _SortAndCheckEdits(LOffsets, LLengths, LTexts, LBufferBytes, AReason) then Exit;
+
+  Result := _ApplySourceEdits(FEditor, LOffsets, LLengths, LTexts);
+  if Result then
+    FDidWrite := True
+  else
+    AReason := 'write-failed';
 end;
 
 procedure TLiveSourceContext.RevealLine(const ALine: Integer);

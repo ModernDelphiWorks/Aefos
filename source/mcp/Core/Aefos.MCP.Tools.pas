@@ -60,6 +60,8 @@ type
       const AContext: IMCPToolContext): TMCPToolResult;
     function HandleGetSelection(const AParams: TJSONObject;
       const AContext: IMCPToolContext): TMCPToolResult;
+    function HandleApplyTextEdits(const AParams: TJSONObject;
+      const AContext: IMCPToolContext): TMCPToolResult;
     function HandleEditUnit(const AParams: TJSONObject;
       const AContext: IMCPToolContext): TMCPToolResult;
     function HandleDeleteUnit(const AParams: TJSONObject;
@@ -88,6 +90,7 @@ type
     function _BuildGetCursorPositionDescriptor: TMCPToolDescriptor;
     function _BuildGetSelectionDescriptor: TMCPToolDescriptor;
     function _BuildEditUnitDescriptor: TMCPToolDescriptor;
+    function _BuildApplyTextEditsDescriptor: TMCPToolDescriptor;
     function _BuildDeleteUnitDescriptor: TMCPToolDescriptor;
     function _BuildOverwriteFileDescriptor: TMCPToolDescriptor;
     function _BuildAddUnitDescriptor: TMCPToolDescriptor;
@@ -101,6 +104,8 @@ type
     function _HandleGetCursorPosition(const AParams: TJSONObject;
       const AContext: IMCPToolContext): TMCPToolResult;
     function _HandleGetSelection(const AParams: TJSONObject;
+      const AContext: IMCPToolContext): TMCPToolResult;
+    function _HandleApplyTextEdits(const AParams: TJSONObject;
       const AContext: IMCPToolContext): TMCPToolResult;
     function _HandleEditUnit(const AParams: TJSONObject;
       const AContext: IMCPToolContext): TMCPToolResult;
@@ -135,6 +140,7 @@ type
     function IMCPToolsRegistrar.HandleGetCursorPosition = _HandleGetCursorPosition;
     function IMCPToolsRegistrar.HandleGetSelection = _HandleGetSelection;
     function IMCPToolsRegistrar.HandleEditUnit = _HandleEditUnit;
+    function IMCPToolsRegistrar.HandleApplyTextEdits = _HandleApplyTextEdits;
     function IMCPToolsRegistrar.HandleDeleteUnit = _HandleDeleteUnit;
     function IMCPToolsRegistrar.HandleOverwriteFile = _HandleOverwriteFile;
     function IMCPToolsRegistrar.HandleAddUnit = _HandleAddUnit;
@@ -312,6 +318,38 @@ begin
   Result := TJSONString(LValue).Value;
 end;
 
+// The integer twin of _ParamStr, with an explicit default for the fields whose
+// absence has an honest meaning.
+//
+// Rejects a non-number rather than coercing: a caller that sends "12" as a
+// string has a bug, and silently reading it would hide the bug until the day
+// the string is "twelve" and the edit lands at byte 0.
+function _ParamInt(const AParams: TJSONObject; const AName: string;
+  const ADefault: Integer): Integer;
+var
+  LValue: TJSONValue;
+  LNumber: Double;
+begin
+  Result := ADefault;
+  if not Assigned(AParams) then Exit;
+  LValue := AParams.GetValue(AName);
+  if not Assigned(LValue) then Exit;
+  if not (LValue is TJSONNumber) then
+    raise EMCPInvalidParams.Create(AName + ' must be a number');
+  // NOT AsInt. It is StrToInt underneath, so `12.0` — which any caller doing
+  // float maths or a `json.dumps(12.0)` produces — raises EConvertError and the
+  // server reports -32603 internal error for a number that is perfectly usable.
+  // A review found it. Read it as a double, then insist it really is a whole
+  // number in range: 12.0 is an offset, 12.5 is a bug in the caller and should
+  // be told so by name.
+  LNumber := TJSONNumber(LValue).AsDouble;
+  if (LNumber < Low(Integer)) or (LNumber > High(Integer)) then
+    raise EMCPInvalidParams.Create(AName + ' is out of range for an integer');
+  if Frac(LNumber) <> 0 then
+    raise EMCPInvalidParams.Create(AName + ' must be a whole number');
+  Result := Trunc(LNumber);
+end;
+
 { TMCPToolsRegistrar }
 
 constructor TMCPToolsRegistrar.Create(const AFacade: IMCPWorkspaceFacade;
@@ -351,6 +389,7 @@ begin
   AServer.RegisterTool(_BuildGetCursorPositionDescriptor);
   AServer.RegisterTool(_BuildGetSelectionDescriptor);
   AServer.RegisterTool(_BuildEditUnitDescriptor);
+  AServer.RegisterTool(_BuildApplyTextEditsDescriptor);
   AServer.RegisterTool(_BuildDeleteUnitDescriptor);
   AServer.RegisterTool(_BuildOverwriteFileDescriptor);
   AServer.RegisterTool(_BuildAddUnitDescriptor);
@@ -471,6 +510,114 @@ begin
       const AContext: IMCPToolContext): TMCPToolResult
     begin
       Result := LDispatch.HandleEditUnit(AParams, AContext);
+    end,
+    tiCode);
+end;
+
+// The `edits` argument: an array of {offset, length, text}.
+//
+// Written out rather than routed through _MakeStringSchema because the shape is
+// the point — a producer that gets `length` wrong writes over code, and a schema
+// that only says "array" teaches it nothing.
+function _MakeApplyTextEditsInputSchema: TJSONObject;
+var
+  LProps, LProp, LItems, LItemProps, LField: TJSONObject;
+  LRequired, LItemRequired: TJSONArray;
+begin
+  Result := TJSONObject.Create;
+  Result.AddPair('type', 'object');
+  LProps := TJSONObject.Create;
+
+  LField := TJSONObject.Create;
+  LField.AddPair('type', 'string');
+  LField.AddPair('description', 'Path of the open unit to edit.');
+  LProps.AddPair('unit_path', LField);
+
+  LField := TJSONObject.Create;
+  LField.AddPair('type', 'string');
+  LField.AddPair('description',
+    'content_hash from the last ReadUnit/EditUnit of this unit. The offsets '
+    + 'below are only meaningful against that exact content.');
+  LProps.AddPair('base_hash', LField);
+
+  LItemProps := TJSONObject.Create;
+  LField := TJSONObject.Create;
+  LField.AddPair('type', 'integer');
+  LField.AddPair('description',
+    'Where the replaced range starts, counted in UTF-8 BYTES from the start '
+    + 'of the buffer — not characters, and not lines.');
+  LItemProps.AddPair('offset', LField);
+  LField := TJSONObject.Create;
+  LField.AddPair('type', 'integer');
+  LField.AddPair('description',
+    'How many bytes to replace. 0 inserts at offset without deleting.');
+  LItemProps.AddPair('length', LField);
+  LField := TJSONObject.Create;
+  LField.AddPair('type', 'string');
+  LField.AddPair('description',
+    'What goes in its place. Empty deletes the range.');
+  LItemProps.AddPair('text', LField);
+
+  LItemRequired := TJSONArray.Create;
+  LItemRequired.Add('offset');
+  LItemRequired.Add('text');
+
+  LItems := TJSONObject.Create;
+  LItems.AddPair('type', 'object');
+  LItems.AddPair('properties', LItemProps);
+  LItems.AddPair('required', LItemRequired);
+
+  LProp := TJSONObject.Create;
+  LProp.AddPair('type', 'array');
+  LProp.AddPair('items', LItems);
+  LProp.AddPair('description',
+    'The edits, in any order. They are sorted here, so offsets are all '
+    + 'against the ORIGINAL content and none of them shift the others.');
+  LProps.AddPair('edits', LProp);
+
+  Result.AddPair('properties', LProps);
+  LRequired := TJSONArray.Create;
+  LRequired.Add('unit_path');
+  LRequired.Add('base_hash');
+  LRequired.Add('edits');
+  Result.AddPair('required', LRequired);
+end;
+
+function TMCPToolsRegistrar._BuildApplyTextEditsDescriptor: TMCPToolDescriptor;
+var
+  LDispatch: IMCPToolsRegistrar;
+begin
+  LDispatch := Self;
+  Result := TMCPToolDescriptor.Create(
+    'ApplyTextEdits',
+    'Apply text edits',
+    'Applies a set of byte-range replacements to a Delphi unit''s IDE editor '
+    + 'buffer in ONE undoable write, touching only the ranges given. Use it '
+    + 'when you already know WHERE the change goes — the output of a code '
+    + 'action, a refactor, or a formatter. When you know only the surrounding '
+    + 'TEXT, use EditUnit instead: anchored replacement is safer than an '
+    + 'offset you computed yourself. '
+    + 'Each edit is {offset, length, text} with offset and length in UTF-8 '
+    + 'BYTES; length 0 inserts. Offsets are all against the content base_hash '
+    + 'names, in any order — sorting is done here, so do not pre-adjust them '
+    + 'for each other. '
+    + 'base_hash must be the content_hash returned by a prior ReadUnit (or '
+    + 'ApplyTextEdits/EditUnit) for this unit. Rejected if the unit was not '
+    + 'read this session (-32002) or has changed since (-32001); re-read and '
+    + 'retry with fresh offsets. '
+    + 'Refuses rather than guessing: ranges that overlap are refused, because '
+    + 'the result would depend on which was applied first, and an offset past '
+    + 'the end of the buffer is refused rather than clamped. '
+    + 'The buffer is left dirty and undoable; the file is not saved. When the '
+    + 'unit is the one open in the editor the change is shown as an inline '
+    + 'red/green diff for the user to approve first. The returned content_hash '
+    + 'chains into a follow-up edit.',
+    _MakeApplyTextEditsInputSchema,
+    _MakeEditUnitOutputSchema,
+    function(const AParams: TJSONObject;
+      const AContext: IMCPToolContext): TMCPToolResult
+    begin
+      Result := LDispatch.HandleApplyTextEdits(AParams, AContext);
     end,
     tiCode);
 end;
@@ -849,6 +996,89 @@ begin
     end);
   _RaiseIfEditFailed(LOutcome, LError);
   // Re-read the post-edit body for an authoritative content_hash (BR-6).
+  LNewBody := _ReadCurrentBody(AContext, LUnitPath);
+  FEditTracker.&Record(LUnitPath, LNewBody);
+  Result := TMCPToolResult.Text('{"applied":true}',
+    TMCPEditTracker.HashContent(LNewBody));
+end;
+
+function TMCPToolsRegistrar._HandleApplyTextEdits(const AParams: TJSONObject;
+  const AContext: IMCPToolContext): TMCPToolResult;
+var
+  LUnitPath, LBaseHash, LBody, LNewBody, LCurrentHash, LError: string;
+  LEditsJson: TJSONArray;
+  LItem, LValue: TJSONValue;
+  LObj: TJSONObject;
+  LEdits: TSourceEdits;
+  LAt: Integer;
+  LOutcome: TMCPEditOutcome;
+begin
+  LUnitPath := _ParamStr(AParams, 'unit_path');
+  LBaseHash := _ParamStr(AParams, 'base_hash');
+
+  // `as` is wrong here and a review proved it: on a nil it is safe, but on a
+  // JSON value of the WRONG kind — `"edits": {}` — it raises EInvalidCast, which
+  // the server reports as -32603 internal error. A caller that sent the wrong
+  // shape gets told the server broke. `is` keeps the refusal ours.
+  LEditsJson := nil;
+  if Assigned(AParams) then
+  begin
+    LValue := AParams.GetValue('edits');
+    if (LValue <> nil) and not (LValue is TJSONArray) then
+      raise EMCPInvalidParams.Create('ApplyTextEdits: edits must be an array');
+    LEditsJson := TJSONArray(LValue);
+  end;
+  if not Assigned(LEditsJson) then
+    raise EMCPInvalidParams.Create('ApplyTextEdits: edits must be an array');
+  if LEditsJson.Count = 0 then
+    raise EMCPInvalidParams.Create('ApplyTextEdits: edits is empty');
+
+  SetLength(LEdits, LEditsJson.Count);
+  for LAt := 0 to LEditsJson.Count - 1 do
+  begin
+    LItem := LEditsJson.Items[LAt];
+    if not (LItem is TJSONObject) then
+      raise EMCPInvalidParams.Create(
+        'ApplyTextEdits: every edit must be an object with offset and text');
+    LObj := TJSONObject(LItem);
+    // An absent offset is NOT zero. Defaulting it would write at the top of the
+    // file with full confidence, which is the failure this whole tool is built
+    // to refuse — so a missing offset is an error, and only `length` (whose
+    // meaning of "absent" really is "insert nothing away") defaults.
+    if not Assigned(LObj.GetValue('offset')) then
+      raise EMCPInvalidParams.Create(
+        'ApplyTextEdits: edit ' + IntToStr(LAt) + ' has no offset');
+    LEdits[LAt].Offset := _ParamInt(LObj, 'offset', -1);
+    LEdits[LAt].Length := _ParamInt(LObj, 'length', 0);
+    LEdits[LAt].Text   := _ParamStr(LObj, 'text');
+  end;
+
+  // The same optimistic-concurrency contract EditUnit keeps (ADR-057): re-read
+  // the live content on the worker thread and compare. It matters more here —
+  // an anchored edit against stale text fails to find its anchor, but an OFFSET
+  // against stale text lands somewhere real and wrong.
+  LBody := _ReadCurrentBody(AContext, LUnitPath);
+  LCurrentHash := TMCPEditTracker.HashContent(LBody);
+  if not FEditTracker.WasRead(LUnitPath) then
+    raise EMCPNotRead.Create(
+      'ApplyTextEdits: unit not read this session — call ReadUnit first: '
+      + LUnitPath);
+  if LBaseHash <> LCurrentHash then
+    raise EMCPStaleRead.Create(
+      'ApplyTextEdits: base_hash is stale — re-read the unit and recompute the '
+      + 'offsets: ' + LUnitPath);
+
+  LOutcome := eoUnitNotOpen;
+  LError := '';
+  AContext.MarshalToMainThread(
+    procedure
+    begin
+      LOutcome := FFacade.ApplyTextEdits(LUnitPath, LEdits, LError);
+    end);
+  _RaiseIfEditFailed(LOutcome, LError);
+
+  // Re-read for an authoritative content_hash, so the answer chains into the
+  // next edit (BR-6).
   LNewBody := _ReadCurrentBody(AContext, LUnitPath);
   FEditTracker.&Record(LUnitPath, LNewBody);
   Result := TMCPToolResult.Text('{"applied":true}',

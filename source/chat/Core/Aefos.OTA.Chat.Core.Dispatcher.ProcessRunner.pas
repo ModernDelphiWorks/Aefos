@@ -14,6 +14,20 @@
   of it was lifted verbatim (C-2) from the pre-refactor Core.CLIDispatcher
   (TCLIDispatcherRun + TCLIDispatcherReadThread); behaviour is byte-identical.
 
+  The stdin leg carries a payload now (TProcessStartSpec.StdinText). The pipe
+  itself is not new -- this runner has always created one and closed it right
+  after the spawn, so the child read end-of-input at once -- what is new is
+  writing to it first, on its own thread, and letting THAT close signal the end.
+  A caller that sends nothing takes the old path unchanged.
+    Why it exists: a command line cannot exceed 32766 characters
+  (MAX_COMMAND_LINE_CHARS), and the assembled chat prompt carries the rendered
+  project context, whose active-unit body alone is capped at 32 KB. With a
+  project open that overran the limit and CreateProcess failed every turn with
+  ERROR_FILENAME_EXCED_RANGE (206). Off the command line there is no such cap.
+  Which drivers use it is the drivers' call (IExecutorProfile.PromptViaStdin);
+  the ones that stay on the command line now get an explicit over-length error
+  from _RejectOverLongCommandLine instead of a bare 206.
+
   COVERAGE EXCLUSION (ADR-262 / BR-5, no-silent-caps):
     This unit is DELIBERATELY ABSENT from the coverage list. Its lines
     need a *real* child process to execute, which a 32-bit dcc32 runner debugged
@@ -66,8 +80,33 @@ uses
 
 const
   READ_BUFFER_SIZE = 4096;
+  WRITE_BUFFER_SIZE = 4096;
+  // Longest command line CreateProcess accepts with lpApplicationName = nil.
+  // The documented cap is 32767 INCLUDING the terminating null, so 32766 is the
+  // last length that spawns; 32767 and up fail with ERROR_FILENAME_EXCED_RANGE
+  // (206). Measured, not assumed: 32766 -> success, 32767 -> 206.
+  MAX_COMMAND_LINE_CHARS = 32766;
 
 type
+  // Feeds the child's stdin and closes the pipe, which is what signals end of
+  // input. Runs OFF the spawn thread on purpose: a payload larger than the pipe
+  // buffer (64 KB by default, and a prompt carrying the project context can pass
+  // that) blocks in WriteFile until the child drains it, and the child may not
+  // drain it before writing output of its own. On the spawn thread that is a
+  // deadlock -- the parent has not started its stdout/stderr readers yet, so the
+  // child would block on a full stdout pipe while the parent blocks on stdin.
+  //   Owns the handle it is given: the session hands it over and forgets it, so
+  // nothing else can close it underneath this thread.
+  TWin32StdinWriteThread = class(TThread)
+  private
+    FPipeHandle: THandle;
+    FPayload: TBytes;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(const APipeHandle: THandle; const APayload: TBytes);
+  end;
+
   TWin32ReadThread = class(TThread)
   private
     FPipeHandle: THandle;
@@ -95,9 +134,10 @@ type
     FStdinRead: THandle;
     FStdinWrite: THandle;
     procedure _OpenPipes;
-    procedure _CloseChildSideAndStdin;
+    procedure _CloseChildSideAndStdin(const AStdinText: string);
     procedure _CloseAllHandles;
     procedure _PrepareStartupInfo(out AInfo: TStartupInfoW);
+    procedure _RejectOverLongCommandLine(const ASpec: TProcessStartSpec);
     function _DoCreateProcess(const ASpec: TProcessStartSpec): Boolean;
     procedure _StartReadThreads(const AOnChunk: TProcessChunkProc;
       const AOnStreamEnd: TProcessStreamEndProc);
@@ -218,12 +258,33 @@ begin
       'CreatePipe(stdin) failed (last error: %d)', [GetLastError]);
 end;
 
-procedure TWin32ProcessSession._CloseChildSideAndStdin;
+procedure TWin32ProcessSession._CloseChildSideAndStdin(
+  const AStdinText: string);
+var
+  LWriter: TWin32StdinWriteThread;
+  LPayload: TBytes;
 begin
+  // The child holds its own copies now; the parent's ends must go or the read
+  // loops never see end-of-stream.
   _CloseHandleSafe(FStdoutWrite);
   _CloseHandleSafe(FStderrWrite);
   _CloseHandleSafe(FStdinRead);
-  _CloseHandleSafe(FStdinWrite);
+  if AStdinText = '' then
+  begin
+    // Nothing to send: close at once, byte-identical to what this runner has
+    // always done -- the child reads end-of-input immediately. Every
+    // command-line-prompt driver takes this branch, so their spawn is unchanged.
+    _CloseHandleSafe(FStdinWrite);
+    Exit;
+  end;
+  // Hand the write end to the writer thread and drop it from the session in the
+  // same breath, so neither _CloseAllHandles nor the destructor can close it
+  // out from under the write in progress. The thread closes it when the payload
+  // is out -- that close IS the end-of-input signal.
+  LPayload := TEncoding.UTF8.GetBytes(AStdinText);
+  LWriter := TWin32StdinWriteThread.Create(FStdinWrite, LPayload);
+  FStdinWrite := INVALID_HANDLE_VALUE;
+  LWriter.Start;
 end;
 
 procedure TWin32ProcessSession._CloseAllHandles;
@@ -255,6 +316,27 @@ begin
   // back to the default desktop if creation fails.
   if _EnsureCliDesktop then
     AInfo.lpDesktop := PChar(CLI_DESKTOP_NAME);
+end;
+
+procedure TWin32ProcessSession._RejectOverLongCommandLine(
+  const ASpec: TProcessStartSpec);
+begin
+  if Length(ASpec.CommandLine) <= MAX_COMMAND_LINE_CHARS then
+    Exit;
+  // Checked BEFORE the pipes are opened, so nothing has to be cleaned up, and
+  // before CreateProcess so the failure is named instead of arriving as a bare
+  // "last error: 206" the reader has to look up. 206 is
+  // ERROR_FILENAME_EXCED_RANGE, which reads like a path problem and is not one:
+  // the command line simply does not fit.
+  //   A driver only reaches this if it puts the prompt on the command line
+  // (IExecutorProfile.PromptViaStdin = False) and the prompt outgrew it. The fix
+  // is that flag, not a shorter prompt, so the message says so.
+  raise EDispatcherSpawnFailed.CreateFmt(
+    'Command line too long for "%s": %d characters, but CreateProcess accepts ' +
+    'at most %d. The prompt (which carries the project context) does not fit ' +
+    'as an argument for this executor; it has to be delivered on stdin ' +
+    '(IExecutorProfile.PromptViaStdin).',
+    [ASpec.ExecutorPath, Length(ASpec.CommandLine), MAX_COMMAND_LINE_CHARS]);
 end;
 
 function TWin32ProcessSession._DoCreateProcess(
@@ -297,6 +379,8 @@ end;
 
 procedure TWin32ProcessSession.Spawn(const ASpec: TProcessStartSpec);
 begin
+  _RejectOverLongCommandLine(ASpec);
+
   _OpenPipes;
 
   if not _DoCreateProcess(ASpec) then
@@ -307,7 +391,7 @@ begin
       [ASpec.ExecutorPath, GetLastError]);
   end;
 
-  _CloseChildSideAndStdin;
+  _CloseChildSideAndStdin(ASpec.StdinText);
 end;
 
 procedure TWin32ProcessSession.BeginRead(const AOnChunk: TProcessChunkProc;
@@ -339,6 +423,52 @@ begin
       GetExitCodeProcess(FProcessHandle, Result)
     else
       Result := DWORD(-1);
+  end;
+end;
+
+{ TWin32StdinWriteThread }
+
+constructor TWin32StdinWriteThread.Create(const APipeHandle: THandle;
+  const APayload: TBytes);
+begin
+  inherited Create(True);
+  // Self-freeing, unlike the read threads: this one keeps nothing alive and
+  // nobody waits on it. It owns only its handle and its own copy of the payload,
+  // touches no session state, and is done as soon as the bytes are out -- so
+  // there is nothing left for anyone to join.
+  FreeOnTerminate := True;
+  FPipeHandle := APipeHandle;
+  FPayload := APayload;
+end;
+
+procedure TWin32StdinWriteThread.Execute;
+var
+  LOffset: Integer;
+  LChunk: DWORD;
+  LWritten: DWORD;
+begin
+  try
+    LOffset := 0;
+    while LOffset < Length(FPayload) do
+    begin
+      LChunk := DWORD(Length(FPayload) - LOffset);
+      if LChunk > WRITE_BUFFER_SIZE then
+        LChunk := WRITE_BUFFER_SIZE;
+      LWritten := 0;
+      // A failure here is normal, not exceptional: a cancelled or crashed child
+      // leaves a broken pipe. Stop writing and close, which is what a child that
+      // is still alive is waiting for anyway.
+      if not WriteFile(FPipeHandle, FPayload[LOffset], LChunk, LWritten, nil) then
+        Break;
+      if LWritten = 0 then
+        Break;
+      Inc(LOffset, Integer(LWritten));
+    end;
+  finally
+    // Unconditional: the close is the end-of-input signal. Skipping it on an
+    // error path would leave the child waiting for data that is never coming,
+    // which looks exactly like a hang.
+    _CloseHandleSafe(FPipeHandle);
   end;
 end;
 

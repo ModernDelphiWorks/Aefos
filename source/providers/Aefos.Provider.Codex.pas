@@ -34,6 +34,7 @@ type
     function ResolveReplicationRoot(const AProjectRoot: string): string;
     function BuildDispatchArgs(
       const ACtx: TProviderDispatchContext): TArray<string>;
+    function PromptViaStdin: Boolean;
     function SessionSupport: TSessionSupport;
     function TryCaptureSessionId(const AOutput: UnicodeString;
       out ASessionId: UnicodeString): Boolean;
@@ -351,6 +352,19 @@ begin
             '"-NonInteractive","-File","' + LBridge +
             '","-Session","' + ACtx.McpSession + '"]'];
   end;
+end;
+
+function TCodexExecutorProfile.PromptViaStdin: Boolean;
+begin
+  // Left on the command line: `codex exec` takes the prompt positionally (see
+  // BuildDispatchArgs) and this driver's stdin contract was not verified against
+  // a real codex binary, so flipping it would be a guess on the path every turn
+  // of every Codex chat goes through. The transport supports it the moment
+  // someone can prove the dialect -- this is a one-line change, not a redesign.
+  //   Until then an over-long command line no longer dies as an opaque
+  // CreateProcess 206: the dispatcher checks the length up front and says what
+  // actually happened (Dispatcher.ProcessRunner._RejectOverLongCommandLine).
+  Result := False;
 end;
 
 function TCodexExecutorProfile.SessionSupport: TSessionSupport;

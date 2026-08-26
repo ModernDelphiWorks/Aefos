@@ -110,8 +110,24 @@ type
     // with the session flag). The driver owns ITS dialect; the executor stays
     // generic. Profile-driven dispatch (the per-CLI flags used to live in
     // CommandExecutor).
+    //   A driver that returns True from PromptViaStdin below gets NO positional
+    // prompt appended, so its args must be complete on their own.
     function BuildDispatchArgs(
       const ACtx: TProviderDispatchContext): TArray<string>;
+    // Where this CLI reads the prompt from. False (the default for every driver
+    // that has not been proven otherwise) keeps the prompt as the last token of
+    // the command line. True hands it to the child on STDIN instead, and the
+    // dispatcher then leaves it off the command line entirely.
+    //
+    // This is not a style preference, it is a hard OS limit: CreateProcess with
+    // lpApplicationName = nil rejects a command line of 32767 characters or more
+    // with ERROR_FILENAME_EXCED_RANGE (206), and the assembled prompt carries the
+    // project context -- whose active-unit body alone is capped at 32 KB
+    // (ProjectContextBuilder.ACTIVE_UNIT_MAX_BYTES), already over the limit by
+    // itself. Any driver whose CLI can read the prompt from stdin should say so
+    // here; the ones that cannot keep the command line and are protected by the
+    // dispatcher's explicit over-length error instead of an opaque 206.
+    function PromptViaStdin: Boolean;
     // How this CLI carries a conversation across turns. The executor owns the
     // session STATE; the driver only formats the flag (ssPinned) or knows the
     // marker its CLI prints (ssCaptured). Drivers that return ssNone ignore

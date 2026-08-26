@@ -456,6 +456,14 @@ begin
   LSpec.CommandLine := TCliCommandLine.Build(ARequest);
   LSpec.EnvBlock := TCliCommandLine.BuildEnvBlock(LOverrides);
   LSpec.WorkingDirectory := ARequest.WorkingDirectory;
+  // The prompt goes on exactly ONE of the two channels, never both: Build above
+  // already left it off the command line for a PromptViaStdin driver, and this is
+  // where it picks the other one up. A command-line driver gets '' here, which is
+  // the same closed-stdin child the runner has always spawned.
+  if ARequest.PromptViaStdin then
+    LSpec.StdinText := ARequest.Prompt
+  else
+    LSpec.StdinText := '';
 
   FStartTick := GetTickCount;
 

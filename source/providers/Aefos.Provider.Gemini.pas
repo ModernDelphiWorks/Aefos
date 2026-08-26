@@ -34,6 +34,7 @@ type
     function ResolveReplicationRoot(const AProjectRoot: string): string;
     function BuildDispatchArgs(
       const ACtx: TProviderDispatchContext): TArray<string>;
+    function PromptViaStdin: Boolean;
     function SessionSupport: TSessionSupport;
     function TryCaptureSessionId(const AOutput: UnicodeString;
       out ASessionId: UnicodeString): Boolean;
@@ -173,6 +174,19 @@ begin
     Result := Result + ['--allowed-mcp-server-names',
       Aefos.Provider.Base.ResolveMcpServerName(ACtx.McpServerName)];
   Result := Result + ['-p'];
+end;
+
+function TGeminiExecutorProfile.PromptViaStdin: Boolean;
+begin
+  // Left on the command line for the same reason as Copilot: these args END with
+  // `-p`, whose VALUE is the prompt, so removing the last token would leave the
+  // flag dangling. The Gemini CLI's own help does say `-p` is "appended to input
+  // on stdin (if any)", which is the seam a stdin switch would use -- but that
+  // needs the args changed with it and proven against a live run, and this is the
+  // path every Gemini chat turn takes. Not flipped on documentation alone.
+  //   An over-long command line is now reported for what it is instead of failing
+  // as an opaque CreateProcess 206 (Dispatcher.ProcessRunner).
+  Result := False;
 end;
 
 function TGeminiExecutorProfile.SessionSupport: TSessionSupport;

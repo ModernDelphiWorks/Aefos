@@ -127,6 +127,9 @@ type
     // Builds the child command line: "executor" "arg0" .. "argN" "prompt"
     // (executor -> Args -> Prompt). Byte-identical to the pre-refactor
     // _BuildCommandLine (AC-04).
+    //   ARequest.PromptViaStdin drops the trailing "prompt" token: that driver's
+    // CLI reads the prompt from stdin, so the command line is executor -> Args
+    // only. Every other request is unaffected.
     class function Build(const ARequest: TDispatchRequest): string; static;
     // Ensures NO_COLOR=1 is present among the env overrides: injected when absent,
     // left untouched when already supplied (case-insensitive). Caller overrides for
@@ -355,7 +358,14 @@ begin
     LBuilder.Append(_QuoteArg(ARequest.ExecutorPath));
     for LFor := 0 to High(ARequest.Args) do
       LBuilder.Append(string(' ')).Append(_QuoteArg(ARequest.Args[LFor]));
-    LBuilder.Append(string(' ')).Append(_QuoteArg(ARequest.Prompt));
+    // The prompt is the last token ONLY for the drivers whose CLI reads it there.
+    // Under PromptViaStdin it is left off entirely and travels on stdin instead
+    // (TProcessStartSpec.StdinText) — the whole point being that a command line
+    // cannot hold it: CreateProcess caps it at 32767 characters and the prompt
+    // carries the project context. Everything BEFORE this line is unchanged, so a
+    // command-line driver still gets the byte-identical string it always got.
+    if not ARequest.PromptViaStdin then
+      LBuilder.Append(string(' ')).Append(_QuoteArg(ARequest.Prompt));
     Result := LBuilder.ToString;
   finally
     LBuilder.Free;

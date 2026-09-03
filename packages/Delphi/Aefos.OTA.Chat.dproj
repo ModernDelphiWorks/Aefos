@@ -102,7 +102,7 @@
         <SanitizedProjectName>Aefos_OTA_Chat</SanitizedProjectName>
         <DCC_Description>Aefos AI - Chat (in-IDE AI chat/agent panel + in-process MCP server)</DCC_Description>
         <VerInfo_Locale>1046</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.5.1.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.5.1</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.5.2.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.5.2</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_iOSDevice64)'!=''">
         <DCC_CBuilderOutput>None</DCC_CBuilderOutput>
@@ -125,13 +125,13 @@
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.5.1.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.5.1</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.5.2.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.5.2</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_UsePackage>vcl;rtl;vclie;Aefos.MCP.Core;Aefos.MCP.Tools.OTA;Aefos.Providers;soaprtl;dbrtl;IndySystem;IndyProtocols;IndyCore;vcldb;FireDAC;FireDACCommonDriver;FireDACCommon;FireDACSqliteDriver;Aefos.Data;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>vcl;rtl;vclie;Aefos.MCP.Tools.OTA;soaprtl;dbrtl;IndySystem;IndyProtocols;IndyCore;vcldb;FireDAC;FireDACCommonDriver;FireDACCommon;FireDACSqliteDriver;Aefos.WebView;$(DCC_UsePackage)</DCC_UsePackage>
-        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.5.1.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.5.1</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.5.2.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.5.2</VerInfo_Keys>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
@@ -140,7 +140,7 @@
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.5.1.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.5.1</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=ModernDelphiWorks;FileDescription=$(MSBuildProjectName);FileVersion=1.5.2.0;InternalName=;LegalCopyright=Copyright (c) 2026 ModernDelphiWorks;LegalTrademarks=;OriginalFilename=;ProgramID=com.moderndelphiworks.aefos;ProductName=Aefos;ProductVersion=1.5.2</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_WinARM64EC)'!=''">

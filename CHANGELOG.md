@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Dates are in `YYYY-MM-DD`.
 
-## [Unreleased]
+## [1.5.2] - 2026-09-03
 
 ### Fixed
 
@@ -31,10 +31,18 @@ dedicated writer thread feeds it, so a payload larger than the pipe buffer canno
 deadlock against a child that writes output before draining its input. Off the
 command line, the 32 KB limit no longer applies at all.
 
+**GitHub Copilot was hit by the same 206, and is fixed the same way.** The CLI
+documents its own second channel — with an empty stdin and no `-p` it answers
+*"No prompt provided. Run in an interactive terminal or provide a prompt with -p
+or via standard in."* — and it was measured live, in the exact shape the driver
+builds (`copilot --session-id=<uuid> --allow-all-tools -s`, prompt piped in):
+it answers and exits 0. The trailing `-p` left the driver's arguments in the same
+breath, because a flag whose value never arrives swallows whatever follows it.
+
 Each driver declares its own answer (`IExecutorProfile.PromptViaStdin`), because
-where a CLI accepts its prompt is that CLI's dialect: Codex, Copilot, Gemini and
-the local agent CLI keep the command line, unchanged, until their stdin form can
-be verified against a real binary. For those, an over-long command line is now
+where a CLI accepts its prompt is that CLI's dialect: Codex, Gemini and the local
+agent CLI keep the command line, unchanged, until their stdin form can be
+verified against a real binary. For those, an over-long command line is now
 refused up front with a message that says what actually happened, instead of
 surfacing as a bare `last error: 206`.
 

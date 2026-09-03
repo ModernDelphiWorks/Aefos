@@ -145,31 +145,39 @@ begin
   // is CreateGUID-backed, so what we hand over is always v4.
   if (ACtx.SessionId <> '') then
     Result := Result + ['--session-id=' + ACtx.SessionId];
-  // --allow-all-tools is REQUIRED for non-interactive; -s = clean response; -p
-  // takes the prompt as its VALUE so it MUST stay last. Agent injects the global
-  // aefos MCP explicitly (headless -p does NOT auto-load the workspace .mcp.json,
-  // verified), placed BEFORE -p. Chat mode omits it (conversation only).
+  // --allow-all-tools is REQUIRED for non-interactive; -s = clean response. The
+  // trailing -p is GONE: the prompt now arrives on stdin (PromptViaStdin below),
+  // and -p with no VALUE would swallow the next token or fail the parse -- so the
+  // flag and the channel move together, they are one decision. Agent injects the
+  // global aefos MCP explicitly (headless does NOT auto-load the workspace
+  // .mcp.json, verified). Chat mode omits it (conversation only).
   //   NOTE on the array-constructor spelling: FPC 3.2.2's generics parser chokes
   // on `TArray<string>.Create(` when it follows a `+` (it reads the `<` as a
   // comparison), so these are written as dynamic-array constructors `[...]`
   // instead -- the same values, and a form both compilers parse everywhere.
   if ACtx.AgentMode then
     Result := Result + ['--allow-all-tools', '--additional-mcp-config',
-      '@' + ACtx.McpConfigPath, '-s', '-p']
+      '@' + ACtx.McpConfigPath, '-s']
   else
-    Result := Result + ['--allow-all-tools', '-s', '-p'];
+    Result := Result + ['--allow-all-tools', '-s'];
 end;
 
 function TCopilotExecutorProfile.PromptViaStdin: Boolean;
 begin
-  // Left on the command line: this driver's args END with `-p`, which takes the
-  // prompt as its VALUE (see BuildDispatchArgs), so dropping the last token would
-  // leave a dangling flag rather than a working stdin invocation. Making Copilot
-  // read stdin means changing its args too, and neither half could be verified
-  // here against a real copilot binary. Not guessed on the shared dispatch path.
-  //   An over-long command line is now reported for what it is instead of failing
-  // as an opaque CreateProcess 206 (Dispatcher.ProcessRunner).
-  Result := False;
+  // The Copilot CLI reads the prompt from stdin, and says so ITSELF: with an
+  // empty stdin and no -p it answers "No prompt provided. Run in an interactive
+  // terminal or provide a prompt with -p or via standard in." That is the CLI's
+  // own second channel, not a guess -- and -p left BuildDispatchArgs in the same
+  // breath, because a flag whose VALUE never comes swallows whatever follows it.
+  //   Measured live against the copilot.exe RAD Studio bundles (GitHub Copilot
+  // CLI 1.0.82), in the exact shape this driver builds:
+  //     printf '<prompt>' | copilot --session-id=<uuid> --allow-all-tools -s
+  //   answers and exits 0, with no -p and no positional prompt.
+  //   This is what actually FIXES the CreateProcess 206 for a Copilot user:
+  // naming the over-long command line (Dispatcher.ProcessRunner.
+  // _RejectOverLongCommandLine) only renames the failure -- the prompt carrying
+  // the project context has to leave the command line for the turn to run.
+  Result := True;
 end;
 
 function TCopilotExecutorProfile.SessionSupport: TSessionSupport;

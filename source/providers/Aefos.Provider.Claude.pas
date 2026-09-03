@@ -29,6 +29,7 @@ type
     function ResolveReplicationRoot(const AProjectRoot: string): string;
     function BuildDispatchArgs(
       const ACtx: TProviderDispatchContext): TArray<string>;
+    function PromptViaStdin: Boolean;
     function SessionSupport: TSessionSupport;
     function TryCaptureSessionId(const AOutput: UnicodeString;
       out ASessionId: UnicodeString): Boolean;
@@ -201,6 +202,24 @@ begin
     Result := Result + ['--resume', ACtx.SessionId]
   else
     Result := Result + ['--session-id', ACtx.SessionId];
+end;
+
+function TClaudeExecutorProfile.PromptViaStdin: Boolean;
+begin
+  // Claude Code reads the prompt from stdin when no positional prompt is given,
+  // and a piped (non-TTY) stdin is already what puts it in non-interactive print
+  // mode -- which is how this driver has ALWAYS run, since the dispatcher opens a
+  // stdin pipe for every child. So nothing else changes: the args built above end
+  // with the session flag and are complete without a trailing prompt token.
+  //   Verified live against claude.exe 2.1.246 on the reporter's shape:
+  //     printf '<prompt>' | claude.exe --session-id <uuid>
+  //   answers and exits 0, with no -p and no positional argument.
+  //   This is the fix for the CreateProcess 206 (ERROR_FILENAME_EXCED_RANGE) that
+  // made every chat turn fail WITH A PROJECT OPEN: the rendered project context
+  // rides in the prompt, and its active-unit body alone is capped at 32 KB --
+  // one byte over what a command line can hold. Off the command line, there is no
+  // limit to exceed.
+  Result := True;
 end;
 
 function TClaudeExecutorProfile.SessionSupport: TSessionSupport;

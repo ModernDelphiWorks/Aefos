@@ -43,6 +43,7 @@ type
     function ResolveReplicationRoot(const AProjectRoot: string): string;
     function BuildDispatchArgs(
       const ACtx: TProviderDispatchContext): TArray<string>;
+    function PromptViaStdin: Boolean;
     function SessionSupport: TSessionSupport;
     function TryCaptureSessionId(const AOutput: UnicodeString;
       out ASessionId: UnicodeString): Boolean;
@@ -171,6 +172,15 @@ begin
   if ACtx.AgentMode and (ACtx.McpSession <> '') then
     Result := Result + ['--mcp-pipe', CPipePrefix + ACtx.McpSession,
       '--permission-mode', 'auto-edits'];
+end;
+
+function TOllamaExecutorProfile.PromptViaStdin: Boolean;
+begin
+  // The local agent CLI takes the prompt positionally, like today. Its args are
+  // ours (AefosAgent.dpr), so this is the one driver where the stdin dialect
+  // could be DEFINED rather than discovered -- but that means changing the CLI
+  // and the driver together, which is a different change from fixing the 206.
+  Result := False;
 end;
 
 function TOllamaExecutorProfile.SessionSupport: TSessionSupport;

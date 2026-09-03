@@ -34,6 +34,7 @@ type
     function ResolveReplicationRoot(const AProjectRoot: string): string;
     function BuildDispatchArgs(
       const ACtx: TProviderDispatchContext): TArray<string>;
+    function PromptViaStdin: Boolean;
     function SessionSupport: TSessionSupport;
     function TryCaptureSessionId(const AOutput: UnicodeString;
       out ASessionId: UnicodeString): Boolean;
@@ -157,6 +158,18 @@ begin
       '@' + ACtx.McpConfigPath, '-s', '-p']
   else
     Result := Result + ['--allow-all-tools', '-s', '-p'];
+end;
+
+function TCopilotExecutorProfile.PromptViaStdin: Boolean;
+begin
+  // Left on the command line: this driver's args END with `-p`, which takes the
+  // prompt as its VALUE (see BuildDispatchArgs), so dropping the last token would
+  // leave a dangling flag rather than a working stdin invocation. Making Copilot
+  // read stdin means changing its args too, and neither half could be verified
+  // here against a real copilot binary. Not guessed on the shared dispatch path.
+  //   An over-long command line is now reported for what it is instead of failing
+  // as an opaque CreateProcess 206 (Dispatcher.ProcessRunner).
+  Result := False;
 end;
 
 function TCopilotExecutorProfile.SessionSupport: TSessionSupport;

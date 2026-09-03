@@ -6,6 +6,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Dates are in `YYYY-MM-DD`.
 
+## [Unreleased]
+
+### Fixed
+
+**With a project open, every Chat message failed instantly.** The turn never
+reached the CLI — it died in the spawn with
+`CreateProcess failed for "…\claude.exe" (last error: 206)`. Closing the project
+made the same question work, which made the bug look like it was about the
+project and not about the message.
+
+Error 206 is `ERROR_FILENAME_EXCED_RANGE`, and despite the name it is not a path
+problem: `CreateProcess` returns it when the command line passes 32767
+characters. The prompt was the last token of that command line, and the prompt
+carries the rendered project context — whose active-unit body alone is capped at
+32 KB (`ProjectContextBuilder.ACTIVE_UNIT_MAX_BYTES`). That cap is already one
+byte past what a command line can hold, before the executable, the flags and the
+quoting are added. Hence the exact correlation: with no project open the context
+degrades to a single short line and the same prompt fits.
+
+The prompt now travels on **stdin** for Claude Code, which reads it there and
+which the dispatcher has always opened a pipe for (it just closed it empty). A
+dedicated writer thread feeds it, so a payload larger than the pipe buffer cannot
+deadlock against a child that writes output before draining its input. Off the
+command line, the 32 KB limit no longer applies at all.
+
+Each driver declares its own answer (`IExecutorProfile.PromptViaStdin`), because
+where a CLI accepts its prompt is that CLI's dialect: Codex, Copilot, Gemini and
+the local agent CLI keep the command line, unchanged, until their stdin form can
+be verified against a real binary. For those, an over-long command line is now
+refused up front with a message that says what actually happened, instead of
+surfacing as a bare `last error: 206`.
+
 ## [1.5.1] - 2026-08-10
 
 **Two things the addon store and the MCP list disagreed about.** Both were found

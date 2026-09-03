@@ -76,6 +76,16 @@ type
     TimeoutMs: Cardinal;
     // Stdout filter policy (ADR-289). Default ofpStrip preserves today.
     OutputFilter: TOutputFilterPolicy;
+    // Where the child reads Prompt from. False (the zero value, so every
+    // Default(TDispatchRequest) caller keeps today's behaviour byte-for-byte)
+    // appends Prompt as the last token of the command line. True keeps Prompt
+    // OFF the command line and hands it to the child on stdin instead.
+    //
+    // Set from IExecutorProfile.PromptViaStdin — it is the CLI's dialect that
+    // decides, not this record. It exists because a command line is capped at
+    // 32767 characters by CreateProcess and the prompt carries the project
+    // context, which alone can fill that (see the profile member's comment).
+    PromptViaStdin: Boolean;
   end;
 
   IDispatcherRunHandle = interface
@@ -142,6 +152,15 @@ type
     CommandLine: string;
     EnvBlock: string;
     WorkingDirectory: string;
+    // Text to feed the child on stdin, UTF-8 encoded by the runner. Empty (the
+    // zero value) means what it has always meant: the child's stdin is closed
+    // immediately after the spawn, so it reads end-of-input at once. A non-empty
+    // payload is written and THEN the pipe is closed — the close is what signals
+    // end of input, so a runner that forgets it hangs the child.
+    //   The write happens off the spawn thread: a payload can be far larger than
+    // the pipe buffer, and a child that emits output before draining its stdin
+    // would otherwise deadlock against a parent blocked in WriteFile.
+    StdinText: string;
   end;
 
   // One started child process. Owns its OS handles and read threads; closes

@@ -440,6 +440,11 @@ begin
       ; // no continuity: the driver ignores the session fields entirely
   end;
   Result.Args := AProfile.BuildDispatchArgs(LCtx);
+  // Prompt channel, straight from the driver: the CLI's own dialect decides
+  // whether the prompt is the last command-line token or arrives on stdin. Asked
+  // AFTER BuildDispatchArgs purely so the two read in the order the dispatcher
+  // uses them; the answer does not depend on the args.
+  Result.PromptViaStdin := AProfile.PromptViaStdin;
   // Tags the per-executor session log file (YYYY-MM-DD-<executor>.log).
   Result.Executor := TProviderRegistry.ExecutorKindToString(AConfig.Executor);
   // Persisted runtime settings: seconds -> ms; a non-positive value disables the

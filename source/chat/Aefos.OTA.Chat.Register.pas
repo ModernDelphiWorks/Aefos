@@ -173,6 +173,14 @@ var
   // client that already works, so turning this on cannot regress them.
   GHttpSessionServer: IMCPServer;
   GHttpSessionPort: Integer = 0;
+  // Set BEFORE the HTTP server is stopped, and read by its marshalling closure.
+  // Teardown runs in finalization, ON the main thread, which by then is no
+  // longer pumping its message loop -- so a TThread.Synchronize issued from the
+  // transport thread at that moment can never complete, the transport thread
+  // never returns, and the WaitFor inside Stop holds the whole IDE open with no
+  // window and no way out but Task Manager. Measured on the Seattle VM: window
+  // closed 15:42, process still alive and still listening at 15:48.
+  GHttpStopping: Boolean = False;
   GLastResolvedProjectRoot: string = '';
 
 // ADR-083/084/085: re-runnable, guarded composition of the
@@ -2867,6 +2875,14 @@ begin
     end,
     procedure(const AProc: TThreadProcedure)
     begin
+      // Refuse the hop once teardown has begun (HTTP only -- the pipe transport
+      // keeps its existing behaviour). Raising here unwinds the frame on the
+      // transport thread, which then finds the socket closed and exits, so Stop's
+      // WaitFor returns instead of waiting on a main thread that will never pump
+      // again. A frame lost at shutdown costs a client one error; a frame waited
+      // on costs the user their IDE.
+      if AUseHttp and GHttpStopping then
+        raise Exception.Create('Aefos MCP: HTTP transport is shutting down');
       TThread.Synchronize(nil, AProc);
     end,
     '0.6.0',
@@ -3176,6 +3192,12 @@ begin
 end;
 
 procedure _ShutdownDevSessionServer;
+const
+  // Enough for an in-flight tool call to hand back its result; short enough that
+  // a wedged one never becomes a hung IDE.
+  CDrainMs = 2000;
+var
+  LDrainUntil: UInt64;
 begin
   // Drop the global consent presenter first so its interface ref (which captures
   // GChatPanel) does not dangle past teardown ([[project_chat_bpl_unload]]).
@@ -3187,6 +3209,15 @@ begin
   end;
   if Assigned(GHttpSessionServer) then
   begin
+    GHttpStopping := True;
+    // Drain a Synchronize that was ALREADY queued before the flag went up: the
+    // flag only closes the door for frames that have not knocked yet. This runs
+    // on the main thread, so we are the only one who can release that entry --
+    // and CheckSynchronize is exactly the pump the IDE has stopped running.
+    // Bounded: it leaves as soon as the queue is empty, and cannot sit here.
+    LDrainUntil := GetTickCount64 + CDrainMs;
+    while (GetTickCount64 < LDrainUntil) and CheckSynchronize(10) do
+      ;
     GHttpSessionServer.Stop;
     GHttpSessionServer := nil;
   end;

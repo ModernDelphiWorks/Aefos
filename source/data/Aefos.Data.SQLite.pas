@@ -189,9 +189,15 @@ procedure TSQLiteDatabase.MetaSet(const AKey, AValue: string);
 begin
   Lock;
   try
+    // INSERT OR REPLACE for the same reason as the session upsert: the
+    // ON CONFLICT form died on Seattle with 'near "ON": syntax error', and this
+    // one took the session LIST down with it -- the store writes its
+    // one-time-import flag through here, so a failing MetaSet made every read
+    // throw too, and an empty list from a broken read looks exactly like an
+    // empty table. (k) is the primary key and both columns are written, so
+    // replace and update land the same row.
     FConn.ExecSQL(
-      'INSERT INTO meta (k, v) VALUES (:k, :v) ' +
-      'ON CONFLICT(k) DO UPDATE SET v = excluded.v', [AKey, AValue]);
+      'INSERT OR REPLACE INTO meta (k, v) VALUES (:k, :v)', [AKey, AValue]);
   finally
     Unlock;
   end;

@@ -190,14 +190,24 @@ begin
       '(id, title, cli, project, updated, msg_count, messages_json) ' +
       'VALUES (:id, :title, :cli, :project, :updated, :count, :msgs)'
   else
+    // INSERT OR REPLACE, not the ON CONFLICT ... DO UPDATE upsert this used to
+    // carry. The upsert reached SQLite malformed on Delphi 10 Seattle and every
+    // save died with: [FireDAC][Phys][SQLite] ERROR: near "ON": syntax error --
+    // which is why a Seattle install listed "No sessions." after a real
+    // conversation, with a schema on disk and not one row in it. The engine is
+    // not the reason (the sqlite3.dll shipped beside the BPL there is 3.46.1,
+    // eight years newer than the 3.24 that introduced the syntax), so what
+    // mangles it sits above SQLite, in the older FireDAC's own statement
+    // handling. INSERT OR REPLACE predates all of it and every engine accepts it.
+    //
+    // Same outcome, not merely similar: this statement writes ALL seven columns,
+    // so replacing the row leaves exactly what the upsert would have set. The
+    // table has no triggers and nothing references its rowid, which is the only
+    // thing REPLACE does differently.
     LSql :=
-      'INSERT INTO sessions ' +
+      'INSERT OR REPLACE INTO sessions ' +
       '(id, title, cli, project, updated, msg_count, messages_json) ' +
-      'VALUES (:id, :title, :cli, :project, :updated, :count, :msgs) ' +
-      'ON CONFLICT(id) DO UPDATE SET ' +
-      'title = excluded.title, cli = excluded.cli, ' +
-      'project = excluded.project, updated = excluded.updated, ' +
-      'msg_count = excluded.msg_count, messages_json = excluded.messages_json';
+      'VALUES (:id, :title, :cli, :project, :updated, :count, :msgs)';
   ADb.Connection.ExecSQL(LSql,
     [AEntry.Id, AEntry.Title, AEntry.Cli, AEntry.Project,
      _IsoOf(AEntry.Updated), AEntry.Count, LMsgs]);

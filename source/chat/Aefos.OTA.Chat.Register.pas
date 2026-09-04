@@ -3191,20 +3191,61 @@ begin
   ShowMCPInspector(LBridge, _InspectorToolsJson(LHost));
 end;
 
+// One line per teardown STEP, appended to %AppData%\Aefosefos-teardown-trace.log.
+// A shutdown that never finishes leaves no stack, no dialog and no log entry --
+// the IDE simply keeps running with no window, and the only evidence is which
+// step never printed its 'done'. Cheap to write, and it is what turned the
+// session bug from three competing theories into one measured line.
+// Never raises, and never uses anything that could itself block.
+procedure _TeardownTrace(const AStep: string);
+var
+  LDir, LPath: string;
+  LBytes: TBytes;
+  LMode: Word;
+  LStream: TFileStream;
+begin
+  try
+    LDir := TPath.Combine(TPath.GetHomePath, 'Aefos');
+    if not TDirectory.Exists(LDir) then
+      TDirectory.CreateDirectory(LDir);
+    LPath := TPath.Combine(LDir, 'aefos-teardown-trace.log');
+    LBytes := TEncoding.UTF8.GetBytes(
+      FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz', Now) + ' ' + AStep + sLineBreak);
+    if TFile.Exists(LPath) then
+      LMode := fmOpenWrite or fmShareDenyWrite
+    else
+      LMode := fmCreate or fmShareDenyWrite;
+    LStream := TFileStream.Create(LPath, LMode);
+    try
+      LStream.Seek(0, soEnd);
+      LStream.WriteBuffer(LBytes[0], Length(LBytes));
+    finally
+      LStream.Free;
+    end;
+  except
+    // A breadcrumb that can break teardown is worse than no breadcrumb.
+  end;
+end;
+
 procedure _ShutdownDevSessionServer;
 const
   // Enough for an in-flight tool call to hand back its result; short enough that
   // a wedged one never becomes a hung IDE.
-  CDrainMs = 2000;
+  CDrainMs = 3000;
 var
   LDrainUntil: UInt64;
+  LDrained: Integer;
 begin
+  _TeardownTrace('enter');
   // Drop the global consent presenter first so its interface ref (which captures
   // GChatPanel) does not dangle past teardown ([[project_chat_bpl_unload]]).
   SetGlobalConsentPresenter(nil);
+  _TeardownTrace('consent presenter cleared');
   if Assigned(GDevSessionServer) then
   begin
+    _TeardownTrace('pipe: Stop begin');
     GDevSessionServer.Stop;
+    _TeardownTrace('pipe: Stop returned');
     GDevSessionServer := nil;
   end;
   if Assigned(GHttpSessionServer) then
@@ -3215,16 +3256,28 @@ begin
     // on the main thread, so we are the only one who can release that entry --
     // and CheckSynchronize is exactly the pump the IDE has stopped running.
     // Bounded: it leaves as soon as the queue is empty, and cannot sit here.
+    _TeardownTrace('http: drain begin');
+    // Pump the WHOLE window, never stopping at the first empty poll. The earlier
+    // version exited as soon as CheckSynchronize found nothing, which is 10 ms in
+    // and long before a frame still on its way to Synchronize could queue itself --
+    // it read as a 2-second grace and behaved like none. The entry we are waiting
+    // for may not exist YET; that is exactly the case worth waiting for.
+    LDrained := 0;
     LDrainUntil := GetTickCount64 + CDrainMs;
-    while (GetTickCount64 < LDrainUntil) and CheckSynchronize(10) do
-      ;
+    while GetTickCount64 < LDrainUntil do
+      if CheckSynchronize(10) then
+        Inc(LDrained);
+    _TeardownTrace(Format('http: drain end (%d entries)', [LDrained]));
+    _TeardownTrace('http: Stop begin');
     GHttpSessionServer.Stop;
+    _TeardownTrace('http: Stop returned');
     GHttpSessionServer := nil;
   end;
   // Clear the endpoint too: a stale URL in the next written config would point
   // a CLI at a socket this BPL no longer answers on.
   GHttpSessionPort := 0;
   TMCPProvision.SetHttpEndpoint('');
+  _TeardownTrace('exit');
 end;
 
 function _RunCommand(const ACommandName: string): Boolean;

@@ -93,7 +93,6 @@ uses
   Aefos.MCP.Resources,
   Aefos.MCP.ReAnchor,
   Aefos.MCP.Transport.NamedPipe,
-  Aefos.MCP.Transport.Http,
   // Facade unification (Passo 3): the single shared IMCPWorkspaceFacade impl
   // now lives in the Aefos.MCP.Tools.OTA runtime BPL (requires above).
   // The Chat composition root instantiates it instead of the legacy local
@@ -167,20 +166,6 @@ var
   // Lives on a named pipe so the mcp-bridge.ps1 (-Session dev) can connect
   // from outside the IDE.
   GDevSessionServer: IMCPServer;
-  // The SAME tool graph, published a second way: an in-process HTTP listener on
-  // 127.0.0.1 so a CLI can reach the live IDE with no PowerShell and no named
-  // pipe in the path. Additive on purpose -- the pipe above keeps serving every
-  // client that already works, so turning this on cannot regress them.
-  GHttpSessionServer: IMCPServer;
-  GHttpSessionPort: Integer = 0;
-  // Set BEFORE the HTTP server is stopped, and read by its marshalling closure.
-  // Teardown runs in finalization, ON the main thread, which by then is no
-  // longer pumping its message loop -- so a TThread.Synchronize issued from the
-  // transport thread at that moment can never complete, the transport thread
-  // never returns, and the WaitFor inside Stop holds the whole IDE open with no
-  // window and no way out but Task Manager. Measured on the Seattle VM: window
-  // closed 15:42, process still alive and still listening at 15:48.
-  GHttpStopping: Boolean = False;
   GLastResolvedProjectRoot: string = '';
 
 // ADR-083/084/085: re-runnable, guarded composition of the
@@ -2832,7 +2817,7 @@ begin
     end;
 end;
 
-function _BuildInspectorMcpServer(const AUseHttp: Boolean = False): IMCPServer;
+function _BuildInspectorMcpServer: IMCPServer;
 var
   LServer: IMCPServer;
   LBuildManager: IMCPBuildManager;
@@ -2866,23 +2851,10 @@ begin
   LServer := TMCPServer.Create(
     function: IMCPTransport
     begin
-      // Same server, either doorway. Start() carries the pipe NAME for one and
-      // the decimal PORT for the other -- the transport contract already says so.
-      if AUseHttp then
-        Result := THttpTransport.Create
-      else
-        Result := TNamedPipeTransport.Create;
+      Result := TNamedPipeTransport.Create;
     end,
     procedure(const AProc: TThreadProcedure)
     begin
-      // Refuse the hop once teardown has begun (HTTP only -- the pipe transport
-      // keeps its existing behaviour). Raising here unwinds the frame on the
-      // transport thread, which then finds the socket closed and exits, so Stop's
-      // WaitFor returns instead of waiting on a main thread that will never pump
-      // again. A frame lost at shutdown costs a client one error; a frame waited
-      // on costs the user their IDE.
-      if AUseHttp and GHttpStopping then
-        raise Exception.Create('Aefos MCP: HTTP transport is shutting down');
       TThread.Synchronize(nil, AProc);
     end,
     '0.6.0',
@@ -3078,13 +3050,6 @@ begin
 end;
 
 procedure _InitDevSessionServer;
-const
-  // A small fixed window rather than an ephemeral port: the range is easy to
-  // name in a firewall rule, and a second IDE simply takes the next one.
-  CFirstPort = 8790;
-  CLastPort  = 8809;
-var
-  LPort: Integer;
 begin
   if Assigned(GDevSessionServer) then
     Exit;
@@ -3096,31 +3061,6 @@ begin
       OutputDebugString(PChar(
         'Aefos: dev session MCP start failed: ' + E.Message));
   end;
-  // The HTTP doorway is best-effort and INDEPENDENT: if no port in the window
-  // binds, the endpoint stays empty and the written config falls back to the
-  // bridge, which is exactly today's behaviour. A failure here must never cost
-  // the pipe that already started above.
-  if Assigned(GHttpSessionServer) then
-    Exit;
-  for LPort := CFirstPort to CLastPort do
-    try
-      GHttpSessionServer := _BuildInspectorMcpServer(True);
-      GHttpSessionServer.Start(IntToStr(LPort));
-      GHttpSessionPort := LPort;
-      TMCPProvision.SetHttpEndpoint(
-        Format('http://127.0.0.1:%d/mcp', [LPort]));
-      Break;
-    except
-      on E: Exception do
-      begin
-        // Port taken (another IDE) or blocked: drop this attempt cleanly and
-        // try the next one. Nil-ing matters -- a half-built server left in the
-        // global would make the Assigned() guard above lie on the next call.
-        GHttpSessionServer := nil;
-        OutputDebugString(PChar(Format(
-          'Aefos: MCP HTTP port %d unavailable: %s', [LPort, E.Message])));
-      end;
-    end;
 end;
 
 // Build the inspector tool dropdown JSON ([{name, description}]) by dispatching
@@ -3241,26 +3181,6 @@ begin
     _TeardownTrace('pipe: Stop returned');
     GDevSessionServer := nil;
   end;
-  if Assigned(GHttpSessionServer) then
-  begin
-    GHttpStopping := True;
-    // No pre-drain here any more, and the reason is worth keeping: draining
-    // BEFORE cancelling releases work the server is still free to replace. It
-    // ran the full three seconds, freed 92 queued entries, and the IDE hung
-    // exactly the same -- because cancellation happens inside Stop, so until
-    // then the transport is simply still serving. The pump belongs INSIDE the
-    // join, after cancellation, and that is where it now lives
-    // (THttpTransport.Stop). The flag above still matters: it turns away frames
-    // that have not reached Synchronize yet.
-    _TeardownTrace('http: Stop begin');
-    GHttpSessionServer.Stop;
-    _TeardownTrace('http: Stop returned');
-    GHttpSessionServer := nil;
-  end;
-  // Clear the endpoint too: a stale URL in the next written config would point
-  // a CLI at a socket this BPL no longer answers on.
-  GHttpSessionPort := 0;
-  TMCPProvision.SetHttpEndpoint('');
   _TeardownTrace('exit');
 end;
 

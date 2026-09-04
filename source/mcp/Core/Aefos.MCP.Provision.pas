@@ -90,17 +90,6 @@ type
       TProviderDispatchContext.McpServerName to the SAME name the config declares,
       keeping the driver's dynamic --allowedTools mcp__<name> in lock-step with the
       served host (single source of truth -- no drift). }
-    // The live in-IDE HTTP endpoint (http://127.0.0.1:<port>/mcp), or '' when
-    // only the named pipe is up. Set by the chat package once the transport is
-    // listening, so the config it writes can point a CLI STRAIGHT at the IDE.
-    //
-    // Why this exists: the powershell+named-pipe entry needs a PowerShell that
-    // will run a -File script AND a client that lets its MCP child open a named
-    // pipe. A locked-down corporate box can withhold either one, and when it
-    // does the failure reads as 'server not connected' with nothing to grab.
-    // An http entry needs neither: the CLI opens a loopback socket itself.
-    class procedure SetHttpEndpoint(const AUrl: string); static;
-    class function HttpEndpoint: string; static;
     class function BuiltInServerKey: string; static;
   end;
 
@@ -214,33 +203,6 @@ end;
 // refuses `-File` scripts outright — the CLI then reports the MCP handshake as
 // "connection closed" (field report 2026-07-08). Dev machines rarely see it
 // because their policy is already RemoteSigned/Unrestricted.
-var
-  GHttpEndpoint: string;
-
-class procedure TMCPProvision.SetHttpEndpoint(const AUrl: string);
-begin
-  GHttpEndpoint := AUrl;
-end;
-
-class function TMCPProvision.HttpEndpoint: string;
-begin
-  Result := GHttpEndpoint;
-end;
-
-// The http form of the built-in server: what `copilot mcp add --transport http`
-// writes, measured against GitHub Copilot CLI 1.0.82 rather than guessed.
-function _BuildHttpServerObject(const AUrl: string): TJSONObject;
-var
-  LTools: TJSONArray;
-begin
-  LTools := TJSONArray.Create;
-  LTools.Add('*');
-  Result := TJSONObject.Create;
-  Result.AddPair('type', 'http');
-  Result.AddPair('url', AUrl);
-  Result.AddPair('tools', LTools);
-end;
-
 function _BuildServerObject(const ASession: string): TJSONObject;
 var
   LArgs: TJSONArray;
@@ -372,14 +334,7 @@ begin
     LServers := TJSONObject.Create;
     LRoot.AddPair('mcpServers', LServers);
     // The built-in server is always present and wins over any same-named extra.
-    // Prefer the direct loopback endpoint when the IDE is listening on it: it
-    // removes the PowerShell hop and the named pipe from the path entirely.
-    // Falls back to the bridge whenever the transport is not up, so a build
-    // where the HTTP listener failed to bind still ships a working config.
-    if GHttpEndpoint <> '' then
-      LServers.AddPair(SERVER_KEY, _BuildHttpServerObject(GHttpEndpoint))
-    else
-      LServers.AddPair(SERVER_KEY, _BuildServerObject(ASession));
+    LServers.AddPair(SERVER_KEY, _BuildServerObject(ASession));
     // Merge the user's extra servers (the "MCP Servers" modal) so every CLI sees
     // one combined config. A malformed/empty doc simply contributes nothing.
     if Trim(AExtraServersJson) <> '' then

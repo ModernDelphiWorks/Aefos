@@ -115,6 +115,34 @@ threadvar
   // synchronous FOnFrame dispatch; Send (called on the SAME thread by the
   // server's _EmitResult/_EmitError) appends the response frame here.
   GResponse: TStringBuilder;
+  // Which connection this thread is serving, so every line it writes names the
+  // same request. Set by TConnThread.Execute; zero on the accept loop, which
+  // serves none.
+  GConnId: Integer;
+
+var
+  // --- the trace ---------------------------------------------------------
+  // A call that is SLOW and a call that is QUEUED look identical from the
+  // chat, and this transport has already been declared dead once when it was
+  // only late. So it says what it did and when: one line per step, appended to
+  // %APPDATA%\Aefos\aefos-http-trace.log, in the shape the teardown and
+  // session-save traces next door already use.
+  //
+  // Times are microseconds from a QueryPerformanceCounter read when the unit
+  // loaded -- monotonic, so a clock adjustment can neither invent nor hide a
+  // delay, and integer, so a locale that writes decimals with a comma cannot
+  // make two logs disagree. The wall-clock stamp is for lining a line up with
+  // what the developer saw on screen, not for measuring.
+  //
+  // Off with AEFOS_HTTP_TRACE=0, on otherwise: one open-append-close per step
+  // costs a few hundred microseconds against a first call measured in seconds,
+  // and a diagnostic nobody remembered to switch on measures nothing.
+  GTraceLock: TRTLCriticalSection;
+  GTraceState: Integer;     // -1 not asked yet, 0 off, 1 on
+  GTracePath: string;
+  GTraceBase: Int64;        // QPC at unit load
+  GTraceFreq: Int64;        // 0 when the counter is unavailable
+  GConnSeq: Integer;        // hands each accepted connection its number
 
 type
   TServerThread = class(TThread)
@@ -133,13 +161,144 @@ type
   private
     FOwner: THttpTransport;
     FSock: TSocket;
+    FId: Integer;           // this connection's number in the trace
   protected
     procedure Execute; override;
   public
-    constructor Create(AOwner: THttpTransport; ASock: TSocket);
+    constructor Create(AOwner: THttpTransport; ASock: TSocket; AId: Integer);
     // Read by Stop to break a receive that is still waiting on a peer.
     property Sock: TSocket read FSock;
   end;
+
+{ the trace }
+
+// Microseconds since this unit loaded. Zero when the platform has no
+// performance counter, which makes every delta zero -- a trace that says
+// nothing rather than a trace that says something false.
+function _TraceUs: Int64;
+var
+  LNow: Int64;
+begin
+  Result := 0;
+  if GTraceFreq = 0 then
+    Exit;
+  if not QueryPerformanceCounter(LNow) then
+    Exit;
+  Result := ((LNow - GTraceBase) * 1000000) div GTraceFreq;
+end;
+
+// Whether to write at all. Asked once and remembered: two threads racing here
+// reach the same answer, so the race is not worth a lock.
+function _TraceEnabled: Boolean;
+var
+  LFlag: string;
+begin
+  if GTraceState < 0 then
+  begin
+    LFlag := Trim(SysUtils.GetEnvironmentVariable('AEFOS_HTTP_TRACE'));
+    if (LFlag = '0') or SameText(LFlag, 'off') then
+      GTraceState := 0
+    else
+      GTraceState := 1;
+  end;
+  Result := GTraceState = 1;
+end;
+
+// One line, appended. Every thread in this unit calls it, so the whole
+// open-append-close is inside the lock: sharing the handle instead would
+// interleave two half-written lines and the log would have to be believed
+// rather than read.
+//
+// It never raises. A diagnostic that can take the transport down with it is
+// worse than no diagnostic -- the same contract SessionSaveTrace states next
+// door.
+procedure _Trace(const AStep, ADetail: string);
+var
+  LDir: string;
+  LLine: string;
+  LBytes: TBytes;
+  LMode: Word;
+  LStream: TFileStream;
+begin
+  if not _TraceEnabled then
+    Exit;
+  EnterCriticalSection(GTraceLock);
+  try
+    try
+      if GTracePath = '' then
+      begin
+        LDir := SysUtils.GetEnvironmentVariable('APPDATA');
+        if LDir = '' then
+          Exit;
+        LDir := IncludeTrailingPathDelimiter(LDir) + 'Aefos';
+        if not DirectoryExists(LDir) then
+          ForceDirectories(LDir);
+        GTracePath := IncludeTrailingPathDelimiter(LDir) + 'aefos-http-trace.log';
+      end;
+      LLine := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz', Now) +
+        Format(' up=%d t=%d c=%d %s %s',
+          [_TraceUs, GetCurrentThreadId, GConnId, AStep, ADetail]) + sLineBreak;
+      LBytes := TEncoding.UTF8.GetBytes(LLine);
+      if FileExists(GTracePath) then
+        LMode := fmOpenWrite or fmShareDenyWrite
+      else
+        LMode := fmCreate or fmShareDenyWrite;
+      LStream := TFileStream.Create(GTracePath, LMode);
+      try
+        LStream.Seek(0, soEnd);
+        LStream.WriteBuffer(LBytes[0], Length(LBytes));
+      finally
+        LStream.Free;
+      end;
+    except
+      // Swallowed on purpose -- see above.
+    end;
+  finally
+    LeaveCriticalSection(GTraceLock);
+  end;
+end;
+
+// The value of one string field of a JSON object, read by hand.
+//
+// Not a parser: the trace needs to NAME the call that was slow, and pulling
+// two fields out of a frame the server is about to parse properly costs less
+// than carrying a JSON dependency into a transport that is RTL-only by design.
+// A field it cannot find is an empty string, never a guess.
+function _JsonField(const ABody, AName: string): string;
+var
+  LAt, LStart, LEnd: Integer;
+begin
+  Result := '';
+  LAt := Pos('"' + AName + '"', ABody);
+  if LAt = 0 then
+    Exit;
+  LStart := LAt + Length(AName) + 2;
+  while (LStart <= Length(ABody)) and (ABody[LStart] <> '"') and
+        (ABody[LStart] <> ',') and (ABody[LStart] <> '}') do
+    Inc(LStart);
+  if (LStart > Length(ABody)) or (ABody[LStart] <> '"') then
+    Exit;
+  Inc(LStart);
+  LEnd := LStart;
+  while (LEnd <= Length(ABody)) and (ABody[LEnd] <> '"') do
+    Inc(LEnd);
+  Result := Copy(ABody, LStart, LEnd - LStart);
+end;
+
+// What a trace line should call this request: the JSON-RPC method, and for a
+// tools/call the tool's own name, which is the part a reader is looking for.
+function _FramePeek(const ABody: string): string;
+var
+  LMethod, LName: string;
+begin
+  LMethod := _JsonField(ABody, 'method');
+  LName := _JsonField(ABody, 'name');
+  if LMethod = '' then
+    LMethod := '?';
+  Result := 'rpc=' + LMethod;
+  if LName <> '' then
+    Result := Result + ' tool=' + LName;
+end;
 
 constructor TServerThread.Create(AOwner: THttpTransport);
 begin
@@ -152,24 +311,36 @@ begin
   FOwner._Run;
 end;
 
-constructor TConnThread.Create(AOwner: THttpTransport; ASock: TSocket);
+constructor TConnThread.Create(AOwner: THttpTransport; ASock: TSocket;
+  AId: Integer);
 begin
   FOwner := AOwner;
   FSock := ASock;
+  FId := AId;
   inherited Create(False);
 end;
 
 procedure TConnThread.Execute;
+var
+  LStarted: Int64;
 begin
+  GConnId := FId;
+  LStarted := _TraceUs;
+  _Trace('conn.begin', Format('sock=%d', [FSock]));
   try
     FOwner._HandleConn(FSock);
   except
-    // A failed request costs its own connection and nothing else. Letting it
-    // out would take the socket down without closing it, which is how the
-    // CLOSE_WAIT sockets in the field report were left behind.
+    on E: Exception do
+      // A failed request costs its own connection and nothing else. Letting it
+      // out would take the socket down without closing it, which is how the
+      // CLOSE_WAIT sockets in the field report were left behind. It is traced,
+      // though: a connection that ends without a response is exactly what the
+      // caller sees as a call that never came back.
+      _Trace('conn.error', Format('%s: %s', [E.ClassName, E.Message]));
   end;
   shutdown(FSock, SD_BOTH);
   closesocket(FSock);
+  _Trace('conn.end', Format('us=%d', [_TraceUs - LStarted]));
   FSock := INVALID_SOCKET;
 end;
 
@@ -269,6 +440,7 @@ begin
     FListen := INVALID_SOCKET;
     raise Exception.Create('HTTP transport: CreateEvent failed');
   end;
+  _Trace('listen', Format('port=%d', [LPort]));
   FThread := TServerThread.Create(Self);
 end;
 
@@ -281,6 +453,7 @@ var
 begin
   if FCancelled and (FThread = nil) then
     Exit;                                  // idempotent: Destroy calls this too
+  _Trace('stop', 'cancel signalled');
   FCancelled := True;
   if FCancelEvent <> 0 then
     SetEvent(FCancelEvent);
@@ -414,6 +587,10 @@ begin
           closesocket(LSock);
           Break;
         end;
+        // Before the slot, not after: the gap between this line and the
+        // conn.begin that follows it is the transport's own handover, and it
+        // is the first thing a reader has to be able to rule out.
+        _Trace('accept', Format('sock=%d wake=%d', [LSock, LWait]));
         _Adopt(LSock);
       until False;
     end;
@@ -431,6 +608,7 @@ var
   LTimeout: Cardinal;
   LMode: Cardinal;
   LIdx: Integer;
+  LSlot: Integer;
   LPlaced: Boolean;
 begin
   WSAEventSelect(ASock, 0, 0);
@@ -440,24 +618,33 @@ begin
   setsockopt(ASock, SOL_SOCKET, SO_RCVTIMEO, PAnsiChar(@LTimeout),
     SizeOf(LTimeout));
   LPlaced := False;
+  LSlot := -1;
   EnterCriticalSection(FConnLock);
   try
     _ReapFinished;
     for LIdx := 0 to MAX_CONNS - 1 do
       if FConns[LIdx] = nil then
       begin
-        FConns[LIdx] := TConnThread.Create(Self, ASock);
+        FConns[LIdx] := TConnThread.Create(Self, ASock,
+          InterlockedIncrement(GConnSeq));
         LPlaced := True;
+        LSlot := LIdx;
         Break;
       end;
   finally
     LeaveCriticalSection(FConnLock);
   end;
+  if LPlaced then
+    _Trace('adopt', Format('sock=%d slot=%d', [ASock, LSlot]));
   // Every slot busy: refuse THIS connection rather than queue it behind the
   // others. A refused socket is a client that retries; a queued one is the
   // stall this whole change exists to remove.
   if not LPlaced then
   begin
+    // The one refusal that must never be silent: to the caller a 503 and a
+    // stall are the same wait, and this is the line that tells them apart.
+    _Trace('refused', Format('sock=%d reason=all-%d-slots-busy',
+      [ASock, MAX_CONNS]));
     _SendStatus(ASock, '503 Service Unavailable');
     shutdown(ASock, SD_BOTH);
     closesocket(ASock);
@@ -528,16 +715,28 @@ procedure THttpTransport._HandleConn(ASock: TSocket);
 var
   LMethod, LBody, LResp: string;
   LSb: TStringBuilder;
+  LAt: Int64;
 begin
+  LAt := _TraceUs;
   if not _ReadRequest(ASock, LMethod, LBody) then
+  begin
+    // No request came out of the socket at all: the peer closed, or the
+    // fifteen-second receive timeout expired. Both are silence to the caller,
+    // and only this line says which one happened.
+    _Trace('read.none', Format('us=%d', [_TraceUs - LAt]));
     Exit;
+  end;
+  _Trace('read.done', Format('us=%d http=%s bytes=%d %s',
+    [_TraceUs - LAt, LMethod, Length(LBody), _FramePeek(LBody)]));
   if not SameText(LMethod, 'POST') then
   begin
+    _Trace('reply', 'status=405');
     _SendStatus(ASock, '405 Method Not Allowed');
     Exit;
   end;
   if Trim(LBody) = '' then
   begin
+    _Trace('reply', 'status=400');
     _SendStatus(ASock, '400 Bad Request');
     Exit;
   end;
@@ -545,6 +744,16 @@ begin
   // Dispatch synchronously and capture whatever the server emits via Send.
   // The server marshals OTA work to the IDE main thread internally, so Send is
   // still invoked on THIS thread.
+  //
+  // **This pair of lines is what the trace exists for.** The main thread the
+  // dispatch marshals to is the one running the IDE, and a turn of the agent
+  // owns it: if the first call is slow because it is queued behind the IDE
+  // rather than because anything here is stuck, the whole delay lands between
+  // dispatch.begin and dispatch.end, with read and send measured in
+  // microseconds on either side. If it does not, the delay is ours and the
+  // surrounding lines say which step owns it.
+  LAt := _TraceUs;
+  _Trace('dispatch.begin', _FramePeek(LBody));
   LSb := TStringBuilder.Create;
   try
     GResponse := LSb;
@@ -558,11 +767,21 @@ begin
   finally
     LSb.Free;
   end;
+  _Trace('dispatch.end', Format('us=%d bytes=%d',
+    [_TraceUs - LAt, Length(LResp)]));
 
+  LAt := _TraceUs;
   if LResp <> '' then
-    _SendJson(ASock, '200 OK', LResp)
+  begin
+    _SendJson(ASock, '200 OK', LResp);
+    _Trace('reply', Format('status=200 us=%d bytes=%d',
+      [_TraceUs - LAt, Length(LResp)]));
+  end
   else
+  begin
     _SendStatus(ASock, '202 Accepted');   // JSON-RPC notification, no response
+    _Trace('reply', Format('status=202 us=%d', [_TraceUs - LAt]));
+  end;
 end;
 
 function THttpTransport._ReadRequest(ASock: TSocket;
@@ -572,6 +791,8 @@ var
   LChunk: array[0..4095] of Byte;
   LRecv, LLen, LHdrEnd, LContentLen, LBodyHave, LSpace, LIdx: Integer;
   LHeaders, LLower: string;
+  LAt: Int64;
+  LFirst: Boolean;
 begin
   Result := False;
   AMethod := '';
@@ -579,10 +800,20 @@ begin
   SetLength(LBuf, 0);
 
   // 1) accumulate until the header terminator (CRLFCRLF) is present.
+  LAt := _TraceUs;
+  LFirst := True;
   repeat
     LRecv := recv(ASock, LChunk[0], SizeOf(LChunk), 0);
     if LRecv <= 0 then
       Exit;   // peer closed, timeout, or error
+    if LFirst then
+    begin
+      // Time to the FIRST byte, separately from the rest. A client that opens
+      // the socket and sends late is not a server that reads slowly, and
+      // without this line the two are one number.
+      _Trace('read.first', Format('us=%d bytes=%d', [_TraceUs - LAt, LRecv]));
+      LFirst := False;
+    end;
     LLen := Length(LBuf);
     SetLength(LBuf, LLen + LRecv);
     Move(LChunk[0], LBuf[LLen], LRecv);
@@ -678,5 +909,21 @@ begin
   if Assigned(GResponse) then
     GResponse.Append(AFrame);
 end;
+
+initialization
+  InitializeCriticalSection(GTraceLock);
+  GTraceState := -1;
+  // Read once, here, so every delta in the log is measured from the same
+  // origin no matter which thread writes it.
+  if not QueryPerformanceFrequency(GTraceFreq) then
+    GTraceFreq := 0;
+  if (GTraceFreq = 0) or (not QueryPerformanceCounter(GTraceBase)) then
+  begin
+    GTraceFreq := 0;
+    GTraceBase := 0;
+  end;
+
+finalization
+  DeleteCriticalSection(GTraceLock);
 
 end.

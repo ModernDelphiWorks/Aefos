@@ -397,11 +397,14 @@ begin
         Break;
       if LWait = WSA_WAIT_EVENT_0 + 1 then
         Break;                       // cancel
-      if LWait <> WSA_WAIT_EVENT_0 then
-        Continue;                    // timeout or spurious wake
-      WSAResetEvent(LAcceptEvent);
-      // FD_ACCEPT is edge-triggered: drain every pending connection now, or a
-      // client that arrived while we were busy waits for the NEXT one to knock.
+      // Reset FIRST, then accept until the queue is empty -- and accept on EVERY
+      // wake, including the timeout. FD_ACCEPT is edge-triggered and only fires
+      // again for a NEW connection, so resetting after a drain that stopped one
+      // accept too early strands that client forever: the event it needed has
+      // already been consumed and no other is coming. Trying the accept even on
+      // a plain timeout makes that unmissable rather than merely unlikely.
+      if LWait = WSA_WAIT_EVENT_0 then
+        WSAResetEvent(LAcceptEvent);
       repeat
         LSock := accept(FListen, nil, nil);
         if LSock = INVALID_SOCKET then

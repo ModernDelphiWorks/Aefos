@@ -275,8 +275,13 @@ begin
     end;
   except
     on E: Exception do
+    begin
       // A DB error must never break the caller (matches the old file behaviour).
       OutputDebugString(PChar('Aefos.SessionStore.Save: ' + E.Message));
+      // ...but it must not vanish either: OutputDebugString needs a debugger
+      // attached, which nobody has while reporting 'my sessions are gone'.
+      SessionSaveTrace('error: save failed -- ' + E.Message);
+    end;
   end;
 end;
 
@@ -319,7 +324,11 @@ begin
         LDb.Unlock;
       end;
     except
-      // A store failure must never break the panel: return what we have.
+      on E: Exception do
+        // A store failure must never break the panel: return what we have,
+        // but say so -- an empty list from a broken read and an empty list
+        // from an empty table look identical on screen.
+        SessionSaveTrace('error: load failed -- ' + E.Message);
     end;
     Result := LList.ToArray;
   finally

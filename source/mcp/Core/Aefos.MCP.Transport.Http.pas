@@ -109,6 +109,20 @@ const
   // waited on forever, and the transport is pinned so it cannot be destroyed
   // under that worker (the pipe transport paid for that lesson in the field).
   STOP_TIMEOUT_MS = 5000;
+  // `ioctlsocket` declares `cmd: Longint`, and Winsock's FIONBIO is $8004667E
+  // -- one bit past what a signed 32-bit value holds. The packages compile with
+  // {$RANGECHECKS ON} (see Aefos.MCP.Core.dpk), so passing the constant did not
+  // merely warn at compile time (W1012, which was in every build log and read
+  // as noise): it RAISED ERangeError on the accept thread. Every accepted
+  // connection died in _Adopt before it was served, the loop went with it, and
+  // from the chat the whole thing looked like 'HTTP is slow' -- it was never
+  // answering at all. Measured in the field by the trace, then reproduced
+  // headless by compiling the probe with -$R+.
+  //
+  // The same bits written as the signed value they are, so nothing is
+  // converted and nothing is checked. Derived from FIONBIO rather than typed
+  // out, so it cannot drift from what Winsock declares.
+  FIONBIO_CMD = Longint(Int64(FIONBIO) - Int64($100000000));
 
 threadvar
   // Response collector for the server thread. _HandleConn sets it around the
@@ -308,7 +322,19 @@ end;
 
 procedure TServerThread.Execute;
 begin
-  FOwner._Run;
+  // The accept loop is the transport. If it leaves, every later request is
+  // silence -- the client connects, nothing answers, and the chat shows a call
+  // that never comes back. It left once in the field and said nothing: one
+  // accept in the log and no line after it, for the rest of the IDE session.
+  // TThread swallows an exception into FatalException, so an unnamed death is
+  // exactly what that looks like. Not any more.
+  try
+    FOwner._Run;
+    _Trace('run.exit', 'accept loop returned');
+  except
+    on E: Exception do
+      _Trace('run.error', Format('%s: %s', [E.ClassName, E.Message]));
+  end;
 end;
 
 constructor TConnThread.Create(AOwner: THttpTransport; ASock: TSocket;
@@ -591,7 +617,20 @@ begin
         // conn.begin that follows it is the transport's own handover, and it
         // is the first thing a reader has to be able to rule out.
         _Trace('accept', Format('sock=%d wake=%d', [LSock, LWait]));
-        _Adopt(LSock);
+        // A connection that cannot be adopted costs ITSELF, never the loop.
+        // Letting it out of here ended the accept loop, and an accept loop
+        // that ended made every later request in that IDE session hang with
+        // nothing in any log -- the exact failure this trace was built to see.
+        try
+          _Adopt(LSock);
+        except
+          on E: Exception do
+          begin
+            _Trace('adopt.error', Format('%s: %s', [E.ClassName, E.Message]));
+            shutdown(LSock, SD_BOTH);
+            closesocket(LSock);
+          end;
+        end;
       until False;
     end;
   finally
@@ -613,15 +652,22 @@ var
 begin
   WSAEventSelect(ASock, 0, 0);
   LMode := 0;
-  ioctlsocket(ASock, FIONBIO, LMode);
+  ioctlsocket(ASock, FIONBIO_CMD, LMode);
   LTimeout := RECV_TIMEOUT_MS;
   setsockopt(ASock, SOL_SOCKET, SO_RCVTIMEO, PAnsiChar(@LTimeout),
     SizeOf(LTimeout));
+  // Step by step, because the field says the loop dies HERE and a single line
+  // saying 'adopt' cannot say which of these four things it died in. Each one
+  // is a different bug: the socket options, the lock, reaping a finished
+  // worker, or starting a new one.
+  _Trace('adopt.opts', Format('sock=%d', [ASock]));
   LPlaced := False;
   LSlot := -1;
   EnterCriticalSection(FConnLock);
   try
+    _Trace('adopt.lock', 'held');
     _ReapFinished;
+    _Trace('adopt.reap', 'done');
     for LIdx := 0 to MAX_CONNS - 1 do
       if FConns[LIdx] = nil then
       begin
@@ -631,6 +677,7 @@ begin
         LSlot := LIdx;
         Break;
       end;
+    _Trace('adopt.spawn', Format('placed=%d slot=%d', [Ord(LPlaced), LSlot]));
   finally
     LeaveCriticalSection(FConnLock);
   end;

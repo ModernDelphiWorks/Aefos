@@ -3228,13 +3228,6 @@ begin
 end;
 
 procedure _ShutdownDevSessionServer;
-const
-  // Enough for an in-flight tool call to hand back its result; short enough that
-  // a wedged one never becomes a hung IDE.
-  CDrainMs = 3000;
-var
-  LDrainUntil: UInt64;
-  LDrained: Integer;
 begin
   _TeardownTrace('enter');
   // Drop the global consent presenter first so its interface ref (which captures
@@ -3251,23 +3244,14 @@ begin
   if Assigned(GHttpSessionServer) then
   begin
     GHttpStopping := True;
-    // Drain a Synchronize that was ALREADY queued before the flag went up: the
-    // flag only closes the door for frames that have not knocked yet. This runs
-    // on the main thread, so we are the only one who can release that entry --
-    // and CheckSynchronize is exactly the pump the IDE has stopped running.
-    // Bounded: it leaves as soon as the queue is empty, and cannot sit here.
-    _TeardownTrace('http: drain begin');
-    // Pump the WHOLE window, never stopping at the first empty poll. The earlier
-    // version exited as soon as CheckSynchronize found nothing, which is 10 ms in
-    // and long before a frame still on its way to Synchronize could queue itself --
-    // it read as a 2-second grace and behaved like none. The entry we are waiting
-    // for may not exist YET; that is exactly the case worth waiting for.
-    LDrained := 0;
-    LDrainUntil := GetTickCount64 + CDrainMs;
-    while GetTickCount64 < LDrainUntil do
-      if CheckSynchronize(10) then
-        Inc(LDrained);
-    _TeardownTrace(Format('http: drain end (%d entries)', [LDrained]));
+    // No pre-drain here any more, and the reason is worth keeping: draining
+    // BEFORE cancelling releases work the server is still free to replace. It
+    // ran the full three seconds, freed 92 queued entries, and the IDE hung
+    // exactly the same -- because cancellation happens inside Stop, so until
+    // then the transport is simply still serving. The pump belongs INSIDE the
+    // join, after cancellation, and that is where it now lives
+    // (THttpTransport.Stop). The flag above still matters: it turns away frames
+    // that have not reached Synchronize yet.
     _TeardownTrace('http: Stop begin');
     GHttpSessionServer.Stop;
     _TeardownTrace('http: Stop returned');

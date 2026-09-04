@@ -75,6 +75,12 @@ type
 implementation
 
 uses
+{$IFDEF FPC}
+  Windows,
+{$ELSE}
+  Winapi.Windows,   // WaitForSingleObject: join the server thread WITHOUT
+                    // blocking the pump it depends on (see Stop).
+{$ENDIF}
   Classes;
 
 const
@@ -209,7 +215,28 @@ begin
   FThread := nil;
   if Assigned(LThread) then
   begin
-    LThread.WaitFor;
+    // PUMP WHILE JOINING -- a plain WaitFor here hangs the IDE.
+    //
+    // Every frame this transport serves is marshalled to the main thread with
+    // TThread.Synchronize, which only completes when someone calls
+    // CheckSynchronize. Stop runs on the main thread, so a bare WaitFor makes
+    // the one thread that could release the server thread sit and wait for it:
+    // the IDE closes its window and the process never exits. Measured, twice,
+    // on Delphi 10 Seattle and again on 12 -- teardown trace stops at
+    // 'http: Stop begin' and never reaches 'returned'.
+    //
+    // Draining before this point does NOT help, and that was the previous
+    // attempt: cancellation happens above, so until then the server is still
+    // accepting work and simply queues more (92 entries drained, then the same
+    // hang). The pump has to run DURING the wait, after cancellation, which is
+    // what this loop does.
+    if GetCurrentThreadId = MainThreadID then
+      while WaitForSingleObject(LThread.Handle, 10) = WAIT_TIMEOUT do
+        CheckSynchronize(0)
+    else
+      // Off the main thread there is nothing to pump and nothing to deadlock
+      // against: whoever owns the pump is still running it.
+      LThread.WaitFor;
     LThread.Free;
   end;
 

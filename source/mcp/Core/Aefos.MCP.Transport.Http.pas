@@ -39,28 +39,52 @@ uses
   // Winapi-scoped units stay dotted on Delphi: not every consumer .dproj config
   // carries the Winapi unit-scope prefix (System.* is safe, Winapi.* is not).
 {$IFDEF FPC}
+  Windows,
   WinSock2,
 {$ELSE}
+  Winapi.Windows,   // TRTLCriticalSection / THandle / event + wait APIs
   Winapi.WinSock2,
 {$ENDIF}
   Aefos.MCP.Types;
+
+const
+  // Concurrent connections served at once. The named-pipe transport next door
+  // publishes four instances for the same reason and names the case in its own
+  // header: more than one consumer at a time is normal, not exotic. Measured
+  // here too -- Copilot opens a second session while the first is still open.
+  // Declared here because the connection table is a field of the class below.
+  MAX_CONNS = 8;
 
 type
   THttpTransport = class(TInterfacedObject, IMCPTransport)
   private
     FThread: TObject;            // TServerThread; opaque to the interface section
     FListen: TSocket;
-    FConn: TSocket;              // current connection (closed by Stop to unblock)
+    // One slot per connection being served. The accept loop no longer serves a
+    // connection itself: a client that opens a socket and holds it idle used to
+    // own the whole server until its receive timeout expired, which is what a
+    // tool call that 'takes forever' looks like from the chat.
+    FConns: array[0..MAX_CONNS - 1] of TObject;   // TConnThread
+    FConnLock: TRTLCriticalSection;
+    // Manual-reset, signalled by Stop. Every wait in this unit watches it, so
+    // shutdown is an event rather than a socket close somebody hopes will make
+    // a blocked call return. Same contract the named-pipe transport uses.
+    FCancelEvent: THandle;
     FCancelled: Boolean;
     FWsaUp: Boolean;
     FOnFrame: TMCPFrameCallback;
     procedure _Run;
+    procedure _Adopt(ASock: TSocket);
+    procedure _ReapFinished;
+    procedure _CloseLiveConns;
+    function _JoinAndFree(AThread: TObject; ADeadline: UInt64): Boolean;
     procedure _HandleConn(ASock: TSocket);
     function _ReadRequest(ASock: TSocket; out AMethod, ABody: string): Boolean;
     procedure _SendAll(ASock: TSocket; const ABytes: TBytes);
     procedure _SendJson(ASock: TSocket; const AStatus, ABody: string);
     procedure _SendStatus(ASock: TSocket; const AStatus: string);
   public
+    constructor Create;
     destructor Destroy; override;
     procedure Start(const APipeName: string);
     procedure Stop;
@@ -75,17 +99,16 @@ type
 implementation
 
 uses
-{$IFDEF FPC}
-  Windows,
-{$ELSE}
-  Winapi.Windows,   // WaitForSingleObject: join the server thread WITHOUT
-                    // blocking the pump it depends on (see Stop).
-{$ENDIF}
-  Classes;
+  Classes;   // TThread / CheckSynchronize; the Windows APIs come in with the
+             // interface uses, where the class fields already need them.
 
 const
   RECV_TIMEOUT_MS = 15000;       // drop a connection that stalls mid-request
   LOCALHOST_NET   = $0100007F;   // 127.0.0.1 already in network byte order
+  // Ceiling on the shutdown join. Past it a worker is left running rather than
+  // waited on forever, and the transport is pinned so it cannot be destroyed
+  // under that worker (the pipe transport paid for that lesson in the field).
+  STOP_TIMEOUT_MS = 5000;
 
 threadvar
   // Response collector for the server thread. _HandleConn sets it around the
@@ -103,6 +126,21 @@ type
     constructor Create(AOwner: THttpTransport);
   end;
 
+  // One accepted connection, served to completion and then closed. Separate
+  // from the accept loop on purpose: serving inline made one idle client able
+  // to hold every other request behind it.
+  TConnThread = class(TThread)
+  private
+    FOwner: THttpTransport;
+    FSock: TSocket;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(AOwner: THttpTransport; ASock: TSocket);
+    // Read by Stop to break a receive that is still waiting on a peer.
+    property Sock: TSocket read FSock;
+  end;
+
 constructor TServerThread.Create(AOwner: THttpTransport);
 begin
   FOwner := AOwner;
@@ -112,6 +150,27 @@ end;
 procedure TServerThread.Execute;
 begin
   FOwner._Run;
+end;
+
+constructor TConnThread.Create(AOwner: THttpTransport; ASock: TSocket);
+begin
+  FOwner := AOwner;
+  FSock := ASock;
+  inherited Create(False);
+end;
+
+procedure TConnThread.Execute;
+begin
+  try
+    FOwner._HandleConn(FSock);
+  except
+    // A failed request costs its own connection and nothing else. Letting it
+    // out would take the socket down without closing it, which is how the
+    // CLOSE_WAIT sockets in the field report were left behind.
+  end;
+  shutdown(FSock, SD_BOTH);
+  closesocket(FSock);
+  FSock := INVALID_SOCKET;
 end;
 
 { helpers }
@@ -141,9 +200,17 @@ end;
 
 { THttpTransport }
 
+constructor THttpTransport.Create;
+begin
+  inherited Create;
+  InitializeCriticalSection(FConnLock);
+  FListen := INVALID_SOCKET;
+end;
+
 destructor THttpTransport.Destroy;
 begin
   Stop;
+  DeleteCriticalSection(FConnLock);
   inherited;
 end;
 
@@ -192,55 +259,76 @@ begin
     raise Exception.Create('HTTP transport: listen() failed');
   end;
 
-  FConn := INVALID_SOCKET;
   FCancelled := False;
+  // Manual-reset: once shutdown is signalled it STAYS signalled, so a wait that
+  // starts after the signal returns immediately instead of missing it.
+  FCancelEvent := CreateEvent(nil, True, False, nil);
+  if FCancelEvent = 0 then
+  begin
+    closesocket(FListen);
+    FListen := INVALID_SOCKET;
+    raise Exception.Create('HTTP transport: CreateEvent failed');
+  end;
   FThread := TServerThread.Create(Self);
 end;
 
 procedure THttpTransport.Stop;
 var
-  LThread: TThread;
+  LThread: TObject;
+  LDeadline: UInt64;
+  LIdx: Integer;
+  LLeaked: Boolean;
 begin
+  if FCancelled and (FThread = nil) then
+    Exit;                                  // idempotent: Destroy calls this too
   FCancelled := True;
-  // Unblock accept() and any in-flight recv() by closing the sockets.
+  if FCancelEvent <> 0 then
+    SetEvent(FCancelEvent);
   if FListen <> INVALID_SOCKET then
   begin
     closesocket(FListen);
     FListen := INVALID_SOCKET;
   end;
-  if FConn <> INVALID_SOCKET then
-    closesocket(FConn);
+  // Break the receives before waiting on the threads that are sitting in them.
+  _CloseLiveConns;
 
-  LThread := TThread(FThread);
+  LDeadline := GetTickCount64 + STOP_TIMEOUT_MS;
+  LLeaked := False;
+
+  LThread := FThread;
   FThread := nil;
   if Assigned(LThread) then
-  begin
-    // PUMP WHILE JOINING -- a plain WaitFor here hangs the IDE.
-    //
-    // Every frame this transport serves is marshalled to the main thread with
-    // TThread.Synchronize, which only completes when someone calls
-    // CheckSynchronize. Stop runs on the main thread, so a bare WaitFor makes
-    // the one thread that could release the server thread sit and wait for it:
-    // the IDE closes its window and the process never exits. Measured, twice,
-    // on Delphi 10 Seattle and again on 12 -- teardown trace stops at
-    // 'http: Stop begin' and never reaches 'returned'.
-    //
-    // Draining before this point does NOT help, and that was the previous
-    // attempt: cancellation happens above, so until then the server is still
-    // accepting work and simply queues more (92 entries drained, then the same
-    // hang). The pump has to run DURING the wait, after cancellation, which is
-    // what this loop does.
-    if GetCurrentThreadId = MainThreadID then
-      while WaitForSingleObject(LThread.Handle, 10) = WAIT_TIMEOUT do
-        CheckSynchronize(0)
-    else
-      // Off the main thread there is nothing to pump and nothing to deadlock
-      // against: whoever owns the pump is still running it.
-      LThread.WaitFor;
-    LThread.Free;
+    if not _JoinAndFree(LThread, LDeadline) then
+      LLeaked := True;
+
+  EnterCriticalSection(FConnLock);
+  try
+    for LIdx := 0 to MAX_CONNS - 1 do
+      if Assigned(FConns[LIdx]) then
+      begin
+        if _JoinAndFree(FConns[LIdx], LDeadline) then
+          FConns[LIdx] := nil
+        else
+          LLeaked := True;
+      end;
+  finally
+    LeaveCriticalSection(FConnLock);
   end;
 
-  if FWsaUp then
+  if LLeaked then
+    // A worker outlived the ceiling. It still runs against Self through a plain
+    // field, so letting the interface refcount destroy this object now would be
+    // a use-after-free -- the named-pipe transport took that crash in the field
+    // in 2026-07-08 and pins itself for the same reason. An IDE that closes with
+    // a leaked thread beats an IDE that never closes, and beats an AV.
+    _AddRef
+  else if FCancelEvent <> 0 then
+  begin
+    CloseHandle(FCancelEvent);
+    FCancelEvent := 0;
+  end;
+
+  if FWsaUp and (not LLeaked) then
   begin
     WSACleanup;
     FWsaUp := False;
@@ -283,30 +371,154 @@ end;
 procedure THttpTransport._Run;
 var
   LSock: TSocket;
-  LTimeout: Cardinal;
+  LAcceptEvent: TWSAEvent;
+  LEvents: array[0..1] of TWSAEvent;
+  LWait: DWORD;
 begin
-  while not FCancelled do
-  begin
-    LSock := accept(FListen, nil, nil);
-    if FCancelled then
+  // Nothing here blocks in a way Stop cannot break. accept() used to block
+  // outright, so shutdown had to close the listening socket underneath it and
+  // hope the call returned; now the socket reports readiness through an event
+  // and the loop waits on that event AND the cancel event together. Signalling
+  // cancel is enough to end the loop, immediately and from any state.
+  LAcceptEvent := WSACreateEvent;
+  if LAcceptEvent = WSA_INVALID_EVENT then
+    Exit;
+  try
+    if WSAEventSelect(FListen, LAcceptEvent, FD_ACCEPT) = SOCKET_ERROR then
+      Exit;
+    LEvents[0] := LAcceptEvent;
+    LEvents[1] := TWSAEvent(FCancelEvent);
+    while not FCancelled do
     begin
-      if LSock <> INVALID_SOCKET then
-        closesocket(LSock);
-      Break;
+      // The timeout is a belt for a signal that never arrives, not the
+      // mechanism: cancel wakes this the moment it is set.
+      LWait := WSAWaitForMultipleEvents(2, @LEvents[0], False, 500, False);
+      if FCancelled then
+        Break;
+      if LWait = WSA_WAIT_EVENT_0 + 1 then
+        Break;                       // cancel
+      if LWait <> WSA_WAIT_EVENT_0 then
+        Continue;                    // timeout or spurious wake
+      WSAResetEvent(LAcceptEvent);
+      // FD_ACCEPT is edge-triggered: drain every pending connection now, or a
+      // client that arrived while we were busy waits for the NEXT one to knock.
+      repeat
+        LSock := accept(FListen, nil, nil);
+        if LSock = INVALID_SOCKET then
+          Break;
+        if FCancelled then
+        begin
+          closesocket(LSock);
+          Break;
+        end;
+        _Adopt(LSock);
+      until False;
     end;
-    if LSock = INVALID_SOCKET then
-      Break;   // listen socket closed / error
-    LTimeout := RECV_TIMEOUT_MS;
-    setsockopt(LSock, SOL_SOCKET, SO_RCVTIMEO, PAnsiChar(@LTimeout),
-      SizeOf(LTimeout));
-    FConn := LSock;
-    try
-      _HandleConn(LSock);
-    finally
-      FConn := INVALID_SOCKET;
-      closesocket(LSock);
-    end;
+  finally
+    WSACloseEvent(LAcceptEvent);
   end;
+end;
+
+// Hands one accepted socket to its own thread. The socket inherits non-blocking
+// mode from the event-selected listener, so it is put back to blocking first --
+// the request reader is written for blocking reads and a non-blocking recv would
+// return WSAEWOULDBLOCK and be read as 'peer closed'.
+procedure THttpTransport._Adopt(ASock: TSocket);
+var
+  LTimeout: Cardinal;
+  LMode: Cardinal;
+  LIdx: Integer;
+  LPlaced: Boolean;
+begin
+  WSAEventSelect(ASock, 0, 0);
+  LMode := 0;
+  ioctlsocket(ASock, FIONBIO, LMode);
+  LTimeout := RECV_TIMEOUT_MS;
+  setsockopt(ASock, SOL_SOCKET, SO_RCVTIMEO, PAnsiChar(@LTimeout),
+    SizeOf(LTimeout));
+  LPlaced := False;
+  EnterCriticalSection(FConnLock);
+  try
+    _ReapFinished;
+    for LIdx := 0 to MAX_CONNS - 1 do
+      if FConns[LIdx] = nil then
+      begin
+        FConns[LIdx] := TConnThread.Create(Self, ASock);
+        LPlaced := True;
+        Break;
+      end;
+  finally
+    LeaveCriticalSection(FConnLock);
+  end;
+  // Every slot busy: refuse THIS connection rather than queue it behind the
+  // others. A refused socket is a client that retries; a queued one is the
+  // stall this whole change exists to remove.
+  if not LPlaced then
+  begin
+    _SendStatus(ASock, '503 Service Unavailable');
+    shutdown(ASock, SD_BOTH);
+    closesocket(ASock);
+  end;
+end;
+
+// Frees the threads that already finished. Caller holds FConnLock.
+procedure THttpTransport._ReapFinished;
+var
+  LIdx: Integer;
+begin
+  for LIdx := 0 to MAX_CONNS - 1 do
+    if Assigned(FConns[LIdx]) and TThread(FConns[LIdx]).Finished then
+    begin
+      TThread(FConns[LIdx]).Free;
+      FConns[LIdx] := nil;
+    end;
+end;
+
+// Breaks any receive still waiting on a peer, so its thread can finish.
+procedure THttpTransport._CloseLiveConns;
+var
+  LIdx: Integer;
+  LSock: TSocket;
+begin
+  EnterCriticalSection(FConnLock);
+  try
+    for LIdx := 0 to MAX_CONNS - 1 do
+      if Assigned(FConns[LIdx]) then
+      begin
+        LSock := TConnThread(FConns[LIdx]).Sock;
+        if LSock <> INVALID_SOCKET then
+        begin
+          // shutdown() first: closesocket alone does not reliably wake a recv
+          // that is already parked, and waiting out RECV_TIMEOUT_MS instead is
+          // fifteen seconds of an IDE that will not close.
+          shutdown(LSock, SD_BOTH);
+          closesocket(LSock);
+        end;
+      end;
+  finally
+    LeaveCriticalSection(FConnLock);
+  end;
+end;
+
+// Joins one thread, pumping Synchronize while it waits, and frees it. False
+// when the deadline passed with the thread still running -- see Stop for what
+// that costs and why it is still better than waiting forever.
+function THttpTransport._JoinAndFree(AThread: TObject; ADeadline: UInt64): Boolean;
+var
+  LThread: TThread;
+begin
+  LThread := TThread(AThread);
+  Result := False;
+  repeat
+    Result := WaitForSingleObject(LThread.Handle, 25) = WAIT_OBJECT_0;
+    // Every frame is marshalled to the main thread with TThread.Synchronize, so
+    // a thread mid-dispatch is parked waiting for exactly the thread that
+    // usually calls Stop. Waiting without pumping is a guaranteed deadlock.
+    if (not Result) and (TThread.CurrentThread.ThreadID = MainThreadID) then
+      CheckSynchronize;
+  until Result or (GetTickCount64 > ADeadline);
+  if Result then
+    LThread.Free;
 end;
 
 procedure THttpTransport._HandleConn(ASock: TSocket);

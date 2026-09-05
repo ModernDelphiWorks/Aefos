@@ -1,4 +1,4 @@
-<#
+﻿<#
   Builds AND stages the Aefos package group for one or more RAD Studio versions.
 
   The same .dproj files target every supported Delphi: the version is chosen by
@@ -148,6 +148,31 @@ Windows 32-bit C++ target is enough). Then run this script again.
   cmd /c "`"$Rsvars`" && pushd `"$vtermDir`" && call `"$bat`" $Plat && popd"
   if (-not (Test-Path $unity)) {
     throw "libvterm build produced no unity object for $Plat -- the Terminal BPL cannot link."
+  }
+}
+
+# The bridge script is embedded as a resource, and a resource compiled by hand
+# goes stale the moment someone edits the .ps1 -- which is exactly what happened:
+# the shipped .res carried a bridge 13 bytes older than the source, and nothing
+# in any build said so. Compile it here, every build, from the one .rc that
+# points at the repo-root mcp-bridge.ps1.
+$rcDir = Join-Path $PSScriptRoot '..\source\mcp\Core'
+$rcFile = Join-Path $rcDir 'Aefos.MCP.Provision.rc'
+if (Test-Path $rcFile) {
+  $brcc = $null
+  foreach ($v in $targets) {
+    $cand = Join-Path (Split-Path (Get-AefosRsVarsPath $v) -Parent) 'brcc32.exe'
+    if (Test-Path $cand) { $brcc = $cand; break }
+  }
+  if ($brcc) {
+    Push-Location $rcDir
+    try {
+      & $brcc 'Aefos.MCP.Provision.rc' | Out-Null
+      if ($LASTEXITCODE -ne 0) { throw "brcc32 failed on Aefos.MCP.Provision.rc (exit $LASTEXITCODE)." }
+      Write-Host '  OK  Aefos.MCP.Provision.res rebuilt from mcp-bridge.ps1' -ForegroundColor DarkGray
+    } finally { Pop-Location }
+  } else {
+    Write-Warning 'brcc32.exe not found -- Aefos.MCP.Provision.res may be stale.'
   }
 }
 

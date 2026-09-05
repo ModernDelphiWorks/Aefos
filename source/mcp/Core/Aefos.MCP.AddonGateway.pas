@@ -154,8 +154,9 @@ var
   // is built twice per turn shows up as two `gw.create` lines; a CLI starting
   // its own servers shows up as PIDs that never appear here at all.
   //
-  // Same contract as the HTTP transport's trace: off with AEFOS_GATEWAY_TRACE=0,
-  // one open-append-close per line under a lock, and it never raises.
+  // Same contract as the HTTP transport's trace: SHIPPED OFF, turned on for a
+  // hunt with AEFOS_GATEWAY_TRACE=1, one open-append-close per line under a
+  // lock, and it never raises.
   GGwTraceLock: TRTLCriticalSection;
   GGwTraceState: Integer;   // -1 not asked yet, 0 off, 1 on
   GGwTracePath: string;
@@ -187,10 +188,10 @@ begin
     // Qualified: `uses Windows` hijacks the bare name, the same trap this unit
     // already documents further down.
     LFlag := Trim(SysUtils.GetEnvironmentVariable('AEFOS_GATEWAY_TRACE'));
-    if (LFlag = '0') or SameText(LFlag, 'off') then
-      GGwTraceState := 0
+    if (LFlag = '1') or SameText(LFlag, 'on') or SameText(LFlag, 'true') then
+      GGwTraceState := 1
     else
-      GGwTraceState := 1;
+      GGwTraceState := 0;
   end;
   if GGwTraceState <> 1 then
     Exit;

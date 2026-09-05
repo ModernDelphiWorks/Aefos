@@ -148,9 +148,11 @@ var
   // make two logs disagree. The wall-clock stamp is for lining a line up with
   // what the developer saw on screen, not for measuring.
   //
-  // Off with AEFOS_HTTP_TRACE=0, on otherwise: one open-append-close per step
-  // costs a few hundred microseconds against a first call measured in seconds,
-  // and a diagnostic nobody remembered to switch on measures nothing.
+  // SHIPPED OFF. AEFOS_HTTP_TRACE=1 turns it on for a hunt. It was on by
+  // default while this transport was being debugged, which is what made it
+  // catch the accept loop dying on the owner's machine -- but a line per step
+  // per request, in a file nothing rotates, is not something to leave running
+  // on every user's disk for a bug that is now fixed.
   GTraceLock: TRTLCriticalSection;
   GTraceState: Integer;     // -1 not asked yet, 0 off, 1 on
   GTracePath: string;
@@ -210,10 +212,10 @@ begin
   if GTraceState < 0 then
   begin
     LFlag := Trim(SysUtils.GetEnvironmentVariable('AEFOS_HTTP_TRACE'));
-    if (LFlag = '0') or SameText(LFlag, 'off') then
-      GTraceState := 0
+    if (LFlag = '1') or SameText(LFlag, 'on') or SameText(LFlag, 'true') then
+      GTraceState := 1
     else
-      GTraceState := 1;
+      GTraceState := 0;
   end;
   Result := GTraceState = 1;
 end;

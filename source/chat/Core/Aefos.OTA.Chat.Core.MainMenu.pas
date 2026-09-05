@@ -25,7 +25,7 @@ uses
   Aefos.OTA.Chat.UI.OutputPanel.Edge;
 
 const
-  OTA_PLUGIN_VERSION = '1.5.2';
+  OTA_PLUGIN_VERSION = '1.6.0';
 
 type
   TMenuAction = (maAgentSuggest, maCommandReplicate, maAbout, maShowChat);

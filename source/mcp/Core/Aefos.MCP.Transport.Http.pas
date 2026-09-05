@@ -102,6 +102,20 @@ uses
   Classes;   // TThread / CheckSynchronize; the Windows APIs come in with the
              // interface uses, where the class fields already need them.
 
+{$IF not Declared(GetTickCount64)}
+// 10 Seattle's and 10.1 Berlin's Winapi.Windows do not declare this Vista-era
+// API yet, and both of them build this unit. Declared() rather than a
+// CompilerVersion number: it asks the compiler in hand whether the symbol
+// exists instead of encoding a guess about which release added it -- the same
+// guard, for the same reason, that Aefos.MCP.AddonGateway already carries.
+//
+// Found by the release build on the VM, not by reading: 19.0 through 37.0
+// compiled this file happily and 17.0/18.0 stopped dead on it. Six of the eight
+// IDEs this product ships for exist only on that VM, so "it builds here" says
+// nothing at all about them.
+function GetTickCount64: UInt64; stdcall; external 'kernel32.dll' name 'GetTickCount64';
+{$IFEND}
+
 const
   RECV_TIMEOUT_MS = 15000;       // drop a connection that stalls mid-request
   LOCALHOST_NET   = $0100007F;   // 127.0.0.1 already in network byte order

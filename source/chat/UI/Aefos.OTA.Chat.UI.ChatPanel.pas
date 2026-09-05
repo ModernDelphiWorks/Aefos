@@ -797,10 +797,19 @@ begin
   // meaningful to record, so skip. The recorded messages come straight from the
   // controller's history (same array dsReplay consumes).
   if not Assigned(FGetSession) or not Assigned(FController) then
+  begin
+    SessionSaveTrace('skip: hooks not wired (GetSession/Controller)');
     Exit;
+  end;
   LId := FGetSession();
   if LId = '' then
+  begin
+    // The executor holds no session id at this moment. Worth a line of its
+    // own: it means the panel is asking an executor that never dispatched,
+    // or one whose id was reset since -- not that the conversation is empty.
+    SessionSaveTrace('skip: empty session id from OnGetSession');
     Exit;
+  end;
   LEntry := Default(TSessionEntry);
   LEntry.Id := LId;
   if Trim(FSessionTitle) <> '' then
@@ -822,7 +831,13 @@ begin
   // Skipping the save preserves what's on disk. (ReplayMessages now re-seeds the
   // controller's history on resume, so this is a belt-and-suspenders guard.)
   if SessionSaveWouldClobber(LEntry.MessagesJson, LEntry.Count) then
+  begin
+    SessionSaveTrace(Format('skip: clobber guard (id=%s count=%d messages=%d chars)',
+      [LId, LEntry.Count, Length(LEntry.MessagesJson)]));
     Exit;
+  end;
+  SessionSaveTrace(Format('save: id=%s cli=%s count=%d messages=%d chars',
+    [LId, LEntry.Cli, LEntry.Count, Length(LEntry.MessagesJson)]));
   SaveSession(LEntry);
 end;
 

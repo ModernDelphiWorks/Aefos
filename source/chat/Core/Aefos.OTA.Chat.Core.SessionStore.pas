@@ -53,6 +53,15 @@ type
 function SessionSaveWouldClobber(const AMessagesJson: string;
   ACount: Integer): Boolean;
 
+// Appends one line to %AppData%\Aefosefos-session-save.log naming what the
+// save path decided. Every way a session fails to reach disk today is SILENT --
+// a missing session id, the clobber guard and a database error all simply
+// return -- so a user reporting "no sessions" leaves nothing behind to tell the
+// three apart. This records the reason instead of an OutputDebugString nobody
+// is watching. Never raises: a diagnostic that can break the caller it is
+// diagnosing is worse than no diagnostic at all.
+procedure SessionSaveTrace(const AReason: string);
+
 // ── Provider seam ────────────────────────────────────────────────────────────
 // Registers the active store. Pass nil to fall back to the no-op null store.
 procedure SetSessionStoreProvider(const AStore: ISessionStore);
@@ -72,6 +81,7 @@ procedure DeleteSession(const AId: string);
 implementation
 
 uses
+  System.Classes,
   System.IOUtils;
 
 var
@@ -117,6 +127,38 @@ var
 begin
   LTrim := Trim(AMessagesJson);
   Result := (ACount > 0) and ((LTrim = '') or (LTrim = '[]'));
+end;
+
+procedure SessionSaveTrace(const AReason: string);
+var
+  LDir: string;
+  LPath: string;
+  LBytes: TBytes;
+  LMode: Word;
+  LStream: TFileStream;
+begin
+  try
+    LDir := TPath.Combine(TPath.GetHomePath, 'Aefos');
+    if not TDirectory.Exists(LDir) then
+      TDirectory.CreateDirectory(LDir);
+    LPath := TPath.Combine(LDir, 'aefos-session-save.log');
+    LBytes := TEncoding.UTF8.GetBytes(
+      FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz', Now) + ' ' + AReason +
+      sLineBreak);
+    if TFile.Exists(LPath) then
+      LMode := fmOpenWrite or fmShareDenyWrite
+    else
+      LMode := fmCreate or fmShareDenyWrite;
+    LStream := TFileStream.Create(LPath, LMode);
+    try
+      LStream.Seek(0, soEnd);
+      LStream.WriteBuffer(LBytes[0], Length(LBytes));
+    finally
+      LStream.Free;
+    end;
+  except
+    // Swallowed on purpose -- see the declaration.
+  end;
 end;
 
 procedure SetSessionStoreProvider(const AStore: ISessionStore);

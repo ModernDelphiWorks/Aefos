@@ -6,6 +6,52 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Dates are in `YYYY-MM-DD`.
 
+## [1.6.0] - 2026-09-05
+
+### Added
+
+**A second doorway to the IDE's MCP server, for machines where the named pipe is
+not an option.** Some corporate images block or restrict named pipes, and on
+those the agent could see the IDE's tools listed and never reach them. Aefos now
+also publishes its MCP server over a **loopback HTTP listener on 127.0.0.1** —
+no relay executable, no bridge script, nothing off-box — and the local CLI
+connects straight to it. The named pipe stays the default and is untouched; the
+same server answers either door.
+
+The port is bound to `127.0.0.1` only. Eight connections are served
+concurrently, each on its own thread, so one idle client can no longer hold
+every other request behind it; a ninth is refused rather than queued.
+
+**Two diagnostics, both off unless you switch them on.** `AEFOS_HTTP_TRACE=1`
+writes every step of a request — accept, read, dispatch, reply — with
+microsecond timings, and `AEFOS_GATEWAY_TRACE=1` writes the PID of every addon
+MCP server Aefos starts, the same number Task Manager shows.
+
+### Fixed
+
+**Chat sessions were never saved on Delphi 10 Seattle and 10.1 Berlin.** The
+upsert reached SQLite malformed through the older FireDAC, so every session
+vanished with the IDE. History is kept again on those versions.
+
+**An installed MCP addon was started twice per question.** Aefos already
+re-exposes installed addon servers to every agent, and the configuration handed
+to the CLI listed them as well, so each turn started a second copy of every
+addon server — two `AefosDesktopMcp.exe`, two analyzer servers — and the agent
+saw the same tools twice, under two names. One server per addon now starts once
+per IDE session and is reused by every turn. `AEFOS_CLI_ADDON_MCP=1` restores
+the previous behaviour.
+
+**The IDE could be held open at shutdown by the new transport.** Shutting down
+now closes live connections first and waits with a five-second ceiling rather
+than forever.
+
+**A failed connection no longer costs the whole transport.** An error while
+accepting could end the accept loop for the rest of the session, and every
+request after it would wait with nothing in any log.
+
+**The provisioning bridge script embedded in the plugin could ship out of date**
+with the one in the repository. It is now compiled from source on every build.
+
 ## [1.5.2] - 2026-09-03
 
 ### Fixed

@@ -140,6 +140,27 @@ implementation
 function GetTickCount64: UInt64; stdcall; external 'kernel32.dll' name 'GetTickCount64';
 {$IFEND}
 
+var
+  // --- the trace ----------------------------------------------------------
+  // The owner counted his own processes before we did: two requests, two
+  // AefosDesktopMcp.exe. They die with the IDE (the kill-on-job-close job below
+  // is doing its work, measured), but one child per request instead of one
+  // reused child is a pile that grows all session.
+  //
+  // Whose child it is decides the fix, and only the spawn site can say. So
+  // every child this gateway starts, hands back, or kills writes one line to
+  // %APPDATA%\Aefos\aefos-gateway-trace.log with its PID -- the same number
+  // Task Manager shows -- and the server key that asked for it. A gateway that
+  // is built twice per turn shows up as two `gw.create` lines; a CLI starting
+  // its own servers shows up as PIDs that never appear here at all.
+  //
+  // Same contract as the HTTP transport's trace: off with AEFOS_GATEWAY_TRACE=0,
+  // one open-append-close per line under a lock, and it never raises.
+  GGwTraceLock: TRTLCriticalSection;
+  GGwTraceState: Integer;   // -1 not asked yet, 0 off, 1 on
+  GGwTracePath: string;
+  GGwSeq: Integer;          // gateway instances built in this process
+
 const
   CGatewayProtocolVersion = '2025-06-18';
   CGatewayClientName      = 'aefos-gateway';
@@ -150,6 +171,64 @@ const
   // physical key). A bounded read still protects against a dead child.
   CCallTimeoutMs          = 300000;
   CMaxNotificationsSkip   = 64;
+
+// One line, appended, never raising -- see the declarations above for why this
+// exists and what it has to answer.
+procedure _GwTrace(const AStep, ADetail: string);
+var
+  LDir, LLine: string;
+  LFlag: string;
+  LBytes: TBytes;
+  LMode: Word;
+  LStream: TFileStream;
+begin
+  if GGwTraceState < 0 then
+  begin
+    // Qualified: `uses Windows` hijacks the bare name, the same trap this unit
+    // already documents further down.
+    LFlag := Trim(SysUtils.GetEnvironmentVariable('AEFOS_GATEWAY_TRACE'));
+    if (LFlag = '0') or SameText(LFlag, 'off') then
+      GGwTraceState := 0
+    else
+      GGwTraceState := 1;
+  end;
+  if GGwTraceState <> 1 then
+    Exit;
+  EnterCriticalSection(GGwTraceLock);
+  try
+    try
+      if GGwTracePath = '' then
+      begin
+        LDir := SysUtils.GetEnvironmentVariable('APPDATA');
+        if LDir = '' then
+          Exit;
+        LDir := IncludeTrailingPathDelimiter(LDir) + 'Aefos';
+        if not DirectoryExists(LDir) then
+          ForceDirectories(LDir);
+        GGwTracePath := IncludeTrailingPathDelimiter(LDir) +
+          'aefos-gateway-trace.log';
+      end;
+      LLine := FormatDateTime('yyyy-mm-dd"T"hh:nn:ss.zzz', Now) +
+        Format(' t=%d %s %s', [GetCurrentThreadId, AStep, ADetail]) + sLineBreak;
+      LBytes := TEncoding.UTF8.GetBytes(LLine);
+      if FileExists(GGwTracePath) then
+        LMode := fmOpenWrite or fmShareDenyWrite
+      else
+        LMode := fmCreate or fmShareDenyWrite;
+      LStream := TFileStream.Create(GGwTracePath, LMode);
+      try
+        LStream.Seek(0, soEnd);
+        LStream.WriteBuffer(LBytes[0], Length(LBytes));
+      finally
+        LStream.Free;
+      end;
+    except
+      // A diagnostic that can take the gateway down is worse than none.
+    end;
+  finally
+    LeaveCriticalSection(GGwTraceLock);
+  end;
+end;
 
 type
   TMCPStdioChild = class(TInterfacedObject, IMCPStdioChild)
@@ -162,6 +241,7 @@ type
     FTail: TBytes;           // bytes after the last LF, carried between reads
     FNextId: Integer;
     FAlive: Boolean;
+    FPid: Cardinal;          // named in the trace, so a line matches Task Manager
     function _SendLine(const ALine: string): Boolean;
     function _ReadLine(out ALine: string; const ADeadline: UInt64): Boolean;
     function _Request(const AMethod, AParamsJson: string;
@@ -464,7 +544,9 @@ begin
 
     FProcess := LProcInfo.hProcess;
     FThreadHandle := LProcInfo.hThread;
+    FPid := LProcInfo.dwProcessId;
     FAlive := True;
+    _GwTrace('spawn', Format('pid=%d cmd=%s', [FPid, LCmdLine]));
 
     // The child EXISTS but is still suspended, so from here on a raised
     // exception would strand a parked process. Reaping it must not be delegated
@@ -785,6 +867,7 @@ begin
     FAlive := False;
     if (FProcess <> 0) and (FProcess <> INVALID_HANDLE_VALUE) then
       TerminateProcess(FProcess, 0);
+    _GwTrace('terminate', Format('pid=%d', [FPid]));
   except
   end;
 end;
@@ -798,10 +881,16 @@ begin
   FLock := TCriticalSection.Create;
   FChildren := TList<IMCPStdioChild>.Create;
   FRoutes := TDictionary<string, TMCPAddonRoute>.Create;
+  // The instance number is the question, not decoration: ONE gateway per IDE
+  // session spawns its children once; one per request spawns them again every
+  // time. The count answers that without anyone reading Task Manager.
+  _GwTrace('gw.create', Format('n=%d hostRenders=%d',
+    [InterlockedIncrement(GGwSeq), Ord(AHostRenders)]));
 end;
 
 destructor TMCPAddonGateway.Destroy;
 begin
+  _GwTrace('gw.destroy', Format('children=%d', [FChildren.Count]));
   Shutdown;
   FRoutes.Free;
   FChildren.Free;
@@ -975,11 +1064,16 @@ begin
   else
     LEnvBlock := '';
 
+  _GwTrace('server.start', Format('key=%s cmd=%s', [AServerKey, LCommand]));
   LChild := TMCPStdioChild.Create;
   if not LChild.Spawn(LCommand, LArgs, LCwd, LEnvBlock) then
+  begin
+    _GwTrace('server.fail', Format('key=%s step=spawn', [AServerKey]));
     Exit;
+  end;
   if not LChild.Handshake(CHandshakeTimeoutMs) then
   begin
+    _GwTrace('server.fail', Format('key=%s step=handshake', [AServerKey]));
     LChild.Terminate;
     Exit;
   end;
@@ -1165,6 +1259,12 @@ end;
 
 initialization
   GJobLock := TCriticalSection.Create;
+  { The trace's lock. INTENTIONALLY NEVER DELETED, for the same reason GJobLock
+    below is intentionally leaked: teardown still writes trace lines (Shutdown,
+    gw.destroy), and a critical section deleted while another thread is about to
+    enter it corrupts memory to save one OS handle the process reclaims anyway. }
+  InitializeCriticalSection(GGwTraceLock);
+  GGwTraceState := -1;
 
 finalization
   { Closing the last handle to a KILL_ON_JOB_CLOSE job kills everything still in

@@ -588,14 +588,28 @@ begin
   // servers) that every CLI is pointed at; the bridge path feeds Codex's -c
   // override; the session is the named-pipe the chat host serves.
   //
-  // FASE 0 (Desktop MCP): merge the user's extras with the addon aggregate that
-  // `aefos install` writes to ~/.aefos/addons/mcp-servers.json BEFORE provisioning
-  // -- without this an installed MCP addon (Desktop, Janus-DB, ...) never reaches
-  // the agent. On a name collision the USER's hand-written server wins over the
-  // addon's (see Aefos.MCP.ServerMerge). A missing/unreadable aggregate degrades
-  // to the user's config alone.
-  LMergedMcp := TMCPServerMerge.MergeServers(TChatGlobalSettings.LoadMcpConfig,
-    TMCPProvision.LoadAddonAggregate);
+  // FASE 0 (Desktop MCP) merged the addon aggregate that `aefos install` writes
+  // to ~/.aefos/addons/mcp-servers.json into the config handed to the CLI,
+  // because back then nothing else carried those tools to the agent.
+  //
+  // The in-process gateway carries them now (Aefos.MCP.AddonGateway: it spawns
+  // each installed addon server ONCE per session and re-exposes its tools on the
+  // aefos server), so merging them here spawns the SAME servers a SECOND time --
+  // and once per turn, because the CLI starts its own and takes them down with
+  // it. Measured on the owner's machine 2026-09-05: one question, two
+  // AefosDesktopMcp.exe and two aefos-analyzer-server.exe; the gateway's pair
+  // (aefos-gateway-trace.log names their PIDs) lived for the session, the CLI's
+  // pair died with the answer. The agent saw the same tools twice, under two
+  // names, in a 119 KB tools/list.
+  //
+  // So the gateway owns the addons and the CLI config carries only the built-in
+  // server plus whatever the USER wrote by hand. AEFOS_CLI_ADDON_MCP=1 restores
+  // the old merge without a rebuild, for when a CLI turns out to need its own
+  // copy after all.
+  LMergedMcp := TChatGlobalSettings.LoadMcpConfig;
+  if Trim(System.SysUtils.GetEnvironmentVariable('AEFOS_CLI_ADDON_MCP')) = '1' then
+    LMergedMcp := TMCPServerMerge.MergeServers(LMergedMcp,
+      TMCPProvision.LoadAddonAggregate);
   AWiring.McpConfigPath := TMCPProvision.EnsureGlobalConfig('plugin', LMergedMcp);
   AWiring.McpBridgePath := TMCPProvision.BridgePath;
   AWiring.McpSession := 'plugin';

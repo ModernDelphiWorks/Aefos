@@ -67,19 +67,48 @@ uses
   Vcl.Dialogs,
   ToolsAPI,
   Aefos.OTA.Chat.UI.Options.Binding,
-  Aefos.OTA.Chat.UI.Options.ChatFrame;
+  Aefos.OTA.Chat.UI.Options.ChatFrame,
+  Aefos.OTA.Chat.UI.Options.ProvidersFrame,
+  Aefos.OTA.Chat.UI.Options.ACPRegistryFrame;
 
 const
   AREA_NAME = 'Aefos';
-  // 'Chat' collides exactly with the IDE's built-in AI assistant Chat page. The
-  // RAD Studio Options dialog keys the page frame by caption (area-independent),
-  // so a bare 'Chat' aliases to that built-in frame. 'AI Chat' keeps us under the
-  // Aefos area node while staying globally unique (img-4 evidence: 'MCP Server'
-  // never collided with the built-in 'MCP Servers' because the strings differ). 2026-06-07.
-  CAPTION_CHAT = 'AI Chat';
+  CAPTION_PROVIDERS = 'Agentes & Conexões';
+  CAPTION_REGISTRY = 'Catálogo de Agentes';
+  CAPTION_CHAT = 'AI Chat (Legado)';
 
 type
-  // Chat / Executor page. Owns a osChat binding rebuilt per dialog open.
+  // Providers / ACP Agent Configuration page (Master-Detail).
+  TProvidersAddInOptions = class(TInterfacedObject, INTAAddInOptions)
+  private
+    FFrame: TAefosProvidersOptionsFrame;
+  public
+    function GetArea: string;
+    function GetCaption: string;
+    function GetFrameClass: TCustomFrameClass;
+    procedure FrameCreated(AFrame: TCustomFrame);
+    procedure DialogClosed(Accepted: Boolean);
+    function ValidateContents: Boolean;
+    function GetHelpContext: Integer;
+    function IncludeInIDEInsight: Boolean;
+  end;
+
+  // ACP Registry / Marketplace page.
+  TACPRegistryAddInOptions = class(TInterfacedObject, INTAAddInOptions)
+  private
+    FFrame: TAefosACPRegistryOptionsFrame;
+  public
+    function GetArea: string;
+    function GetCaption: string;
+    function GetFrameClass: TCustomFrameClass;
+    procedure FrameCreated(AFrame: TCustomFrame);
+    procedure DialogClosed(Accepted: Boolean);
+    function ValidateContents: Boolean;
+    function GetHelpContext: Integer;
+    function IncludeInIDEInsight: Boolean;
+  end;
+
+  // Legacy Chat / Executor page. Owns a osChat binding rebuilt per dialog open.
   TChatAddInOptions = class(TInterfacedObject, INTAAddInOptions)
   private
     FFrame: TAefosChatOptionsFrame;
@@ -114,6 +143,96 @@ function _NewBinding(const AScope: TOptionsScope): TOptionsConfigBinding;
 begin
   Result := TOptionsConfigBinding.Create(GConfig, GRootResolver, AScope);
   Result.LoadFromConfig;
+end;
+
+{ TProvidersAddInOptions }
+
+function TProvidersAddInOptions.GetArea: string;
+begin
+  Result := AREA_NAME;
+end;
+
+function TProvidersAddInOptions.GetCaption: string;
+begin
+  Result := CAPTION_PROVIDERS;
+end;
+
+function TProvidersAddInOptions.GetFrameClass: TCustomFrameClass;
+begin
+  Result := TAefosProvidersOptionsFrame;
+end;
+
+procedure TProvidersAddInOptions.FrameCreated(AFrame: TCustomFrame);
+begin
+  FFrame := AFrame as TAefosProvidersOptionsFrame;
+end;
+
+function TProvidersAddInOptions.ValidateContents: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TProvidersAddInOptions.DialogClosed(Accepted: Boolean);
+begin
+  if Accepted and Assigned(FFrame) then
+  begin
+    FFrame.ApplySettings;
+    if Assigned(GOnConfigSaved) then
+      GOnConfigSaved();
+  end;
+  FFrame := nil;
+end;
+
+function TProvidersAddInOptions.GetHelpContext: Integer;
+begin
+  Result := 0;
+end;
+
+function TProvidersAddInOptions.IncludeInIDEInsight: Boolean;
+begin
+  Result := True;
+end;
+
+{ TACPRegistryAddInOptions }
+
+function TACPRegistryAddInOptions.GetArea: string;
+begin
+  Result := AREA_NAME;
+end;
+
+function TACPRegistryAddInOptions.GetCaption: string;
+begin
+  Result := CAPTION_REGISTRY;
+end;
+
+function TACPRegistryAddInOptions.GetFrameClass: TCustomFrameClass;
+begin
+  Result := TAefosACPRegistryOptionsFrame;
+end;
+
+procedure TACPRegistryAddInOptions.FrameCreated(AFrame: TCustomFrame);
+begin
+  FFrame := AFrame as TAefosACPRegistryOptionsFrame;
+end;
+
+function TACPRegistryAddInOptions.ValidateContents: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TACPRegistryAddInOptions.DialogClosed(Accepted: Boolean);
+begin
+  FFrame := nil;
+end;
+
+function TACPRegistryAddInOptions.GetHelpContext: Integer;
+begin
+  Result := 0;
+end;
+
+function TACPRegistryAddInOptions.IncludeInIDEInsight: Boolean;
+begin
+  Result := True;
 end;
 
 { TChatAddInOptions }
@@ -204,7 +323,11 @@ begin
     Exit;
   if not _EnvOptionsServices(LServices) then
     Exit;
-  GOptions := [TChatAddInOptions.Create];
+  GOptions := [
+    TProvidersAddInOptions.Create,
+    TACPRegistryAddInOptions.Create,
+    TChatAddInOptions.Create
+  ];
   for LOption in GOptions do
     LServices.RegisterAddInOptions(LOption);
   GRegistered := True;

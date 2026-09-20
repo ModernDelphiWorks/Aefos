@@ -17,7 +17,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       Top = 12
       Width = 110
       Height = 15
-      Caption = 'Agentes Instalados'
+      Caption = 'Installed Agents'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -12
@@ -31,7 +31,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       Width = 196
       Height = 23
       TabOrder = 0
-      TextHint = 'Filtrar agentes...'
+      TextHint = 'Filter agents...'
       OnChange = EditFilterChange
     end
     object ListBoxAgents: TListBox
@@ -42,13 +42,14 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       ItemHeight = 24
       TabOrder = 1
       OnClick = ListBoxAgentsClick
+      OnDblClick = ListBoxAgentsDblClick
     end
     object ButtonCatalogLink: TButton
       Left = 12
       Top = 604
       Width = 196
       Height = 32
-      Caption = '+ Obter mais no Cat'#225'logo...'
+      Caption = '+ Browse Agent Catalog...'
       TabOrder = 2
       OnClick = ButtonCatalogLinkClick
     end
@@ -72,7 +73,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       Top = 12
       Width = 120
       Height = 18
-      Caption = 'Detalhes do Agente'
+      Caption = 'Agent Details'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -15
@@ -85,7 +86,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       Top = 36
       Width = 84
       Height = 15
-      Caption = 'Status: Pronto'
+      Caption = 'Status: Ready'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clGrayText
       Font.Height = -12
@@ -98,14 +99,14 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       Top = 68
       Width = 394
       Height = 150
-      Caption = 'Autentica'#231#227'o & Assinatura'
+      Caption = 'Authentication && Subscription'
       TabOrder = 0
       object RadioOAuth: TRadioButton
         Left = 16
         Top = 24
         Width = 250
         Height = 17
-        Caption = 'Assinatura (Login via Navegador)'
+        Caption = 'Subscription (Browser Login)'
         Checked = True
         TabOrder = 0
         TabStop = True
@@ -116,7 +117,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
         Top = 48
         Width = 130
         Height = 28
-        Caption = 'Entrar / Conectar'
+        Caption = 'Login / Connect'
         TabOrder = 1
         OnClick = ButtonLoginBrowserClick
       end
@@ -125,7 +126,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
         Top = 54
         Width = 100
         Height = 15
-        Caption = 'Status: Conectado'
+        Caption = 'Status: Connected'
         Font.Color = clGreen
       end
       object RadioApiKey: TRadioButton
@@ -133,7 +134,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
         Top = 86
         Width = 200
         Height = 17
-        Caption = 'Chave de API / Token'
+        Caption = 'API Key / Token'
         TabOrder = 2
         OnClick = RadioApiKeyClick
       end
@@ -144,7 +145,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
         Height = 23
         PasswordChar = '*'
         TabOrder = 3
-        TextHint = 'Cole sua chave de API aqui...'
+        TextHint = 'Paste your API key here...'
       end
     end
     object GroupBoxModels: TGroupBox
@@ -152,14 +153,14 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       Top = 228
       Width = 394
       Height = 120
-      Caption = 'Modelos Suportados via ACP'
+      Caption = 'Supported Models (ACP)'
       TabOrder = 1
       object LabelModelSelect: TLabel
         Left = 16
         Top = 26
         Width = 44
         Height = 15
-        Caption = 'Modelo:'
+        Caption = 'Model:'
       end
       object ComboBoxModels: TComboBox
         Left = 16
@@ -204,7 +205,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
         Top = 82
         Width = 240
         Height = 15
-        Caption = 'Contexto: 200k tokens | Ferramentas: Sim'
+        Caption = 'Context: 200k tokens | Tools: Yes'
         Font.Color = clGrayText
       end
     end
@@ -213,14 +214,14 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       Top = 360
       Width = 394
       Height = 110
-      Caption = 'Integra'#231#227'o com Aefos MCP'
+      Caption = 'Aefos MCP Integration'
       TabOrder = 2
       object CheckBoxShareMCP: TCheckBox
         Left = 16
         Top = 28
         Width = 360
         Height = 17
-        Caption = 'Compartilhar ferramentas da IDE com o agente'
+        Caption = 'Share IDE tools with the agent'
         Checked = True
         State = cbChecked
         TabOrder = 0
@@ -230,7 +231,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
         Top = 56
         Width = 360
         Height = 17
-        Caption = 'Exigir consentimento antes de alterar arquivos de c'#243'digo'
+        Caption = 'Require consent before modifying code files'
         Checked = True
         State = cbChecked
         TabOrder = 1
@@ -241,7 +242,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       Top = 490
       Width = 180
       Height = 34
-      Caption = #9889' Definir como Agente Ativo'
+      Caption = 'Set as Default Agent'
       TabOrder = 3
       OnClick = ButtonSetActiveClick
     end
@@ -250,7 +251,7 @@ object AefosProvidersOptionsFrame: TAefosProvidersOptionsFrame
       Top = 490
       Width = 140
       Height = 34
-      Caption = 'Testar Conex'#227'o'
+      Caption = 'Test Connection'
       TabOrder = 4
       OnClick = ButtonTestConnectionClick
     end

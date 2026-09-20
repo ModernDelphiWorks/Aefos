@@ -10,7 +10,8 @@ object AefosChatPanel: TAefosChatPanel
   Font.Color = clWindowText
   Font.Height = -12
   Font.Name = 'Segoe UI'
-  Font.Style = []
+  Constraints.MinHeight = 420
+  Constraints.MinWidth = 380
   TextHeight = 15
   object FSplitter: TSplitter
     Left = 0

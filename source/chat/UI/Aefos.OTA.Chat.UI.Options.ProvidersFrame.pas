@@ -54,14 +54,19 @@ type
     procedure ButtonCatalogLinkClick(Sender: TObject);
     procedure ButtonAddModelClick(Sender: TObject);
     procedure ButtonRemoveModelClick(Sender: TObject);
+    procedure ListBoxAgentsDblClick(Sender: TObject);
+  protected
+    procedure CMShowingChanged(var Message: TMessage); message CM_SHOWINGCHANGED;
   private
     FRegistry: IACPRegistry;
     FCurrentAgentIndex: Integer;
     procedure RefreshInstalledList;
     procedure LoadSelectedAgentDetails;
     procedure SaveCurrentAgentDetails;
+    procedure OnRegistryChanged;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure ApplySettings;
   end;
 
@@ -77,12 +82,91 @@ begin
   inherited;
   FRegistry := DefaultACPRegistry;
   FCurrentAgentIndex := -1;
+  FRegistry.RegisterChangeListener(OnRegistryChanged);
+  OnRegistryChanged;
+end;
+
+destructor TAefosProvidersOptionsFrame.Destroy;
+begin
+  if Assigned(FRegistry) then
+    FRegistry.UnregisterChangeListener(OnRegistryChanged);
+  inherited;
+end;
+
+procedure TAefosProvidersOptionsFrame.OnRegistryChanged;
+var
+  LPrevSelectedAgentId: string;
+  LAgents: TArray<TACPAgentManifest>;
+  I, LTargetIndex: Integer;
+begin
+  LAgents := FRegistry.GetInstalledAgents;
+  if (FCurrentAgentIndex >= 0) and (FCurrentAgentIndex <= High(LAgents)) then
+    LPrevSelectedAgentId := LAgents[FCurrentAgentIndex].Id
+  else
+    LPrevSelectedAgentId := '';
+
   RefreshInstalledList;
-  if ListBoxAgents.Items.Count > 0 then
+
+  LAgents := FRegistry.GetInstalledAgents;
+  LTargetIndex := -1;
+
+  // Try to restore previous selection
+  if LPrevSelectedAgentId <> '' then
   begin
-    ListBoxAgents.ItemIndex := 0;
-    ListBoxAgentsClick(ListBoxAgents);
+    for I := 0 to High(LAgents) do
+    begin
+      if SameText(LAgents[I].Id, LPrevSelectedAgentId) then
+      begin
+        LTargetIndex := I;
+        Break;
+      end;
+    end;
   end;
+
+  // Otherwise select default/active agent
+  if (LTargetIndex = -1) and (Length(LAgents) > 0) then
+  begin
+    for I := 0 to High(LAgents) do
+    begin
+      if LAgents[I].Active then
+      begin
+        LTargetIndex := I;
+        Break;
+      end;
+    end;
+    if LTargetIndex = -1 then
+      LTargetIndex := 0;
+  end;
+
+  FCurrentAgentIndex := LTargetIndex;
+  if (FCurrentAgentIndex >= 0) and (ListBoxAgents.Items.Count > 0) then
+  begin
+    for I := 0 to ListBoxAgents.Items.Count - 1 do
+    begin
+      if Integer(NativeInt(ListBoxAgents.Items.Objects[I])) = FCurrentAgentIndex then
+      begin
+        ListBoxAgents.ItemIndex := I;
+        Break;
+      end;
+    end;
+    LoadSelectedAgentDetails;
+  end
+  else
+  begin
+    ListBoxAgents.ItemIndex := -1;
+    LabelAgentHeader.Caption := 'No Agent Selected';
+    LabelStatus.Caption := 'Status: -';
+    EditApiKey.Text := '';
+    ComboBoxModels.Clear;
+    ButtonSetActive.Enabled := False;
+  end;
+end;
+
+procedure TAefosProvidersOptionsFrame.CMShowingChanged(var Message: TMessage);
+begin
+  inherited;
+  if Showing then
+    OnRegistryChanged;
 end;
 
 procedure TAefosProvidersOptionsFrame.RefreshInstalledList;
@@ -105,7 +189,7 @@ begin
 
       LTitle := LAgents[LAgentIndex].Name;
       if LAgents[LAgentIndex].Active then
-        LTitle := '[Ativo] ' + LTitle;
+        LTitle := '[Default] ' + LTitle;
 
       ListBoxAgents.Items.AddObject(LTitle, TObject(NativeInt(LAgentIndex)));
     end;
@@ -145,7 +229,7 @@ begin
   LabelAgentHeader.Caption := LAgent.Name + ' (v' + LAgent.Version + ')';
   LabelStatus.Caption := 'Status: ' + LAgent.StatusMessage;
 
-  // Carrega autenticação
+  // Load authentication
   if LAgent.SelectedAuthKind = akApiKey then
   begin
     RadioApiKey.Checked := True;
@@ -162,7 +246,7 @@ begin
   end;
   EditApiKey.Text := LAgent.ApiKey;
 
-  // Carrega modelos
+  // Load models
   ComboBoxModels.Items.BeginUpdate;
   try
     ComboBoxModels.Clear;
@@ -181,12 +265,12 @@ begin
   if LAgent.Active then
   begin
     ButtonSetActive.Enabled := False;
-    ButtonSetActive.Caption := 'Agente Ativo';
+    ButtonSetActive.Caption := 'Default Agent';
   end
   else
   begin
     ButtonSetActive.Enabled := True;
-    ButtonSetActive.Caption := #9889' Definir como Agente Ativo';
+    ButtonSetActive.Caption := 'Set as Default Agent';
   end;
 end;
 
@@ -229,19 +313,35 @@ end;
 
 procedure TAefosProvidersOptionsFrame.ButtonLoginBrowserClick(Sender: TObject);
 begin
-  ShowMessage('Fluxo OAuth iniciado no navegador. O token ser'#225' armazenado de forma segura.');
-  LabelAuthStatus.Caption := 'Status: Autenticado';
+  ShowMessage('OAuth flow initiated in browser. The token will be securely stored.');
+  LabelAuthStatus.Caption := 'Status: Authenticated';
+end;
+
+procedure TAefosProvidersOptionsFrame.ListBoxAgentsDblClick(Sender: TObject);
+begin
+  ListBoxAgentsClick(Sender);
+  if ButtonSetActive.Enabled then
+    ButtonSetActiveClick(ButtonSetActive);
 end;
 
 procedure TAefosProvidersOptionsFrame.ButtonSetActiveClick(Sender: TObject);
 var
   LAgents: TArray<TACPAgentManifest>;
+  I: Integer;
 begin
   LAgents := FRegistry.GetInstalledAgents;
   if (FCurrentAgentIndex >= 0) and (FCurrentAgentIndex <= High(LAgents)) then
   begin
     FRegistry.SetActiveAgent(LAgents[FCurrentAgentIndex].Id);
     RefreshInstalledList;
+    for I := 0 to ListBoxAgents.Items.Count - 1 do
+    begin
+      if Integer(NativeInt(ListBoxAgents.Items.Objects[I])) = FCurrentAgentIndex then
+      begin
+        ListBoxAgents.ItemIndex := I;
+        Break;
+      end;
+    end;
     LoadSelectedAgentDetails;
   end;
 end;
@@ -249,12 +349,12 @@ end;
 procedure TAefosProvidersOptionsFrame.ButtonTestConnectionClick(Sender: TObject);
 begin
   SaveCurrentAgentDetails;
-  ShowMessage('Conex'#227'o com o agente ACP testada com sucesso! Resposta stdio JSON-RPC recebida.');
+  ShowMessage('Connection to ACP agent tested successfully! stdio JSON-RPC response received.');
 end;
 
 procedure TAefosProvidersOptionsFrame.ButtonCatalogLinkClick(Sender: TObject);
 begin
-  OpenAefosOptions('Cat'#225'logo de Agentes');
+  OpenAefosOptions('Agent Catalog');
 end;
 
 procedure TAefosProvidersOptionsFrame.ButtonAddModelClick(Sender: TObject);
@@ -266,10 +366,11 @@ begin
   if (FCurrentAgentIndex < 0) or (FCurrentAgentIndex > High(LAgents)) then
     Exit;
 
-  LModelId := InputBox('Adicionar Modelo', 'Identificador do modelo (ex: claude-3-7-sonnet, gpt-4o, deepseek-r1):', '');
-  if Trim(LModelId) <> '' then
+  LModelId := InputBox('Add Model', 'Model identifier (e.g. claude-sonnet-4-6, gpt-4o, deepseek-r1):', '');
+  LModelId := SanitizeModelId(LModelId);
+  if LModelId <> '' then
   begin
-    FRegistry.AddModelToAgent(LAgents[FCurrentAgentIndex].Id, Trim(LModelId), Trim(LModelId));
+    FRegistry.AddModelToAgent(LAgents[FCurrentAgentIndex].Id, LModelId, LModelId);
     LoadSelectedAgentDetails;
   end;
 end;
@@ -286,7 +387,7 @@ begin
   if ComboBoxModels.ItemIndex >= 0 then
   begin
     LSelectedModelId := LAgents[FCurrentAgentIndex].Models[ComboBoxModels.ItemIndex].Id;
-    if MessageDlg('Deseja remover o modelo "' + LSelectedModelId + '" deste agente?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+    if MessageDlg('Do you want to remove model "' + LSelectedModelId + '" from this agent?', mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       FRegistry.RemoveModelFromAgent(LAgents[FCurrentAgentIndex].Id, LSelectedModelId);
       LoadSelectedAgentDetails;

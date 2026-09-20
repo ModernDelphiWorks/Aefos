@@ -1,103 +1,144 @@
 object TTerminalMCPOptionsFrame: TTerminalMCPOptionsFrame
   Left = 0
   Top = 0
-  Width = 450
-  Height = 260
+  Width = 536
+  Height = 440
   TabOrder = 0
-  object LblEnabled: TLabel
-    Left = 8
-    Top = 8
-    Width = 100
-    Height = 13
-    Caption = 'MCP Server'
+  object lblTitle: TLabel
+    Left = 16
+    Top = 10
+    Width = 500
+    Height = 15
+    Caption = 'In-IDE Terminal & MCP Server Configuration'
   end
-  object ChkEnabled: TCheckBox
-    Left = 8
-    Top = 28
-    Width = 200
-    Height = 17
-    Caption = 'Enable MCP server'
+  object gbMCPServer: TGroupBox
+    Left = 16
+    Top = 32
+    Width = 500
+    Height = 140
+    Caption = ' In-IDE MCP Server '
     TabOrder = 0
+    object LblMcpHelp: TLabel
+      Left = 34
+      Top = 46
+      Width = 450
+      Height = 15
+      Caption = 'Allows external agents and MCP tools to access the IDE terminal.'
+    end
+    object LblSession: TLabel
+      Left = 16
+      Top = 72
+      Width = 220
+      Height = 15
+      Caption = 'MCP Named Pipe (Advanced):'
+    end
+    object LblMcpStatus: TLabel
+      Left = 330
+      Top = 96
+      Width = 150
+      Height = 15
+      AutoSize = True
+    end
+    object ChkEnabled: TCheckBox
+      Left = 16
+      Top = 24
+      Width = 468
+      Height = 17
+      Caption = 'Enable MCP server'
+      TabOrder = 0
+    end
+    object EdtSession: TEdit
+      Left = 16
+      Top = 92
+      Width = 200
+      Height = 23
+      Hint = 
+        'Named pipe the MCP server listens on. Change only to resolve a p' +
+        'ipe-in-use conflict.'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 1
+    end
+    object BtnTestMcp: TButton
+      Left = 224
+      Top = 91
+      Width = 96
+      Height = 25
+      Hint = 'Check the MCP pipe is listening'
+      Caption = 'Test MCP'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 2
+      OnClick = BtnTestMcpClick
+    end
   end
-  object LblSession: TLabel
-    Left = 8
-    Top = 56
-    Width = 130
-    Height = 13
-    Caption = 'MCP pipe (advanced):'
-  end
-  object EdtSession: TEdit
-    Left = 8
-    Top = 72
-    Width = 200
-    Height = 21
-    Hint = 'Named pipe the MCP server listens on. Change only to resolve a pipe-in-use conflict.'
-    ParentShowHint = False
-    ShowHint = True
+  object gbAudit: TGroupBox
+    Left = 16
+    Top = 180
+    Width = 500
+    Height = 142
+    Caption = ' Command Audit Log '
     TabOrder = 1
+    object LblAuditPath: TLabel
+      Left = 16
+      Top = 22
+      Width = 468
+      Height = 15
+      Caption = 'Audit log path (leave blank for system default):'
+    end
+    object LblAuditResolvedTag: TLabel
+      Left = 16
+      Top = 110
+      Width = 80
+      Height = 15
+      Caption = 'Active folder:'
+    end
+    object LblAuditResolved: TLabel
+      Left = 100
+      Top = 110
+      Width = 384
+      Height = 15
+      AutoSize = False
+    end
+    object EdtAuditPath: TEdit
+      Left = 16
+      Top = 42
+      Width = 468
+      Height = 23
+      TabOrder = 0
+    end
+    object BtnOpenAuditDir: TButton
+      Left = 16
+      Top = 74
+      Width = 160
+      Height = 26
+      Caption = 'Open Log Folder'
+      TabOrder = 1
+      OnClick = BtnOpenAuditDirClick
+    end
   end
-  object BtnTestMcp: TButton
-    Left = 216
-    Top = 70
-    Width = 96
-    Height = 25
-    Hint = 'Check the MCP pipe is listening'
-    Caption = 'Test MCP'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 5
-    OnClick = BtnTestMcpClick
-  end
-  object LblMcpStatus: TLabel
-    Left = 320
-    Top = 75
-    Width = 3
-    Height = 13
-  end
-  object LblAuditPath: TLabel
-    Left = 8
-    Top = 104
-    Width = 64
-    Height = 13
-    Caption = 'Audit log path:'
-  end
-  object EdtAuditPath: TEdit
-    Left = 8
-    Top = 120
-    Width = 350
-    Height = 21
+  object gbSecurity: TGroupBox
+    Left = 16
+    Top = 330
+    Width = 500
+    Height = 72
+    Caption = ' Security & Consent '
     TabOrder = 2
-  end
-  object BtnOpenAuditDir: TButton
-    Left = 8
-    Top = 152
-    Width = 160
-    Height = 25
-    Caption = 'Open audit-log folder'
-    TabOrder = 3
-    OnClick = BtnOpenAuditDirClick
-  end
-  object LblAuditResolved: TLabel
-    Left = 8
-    Top = 188
-    Width = 420
-    Height = 13
-    AutoSize = False
-    Caption = ''
-    WordWrap = False
-  end
-  object LblConsentTimeout: TLabel
-    Left = 8
-    Top = 214
-    Width = 218
-    Height = 13
-    Caption = 'Consent timeout (seconds, 0 = wait forever):'
-  end
-  object EdtConsentTimeout: TEdit
-    Left = 232
-    Top = 211
-    Width = 60
-    Height = 21
-    TabOrder = 4
+    object LblConsentTimeout: TLabel
+      Left = 16
+      Top = 28
+      Width = 370
+      Height = 15
+      AutoSize = True
+      Caption = 
+        'Consent timeout (seconds, 0 = wait indefinitely):'
+    end
+    object EdtConsentTimeout: TEdit
+      Left = 405
+      Top = 25
+      Width = 79
+      Height = 23
+      TabOrder = 0
+    end
   end
 end

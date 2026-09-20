@@ -1,4 +1,4 @@
-﻿unit Aefos.OTA.Chat.UI.Options.Registration;
+unit Aefos.OTA.Chat.UI.Options.Registration;
 
 {
   OTA Tools->Options registration for the Aefos node
@@ -57,7 +57,7 @@ procedure UnregisterAefosOptions;
 // Single integration point for the menu action and the Chat-panel link
 // (ADR-211). Opens Tools->Options focused on the Aefos node / page; on
 // any failure falls back to opening the dialog top-level.
-procedure OpenAefosOptions(const APageCaption: string = 'AI Chat');
+procedure OpenAefosOptions(const APageCaption: string = 'Agents & Connections');
 
 implementation
 
@@ -73,11 +73,28 @@ uses
 
 const
   AREA_NAME = 'Aefos';
-  CAPTION_PROVIDERS = 'Agentes & Conexões';
-  CAPTION_REGISTRY = 'Catálogo de Agentes';
-  CAPTION_CHAT = 'AI Chat (Legado)';
+  CAPTION_CHAT = 'AI Chat';
+  CAPTION_PROVIDERS = 'Agents & Connections';
+  CAPTION_REGISTRY = 'Agent Catalog';
 
 type
+  // Chat Execution & MCP Settings page (strictly without duplicate provider controls).
+  TChatAddInOptions = class(TInterfacedObject, INTAAddInOptions)
+  private
+    FFrame: TAefosChatOptionsFrame;
+    FBinding: TOptionsConfigBinding;
+  public
+    destructor Destroy; override;
+    function GetArea: string;
+    function GetCaption: string;
+    function GetFrameClass: TCustomFrameClass;
+    procedure FrameCreated(AFrame: TCustomFrame);
+    procedure DialogClosed(Accepted: Boolean);
+    function ValidateContents: Boolean;
+    function GetHelpContext: Integer;
+    function IncludeInIDEInsight: Boolean;
+  end;
+
   // Providers / ACP Agent Configuration page (Master-Detail).
   TProvidersAddInOptions = class(TInterfacedObject, INTAAddInOptions)
   private
@@ -108,23 +125,6 @@ type
     function IncludeInIDEInsight: Boolean;
   end;
 
-  // Legacy Chat / Executor page. Owns a osChat binding rebuilt per dialog open.
-  TChatAddInOptions = class(TInterfacedObject, INTAAddInOptions)
-  private
-    FFrame: TAefosChatOptionsFrame;
-    FBinding: TOptionsConfigBinding;
-  public
-    destructor Destroy; override;
-    function GetArea: string;
-    function GetCaption: string;
-    function GetFrameClass: TCustomFrameClass;
-    procedure FrameCreated(AFrame: TCustomFrame);
-    procedure DialogClosed(Accepted: Boolean);
-    function ValidateContents: Boolean;
-    function GetHelpContext: Integer;
-    function IncludeInIDEInsight: Boolean;
-  end;
-
 var
   GConfig: IConfig = nil;
   GRootResolver: TFunc<string> = nil;
@@ -143,6 +143,70 @@ function _NewBinding(const AScope: TOptionsScope): TOptionsConfigBinding;
 begin
   Result := TOptionsConfigBinding.Create(GConfig, GRootResolver, AScope);
   Result.LoadFromConfig;
+end;
+
+{ TChatAddInOptions }
+
+destructor TChatAddInOptions.Destroy;
+begin
+  FBinding.Free;
+  inherited;
+end;
+
+function TChatAddInOptions.GetArea: string;
+begin
+  Result := AREA_NAME;
+end;
+
+function TChatAddInOptions.GetCaption: string;
+begin
+  Result := CAPTION_CHAT;
+end;
+
+function TChatAddInOptions.GetFrameClass: TCustomFrameClass;
+begin
+  Result := TAefosChatOptionsFrame;
+end;
+
+procedure TChatAddInOptions.FrameCreated(AFrame: TCustomFrame);
+begin
+  FFrame := AFrame as TAefosChatOptionsFrame;
+  FreeAndNil(FBinding);
+  if not Assigned(GConfig) or not Assigned(GRootResolver) then
+    Exit;
+  FBinding := _NewBinding(osChat);
+  FFrame.LoadFrom(FBinding);
+end;
+
+function TChatAddInOptions.ValidateContents: Boolean;
+begin
+  Result := True;
+  if not Assigned(FFrame) or not Assigned(FBinding) then
+    Exit;
+  FFrame.StoreTo(FBinding);
+end;
+
+procedure TChatAddInOptions.DialogClosed(Accepted: Boolean);
+begin
+  if Accepted and Assigned(FFrame) and Assigned(FBinding) then
+  begin
+    FFrame.StoreTo(FBinding);
+    FBinding.SaveToConfig;
+    if Assigned(GOnConfigSaved) then
+      GOnConfigSaved();
+  end;
+  FFrame := nil;
+  FreeAndNil(FBinding);
+end;
+
+function TChatAddInOptions.GetHelpContext: Integer;
+begin
+  Result := 0;
+end;
+
+function TChatAddInOptions.IncludeInIDEInsight: Boolean;
+begin
+  Result := True;
 end;
 
 { TProvidersAddInOptions }
@@ -235,79 +299,6 @@ begin
   Result := True;
 end;
 
-{ TChatAddInOptions }
-
-destructor TChatAddInOptions.Destroy;
-begin
-  FBinding.Free;
-  inherited;
-end;
-
-function TChatAddInOptions.GetArea: string;
-begin
-  Result := AREA_NAME;
-end;
-
-function TChatAddInOptions.GetCaption: string;
-begin
-  Result := CAPTION_CHAT;
-end;
-
-function TChatAddInOptions.GetFrameClass: TCustomFrameClass;
-begin
-  Result := TAefosChatOptionsFrame;
-end;
-
-procedure TChatAddInOptions.FrameCreated(AFrame: TCustomFrame);
-begin
-  FFrame := AFrame as TAefosChatOptionsFrame;
-  FreeAndNil(FBinding);
-  if not Assigned(GConfig) or not Assigned(GRootResolver) then
-    Exit;
-  FBinding := _NewBinding(osChat);
-  FFrame.LoadFrom(FBinding);
-end;
-
-function TChatAddInOptions.ValidateContents: Boolean;
-var
-  LReason: string;
-begin
-  Result := True;
-  if not Assigned(FFrame) or not Assigned(FBinding) then
-    Exit;
-  FFrame.StoreTo(FBinding);
-  if FBinding.Validate(LReason) then
-    Exit;
-  if LReason <> '' then
-    ShowMessage(LReason);
-  Result := False;
-end;
-
-procedure TChatAddInOptions.DialogClosed(Accepted: Boolean);
-begin
-  if Accepted and Assigned(FFrame) and Assigned(FBinding) then
-  begin
-    FFrame.StoreTo(FBinding);
-    FBinding.SaveToConfig;
-    if Assigned(GOnConfigSaved) then
-      GOnConfigSaved();
-  end;
-  // The IDE frees the frame after the dialog closes; drop our refs so the next
-  // open rebuilds them (RN-004).
-  FFrame := nil;
-  FreeAndNil(FBinding);
-end;
-
-function TChatAddInOptions.GetHelpContext: Integer;
-begin
-  Result := 0;
-end;
-
-function TChatAddInOptions.IncludeInIDEInsight: Boolean;
-begin
-  Result := True;
-end;
-
 procedure RegisterAefosOptions(const AConfig: IConfig;
   const ARootResolver: TFunc<string>; const AOnConfigSaved: TProc);
 var
@@ -324,9 +315,9 @@ begin
   if not _EnvOptionsServices(LServices) then
     Exit;
   GOptions := [
+    TChatAddInOptions.Create,
     TProvidersAddInOptions.Create,
-    TACPRegistryAddInOptions.Create,
-    TChatAddInOptions.Create
+    TACPRegistryAddInOptions.Create
   ];
   for LOption in GOptions do
     LServices.RegisterAddInOptions(LOption);

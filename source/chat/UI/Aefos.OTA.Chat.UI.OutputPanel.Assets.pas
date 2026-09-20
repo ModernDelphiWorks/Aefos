@@ -1,4 +1,4 @@
-﻿unit Aefos.OTA.Chat.UI.OutputPanel.Assets;
+unit Aefos.OTA.Chat.UI.OutputPanel.Assets;
 
 {
   Embedded WebView2 panel assets (ESP-008, demand 4/5; updated ESP-004, demand 1/6).
@@ -265,19 +265,21 @@ const
     'white-space: nowrap; letter-spacing: 0.2px; }' + sLineBreak +
     '#ds-header .ds-hd-trial:hover { background: rgba(245,166,35,0.22); ' +
     'border-color: rgba(245,166,35,0.7); }' + sLineBreak +
-    '.ds-hd-model { position: relative; }' + sLineBreak +
-    '.ds-hd-effort { position: relative; }' + sLineBreak +
-    '.ds-hd-mbtn { display: flex; align-items: center; gap: 5px; height: 28px; ' +
-    'padding: 0 10px; border-radius: 8px; border: 1px solid var(--ds-border); ' +
+    '.ds-hd-model { position: relative; z-index: 102; flex: 0 1 auto; min-width: 0; }' + sLineBreak +
+    '.ds-hd-provider { position: relative; z-index: 102; flex: 0 1 auto; min-width: 0; }' + sLineBreak +
+    '.ds-hd-effort { position: relative; z-index: 102; flex-shrink: 0; }' + sLineBreak +
+    '.ds-hd-mbtn { display: flex; align-items: center; gap: 4px; height: 28px; ' +
+    'padding: 0 7px; border-radius: 8px; border: 1px solid var(--ds-border); ' +
     'background: var(--ds-code-bg, #1b1b1f); color: var(--ds-secondary); font: inherit; ' +
-    'font-size: 12px; cursor: pointer; max-width: 240px; }' + sLineBreak +
+    'font-size: 11.5px; cursor: pointer; max-width: 140px; min-width: 0; box-sizing: border-box; overflow: hidden; }' + sLineBreak +
     '.ds-hd-mbtn:hover { color: var(--ds-fg); border-color: rgba(var(--ds-blue-rgb),0.5); }' + sLineBreak +
-    '#ds-hd-model-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }' + sLineBreak +
-    '.ds-hd-mlist { position: absolute; top: calc(100% + 4px); left: 0; z-index: 40; ' +
-    'min-width: 200px; max-height: 280px; overflow: auto; background: var(--ds-code-bg, #171a21); ' +
+    '#ds-hd-model-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80px; min-width: 0; flex: 0 1 auto; }' + sLineBreak +
+    '#ds-hd-provider-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75px; min-width: 0; flex: 0 1 auto; }' + sLineBreak +
+    '.ds-hd-mlist { position: absolute; top: calc(100% + 4px); left: 0; z-index: 99999; ' +
+    'min-width: 190px; max-height: 280px; overflow: auto; background: var(--ds-code-bg, #171a21); ' +
     'border: 1px solid var(--ds-border); border-radius: 10px; ' +
-    'box-shadow: 0 12px 34px rgba(0,0,0,0.5); padding: 5px; }' + sLineBreak +
-    '.ds-hd-mlist.ds-hd-mup { top: auto; bottom: calc(100% + 6px); left: auto; right: 0; }' + sLineBreak +
+    'box-shadow: 0 12px 34px rgba(0,0,0,0.7); padding: 5px; }' + sLineBreak +
+    '.ds-hd-mlist.ds-hd-mup { top: auto; bottom: calc(100% + 8px); left: auto; right: 0; z-index: 99999; }' + sLineBreak +
     '.ds-hd-mitem { padding: 7px 10px; border-radius: 7px; font-size: 12.5px; ' +
     'color: var(--ds-fg); cursor: pointer; white-space: nowrap; display: flex; ' +
     'align-items: center; gap: 8px; }' + sLineBreak +
@@ -285,8 +287,8 @@ const
     '.ds-hd-mitem.on { color: var(--ds-accent); }' + sLineBreak +
     '.ds-hd-mck { width: 12px; flex: none; color: var(--ds-accent); }' + sLineBreak +
     (* action bar below the prompt: attach / memory / MCP + model selector *)
-    '#ds-composer .ds-actbar { display: flex; align-items: center; gap: 6px; padding: 7px 4px 2px; }' + sLineBreak +
-    '#ds-composer .ds-act-sp { flex: 1; }' + sLineBreak +
+    '#ds-composer .ds-actbar { position: relative; z-index: 100; display: flex; align-items: center; gap: 4px; padding: 6px 2px 2px; width: 100%; box-sizing: border-box; flex-wrap: wrap; }' + sLineBreak +
+    '#ds-composer .ds-act-sp { flex: 1; min-width: 2px; }' + sLineBreak +
     '#ds-ctx { display: flex; align-items: center; gap: 8px; padding: 7px 14px; ' +
     'border-bottom: 1px solid var(--ds-border); font-size: 12px; ' +
     'color: var(--ds-secondary); }' + sLineBreak +
@@ -298,10 +300,10 @@ const
     '#ds-ctx .ds-ctx-sp { flex: 1; }' + sLineBreak +
     (* ---- Composer (input bar HTML no rodape; substitui o input VCL) ---- *)
     'body { padding-top: 68px; padding-bottom: 100px; }' + sLineBreak +
-    '#ds-composer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; ' +
+    '#ds-composer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; ' +
     'padding: 10px 12px 12px; background: var(--ds-bg); ' +
     'border-top: 1px solid var(--ds-border); }' + sLineBreak +
-    '#ds-composer .ds-inbar { display: flex; align-items: flex-end; gap: 8px; ' +
+    '#ds-composer .ds-inbar { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 8px; ' +
     'background: var(--ds-code-bg, #1b1b1f); border: 1px solid var(--ds-border); ' +
     'border-radius: 14px; padding: 6px 6px 6px 10px; ' +
     'transition: border-color .15s ease, box-shadow .15s ease; }' + sLineBreak +
@@ -4013,9 +4015,9 @@ const
     '<path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66' +
     'l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>' + sLineBreak +
     '    <button class="ds-mem-btn" id="ds-mem-open" type="button" title="Memory">' +
-    '🧠</button>' + sLineBreak +
+    '&#129504;</button>' + sLineBreak +
     '    <button class="ds-mem-btn" id="ds-mcp-open" type="button" title="MCP Servers">' +
-    '🔌</button>' + sLineBreak +
+    '&#128268;</button>' + sLineBreak +
     '    <span class="ds-act-sp"></span>' + sLineBreak +
     (* reasoning-effort selector: hidden until the active executor supports it *)
     '    <div class="ds-hd-effort" id="ds-hd-effort-wrap" style="display:none">' +
@@ -4025,6 +4027,13 @@ const
     '<path d="M12 14a4 4 0 1 0-4-4"/><path d="M12 14v4"/><path d="M5 20h14"/></svg>' +
     '<span id="ds-hd-effort-name">Effort</span> ' + #$25BE +
     '</button><div class="ds-hd-mlist ds-hd-mup" id="ds-hd-elist" style="display:none"></div></div>' + sLineBreak +
+    '    <div class="ds-hd-provider"><button class="ds-hd-mbtn" id="ds-hd-provider" ' +
+    'type="button" title="Provider">' +
+    '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" ' +
+    'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' +
+    '<circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>' +
+    '<span id="ds-hd-provider-name">Provider</span> ' + #$25BE +
+    '</button><div class="ds-hd-mlist ds-hd-mup" id="ds-hd-plist" style="display:none"></div></div>' + sLineBreak +
     '    <div class="ds-hd-model"><button class="ds-hd-mbtn" id="ds-hd-model" ' +
     'type="button" title="Model">' +
     '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" ' +
@@ -4496,7 +4505,7 @@ const
     '<div id="ds-mem-backdrop" style="display:none">' + sLineBreak +
     '  <div id="ds-mem-modal">' + sLineBreak +
     '    <div class="ds-mem-head">' + sLineBreak +
-    '      <div class="ds-mem-badge">🧠</div>' + sLineBreak +
+    '      <div class="ds-mem-badge">&#129504;</div>' + sLineBreak +
     '      <div>' + sLineBreak +
     '        <div class="ds-mem-title">Aefos Memory</div>' + sLineBreak +
     '        <div class="ds-mem-sub">Instructions that apply to ' +
@@ -4574,7 +4583,7 @@ const
     '<div id="ds-mcp-backdrop" style="display:none">' + sLineBreak +
     '  <div id="ds-mcp-modal">' + sLineBreak +
     '    <div class="ds-mcp-head">' + sLineBreak +
-    '      <div class="ds-mcp-badge">🔌</div>' + sLineBreak +
+    '      <div class="ds-mcp-badge">&#128268;</div>' + sLineBreak +
     '      <div>' + sLineBreak +
     '        <div class="ds-mcp-title">MCP Servers</div>' + sLineBreak +
     '        <div class="ds-mcp-sub">Extra MCP servers handed to the CLI, ' +
@@ -4921,6 +4930,38 @@ const
     '    else { if(tChat){tChat.classList.add("ds-hd-on");}' +
     ' if(tAgent){tAgent.classList.remove("ds-hd-on");} }' + sLineBreak +
     '  };' + sLineBreak +
+    (* provider selector dropdown: dsSetProviders(list,current) fed by Pascal; pick posts hdr:provider:<id> *)
+    '  var _pBtn = document.getElementById("ds-hd-provider");' + sLineBreak +
+    '  var _pList = document.getElementById("ds-hd-plist");' + sLineBreak +
+    '  var _pName = document.getElementById("ds-hd-provider-name");' + sLineBreak +
+    '  window.dsSetProviders = function(providers, current){' + sLineBreak +
+    '    var cur = current || "";' + sLineBreak +
+    '    var curObj = null;' + sLineBreak +
+    '    (providers||[]).forEach(function(p){' + sLineBreak +
+    '      var id = (typeof p === "object") ? p.id : p;' + sLineBreak +
+    '      var nm = (typeof p === "object") ? p.name : p;' + sLineBreak +
+    '      if(id === cur || nm === cur){ curObj = {id: id, name: nm}; }' + sLineBreak +
+    '    });' + sLineBreak +
+    '    if(_pName){ _pName.textContent = curObj ? curObj.name : (cur || "Provider"); }' + sLineBreak +
+    '    if(!_pList){ return; } _pList.innerHTML = "";' + sLineBreak +
+    '    (providers||[]).forEach(function(p){' + sLineBreak +
+    '      var id = (typeof p === "object") ? p.id : p;' + sLineBreak +
+    '      var nm = (typeof p === "object") ? p.name : p;' + sLineBreak +
+    '      var isCur = (curObj && curObj.id === id) || (id === cur);' + sLineBreak +
+    '      var it = document.createElement("div"); it.className = "ds-hd-mitem" + (isCur ? " on" : "");' + sLineBreak +
+    '      var ck = document.createElement("span"); ck.className = "ds-hd-mck"; ' +
+    'ck.textContent = (isCur ? "\u2714" : ""); it.appendChild(ck);' + sLineBreak +
+    '      var lbl = document.createElement("span"); lbl.textContent = nm; it.appendChild(lbl);' + sLineBreak +
+    '      it.addEventListener("click", function(){ if(_pName){ _pName.textContent = nm; } ' +
+    '_pList.style.display = "none"; dsHdPost("hdr:provider:" + id); window.dsSetProviders(providers, id); });' + sLineBreak +
+    '      _pList.appendChild(it);' + sLineBreak +
+    '    });' + sLineBreak +
+    '  };' + sLineBreak +
+    '  if(_pBtn){ _pBtn.addEventListener("click", function(e){ e.stopPropagation(); ' +
+    'if(_pList){ _pList.style.display = (_pList.style.display === "none" ? "block" : "none"); } ' +
+    'if(_mList){ _mList.style.display = "none"; } ' +
+    'if(typeof _eList !== "undefined" && _eList){ _eList.style.display = "none"; } }); }' + sLineBreak +
+    '  document.addEventListener("click", function(){ if(_pList){ _pList.style.display = "none"; } });' + sLineBreak +
     (* model selector dropdown: dsSetModels(list,current) fed by Pascal; pick posts hdr:model:<id> *)
     '  var _mBtn = document.getElementById("ds-hd-model");' + sLineBreak +
     '  var _mList = document.getElementById("ds-hd-mlist");' + sLineBreak +
@@ -4932,7 +4973,7 @@ const
     '    (models||[]).forEach(function(m){' + sLineBreak +
     '      var it = document.createElement("div"); it.className = "ds-hd-mitem" + (m===cur?" on":"");' + sLineBreak +
     '      var ck = document.createElement("span"); ck.className = "ds-hd-mck"; ' +
-    'ck.textContent = (m===cur ? "✓" : ""); it.appendChild(ck);' + sLineBreak +
+    'ck.textContent = (m===cur ? "\u2714" : ""); it.appendChild(ck);' + sLineBreak +
     '      var nm = document.createElement("span"); nm.textContent = m; it.appendChild(nm);' + sLineBreak +
     '      it.addEventListener("click", function(){ if(_mName){ _mName.textContent = m; } ' +
     '_mList.style.display = "none"; dsHdPost("hdr:model:" + m); window.dsSetModels(models, m); });' + sLineBreak +
@@ -4940,7 +4981,8 @@ const
     '    });' + sLineBreak +
     '  };' + sLineBreak +
     '  if(_mBtn){ _mBtn.addEventListener("click", function(e){ e.stopPropagation(); ' +
-    'if(_mList){ _mList.style.display = (_mList.style.display === "none" ? "block" : "none"); } }); }' + sLineBreak +
+    'if(_mList){ _mList.style.display = (_mList.style.display === "none" ? "block" : "none"); } ' +
+    'if(_pList){ _pList.style.display = "none"; } }); }' + sLineBreak +
     '  document.addEventListener("click", function(){ if(_mList){ _mList.style.display = "none"; } });' + sLineBreak +
     (* reasoning-effort dropdown: dsSetEffort(current, supported) fed by Pascal; *)
     (* pick posts hdr:effort:<token> ("default" clears it). Shown only when the *)
@@ -4961,7 +5003,7 @@ const
     '    _eOpts.forEach(function(o){' + sLineBreak +
     '      var it = document.createElement("div"); it.className = "ds-hd-mitem" + (o[0]===cur?" on":"");' + sLineBreak +
     '      var ck = document.createElement("span"); ck.className = "ds-hd-mck"; ' +
-    'ck.textContent = (o[0]===cur ? "✓" : ""); it.appendChild(ck);' + sLineBreak +
+    'ck.textContent = (o[0]===cur ? "\u2714" : ""); it.appendChild(ck);' + sLineBreak +
     '      var nm = document.createElement("span"); nm.textContent = o[1]; it.appendChild(nm);' + sLineBreak +
     '      it.addEventListener("click", function(){ if(_eName){ _eName.textContent = o[1]; } ' +
     '_eList.style.display = "none"; dsHdPost("hdr:effort:" + (o[0]||"default")); ' +
@@ -4970,9 +5012,12 @@ const
     '    });' + sLineBreak +
     '  };' + sLineBreak +
     '  if(_eBtn){ _eBtn.addEventListener("click", function(e){ e.stopPropagation(); ' +
-    'if(_eList){ _eList.style.display = (_eList.style.display === "none" ? "block" : "none"); } }); }' + sLineBreak +
+    'if(_eList){ _eList.style.display = (_eList.style.display === "none" ? "block" : "none"); } ' +
+    'if(_pList){ _pList.style.display = "none"; } }); }' + sLineBreak +
     '  document.addEventListener("click", function(){ if(_eList){ _eList.style.display = "none"; } });' + sLineBreak +
-    '  window.dsModels = function(o){ if(o){ window.dsSetModels(o.models||[], o.current||"");' +
+    '  window.dsModels = function(o){ if(o){ ' +
+    ' if(o.providers && window.dsSetProviders){ window.dsSetProviders(o.providers, o.currentProvider || ""); }' +
+    ' window.dsSetModels(o.models||[], o.current||"");' +
     ' if(window.dsSetEffort){ window.dsSetEffort(o.effort||"", !!o.effortSupported); } } };' + sLineBreak +
     (* Persistent Trial badge: Pascal pushes the text via dsSetTrial (''=hide); *)
     (* a click opens the License manager (hdr:license). *)

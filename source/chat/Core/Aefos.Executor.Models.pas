@@ -1,4 +1,4 @@
-﻿unit Aefos.Executor.Models;
+unit Aefos.Executor.Models;
 
 {$IFDEF FPC}{$mode delphiunicode}{$ENDIF}
 
@@ -246,6 +246,37 @@ begin
   end;
 end;
 
+function _SanitizeModelId(const AId: string): string;
+var
+  I: Integer;
+  LPrevDash: Boolean;
+  C: Char;
+begin
+  Result := '';
+  LPrevDash := False;
+  for I := 1 to Length(AId) do
+  begin
+    C := AId[I];
+    if CharInSet(C, [' ', #9, #10, #13, '_']) then
+      C := '-';
+    if C = '-' then
+    begin
+      if not LPrevDash and (Result <> '') then
+      begin
+        Result := Result + '-';
+        LPrevDash := True;
+      end;
+    end
+    else
+    begin
+      Result := Result + C;
+      LPrevDash := False;
+    end;
+  end;
+  while (Result <> '') and (Result[Length(Result)] = '-') do
+    Delete(Result, Length(Result), 1);
+end;
+
 class procedure TExecutorModelStore.AddModelForKind(const AKind: TExecutorKind;
   const AModel: string);
 var
@@ -253,7 +284,7 @@ var
   LModel, LExisting: string;
   LRoot: TJSONObject;
 begin
-  LModel := Trim(AModel);
+  LModel := _SanitizeModelId(AModel);
   if LModel = '' then
     Exit;
   LList := ModelsForKind(AKind); // ensures the kind is seeded first

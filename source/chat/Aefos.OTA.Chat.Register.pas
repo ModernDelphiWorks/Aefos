@@ -1,4 +1,4 @@
-﻿unit Aefos.OTA.Chat.Register;
+unit Aefos.OTA.Chat.Register;
 
 {
   Composition root for the Aefos OTA plugin.
@@ -106,6 +106,8 @@ uses
   Aefos.OTA.Chat.Core.CommandExecutor,
   Aefos.Provider.Types,
   Aefos.Provider.Registry,
+  Aefos.ACP.Types,
+  Aefos.ACP.Registry,
   Aefos.OTA.Chat.UI.Options.Binding,
   Aefos.OTA.Chat.Adapter.IDENotifier,
   Aefos.OTA.Chat.Adapter.DebuggerNotifier,
@@ -187,6 +189,7 @@ var
 // config-and-executor graph. Forward-declared so callers earlier in the unit
 // can trigger it; implemented before Register.
 procedure _ResolveExecutorGraph; forward;
+procedure _SyncConfigWithACP; forward;
 
 var
   // Last non-empty active-project root (see _ResolveActiveProjectRoot).
@@ -387,11 +390,52 @@ begin
     end);
   try
     GConfig.Load;
+    _SyncConfigWithACP;
   except
     on E: Exception do
       OutputDebugString(PChar(
         'Aefos.Register: initial config load failed: ' + E.Message));
   end;
+end;
+
+procedure _SyncConfigWithACP;
+var
+  LActive: TACPAgentManifest;
+  LCfg: TConfig;
+  LTarget: TExecutorKind;
+  LChanged: Boolean;
+begin
+  if not Assigned(GConfig) then
+    Exit;
+
+  LCfg := GConfig.Snapshot;
+  LChanged := False;
+
+  if DefaultACPRegistry.GetActiveAgent(LActive) then
+  begin
+    if SameText(LActive.Id, 'codex-acp') then
+      LTarget := ekCodex
+    else if SameText(LActive.Id, 'antigravity-acp') then
+      LTarget := ekGemini
+    else
+      LTarget := ekClaude;
+
+    if LCfg.Executor <> LTarget then
+    begin
+      LCfg.Executor := LTarget;
+      LCfg.ExecutorPath := '';
+      LChanged := True;
+    end;
+
+    if (LActive.SelectedModelId <> '') and (LCfg.Model <> LActive.SelectedModelId) then
+    begin
+      LCfg.Model := LActive.SelectedModelId;
+      LChanged := True;
+    end;
+  end;
+
+  if LChanged then
+    GConfig.Save(LCfg);
 end;
 
 procedure _ShutdownConfig;
@@ -449,6 +493,7 @@ var
   LConfigPath: string;
 begin
   // BR-2: the active profile is resolved here, once, from the loaded config.
+  _SyncConfigWithACP;
   LKind := ekClaude;
   LConfigPath := '';
   if Assigned(GConfig) then
@@ -459,10 +504,12 @@ begin
   if LKind = ekCodex then
     _InitCodexExecutorProfile(LConfigPath)
   else if LKind = ekOllama then
-    // Local models: HTTP dispatcher composition (no binary, no probe).
     GExecutorProfile := TProviderRegistry.ResolveExecutorProfile(ekOllama)
+  else if LKind = ekCopilot then
+    GExecutorProfile := TProviderRegistry.ResolveExecutorProfile(ekCopilot)
+  else if LKind = ekGemini then
+    GExecutorProfile := TProviderRegistry.ResolveExecutorProfile(ekGemini)
   else
-    // ekClaude: no probe — v0.7.0 behaviour byte-identical (C-5, AC-13a).
     GExecutorProfile := TProviderRegistry.ResolveExecutorProfile(ekClaude);
 end;
 
@@ -3732,6 +3779,9 @@ procedure _WireChatPanel;
 begin
   if not Assigned(GChatPanel) then
     Exit;
+  if not Assigned(GCommandExecutor) then
+    _ResolveExecutorGraph;
+
   GChatPanel.OnCommand :=
     procedure(ACommandName: string)
     begin
@@ -3746,30 +3796,31 @@ begin
   GChatPanel.OnIsRunning :=
     function: Boolean
     begin
-      Result := GCommandExecutor.IsRunning;
+      Result := Assigned(GCommandExecutor) and GCommandExecutor.IsRunning;
     end;
   GChatPanel.OnNewSession :=
     procedure
     begin
-      GCommandExecutor.ResetSession;
+      if Assigned(GCommandExecutor) then
+        GCommandExecutor.ResetSession;
     end;
   GChatPanel.OnGetSession :=
     function: string
     begin
-      Result := GCommandExecutor.Session;
+      if Assigned(GCommandExecutor) then
+        Result := GCommandExecutor.Session
+      else
+        Result := '';
     end;
   GChatPanel.OnSetSession :=
     procedure(AId: string)
     begin
-      GCommandExecutor.SetSession(AId);
+      if Assigned(GCommandExecutor) then
+        GCommandExecutor.SetSession(AId);
     end;
   GChatPanel.OnGetExecutor :=
     function: string
     begin
-      // The executor that OWNS the session the panel is about to store. Asked
-      // for on every save instead of assumed, because the panel used to write
-      // a literal 'claude' and so mislabelled every conversation -- including
-      // the ones held with Codex, which is the factory default.
       Result := '';
       if Assigned(GCommandExecutor) then
         Result := TProviderRegistry.ExecutorKindToString(GCommandExecutor.Kind);
@@ -3834,15 +3885,27 @@ begin
         _ResolveExecutorGraph;
       GCommandExecutor.SetAgentMode(AAgent);
     end;
+  GChatPanel.OnSetProvider :=
+    procedure(AProviderId: string)
+    begin
+      DefaultACPRegistry.SetActiveAgent(AProviderId);
+      _SyncConfigWithACP;
+      _ResolveExecutorGraph;
+    end;
   GChatPanel.OnSetModel :=
     procedure(AModel: string)
     begin
+      DefaultACPRegistry.SetActiveModel(AModel);
+      _SyncConfigWithACP;
       if not Assigned(GCommandExecutor) then
         _ResolveExecutorGraph; // Welcome-page self-heal — see OnSetAgentMode
-      GCommandExecutor.SetModel(AModel);
-      // Remember this pick PER EXECUTOR so it is recalled (and never leaks to
-      // another provider) — same store the Options page uses.
-      TExecutorModels.SetSelectedModelForKind(GCommandExecutor.Kind, AModel);
+      if Assigned(GCommandExecutor) then
+      begin
+        GCommandExecutor.SetModel(AModel);
+        // Remember this pick PER EXECUTOR so it is recalled (and never leaks to
+        // another provider) — same store the Options page uses.
+        TExecutorModels.SetSelectedModelForKind(GCommandExecutor.Kind, AModel);
+      end;
     end;
   GChatPanel.OnSetEffort :=
     procedure(AToken: string)
@@ -3858,70 +3921,91 @@ begin
   GChatPanel.OnGetModels :=
     function: string
     var
+      LInstalled: TArray<TACPAgentManifest>;
+      LActiveAgent: TACPAgentManifest;
+      LAgent: TACPAgentManifest;
+      LModel: TACPModelInfo;
       LKind: TExecutorKind;
-      LModels: TArray<string>;
-      LArr, M, LCurrent, LOverride: string;
-      LInList: Boolean;
-      LEffort, LSupStr: string;
+      LProvidersJson, LModelsJson: TJSONArray;
+      LProvObj: TJSONObject;
+      LRoot: TJSONObject;
+      LCurrentModel, LCurrentProvider: string;
+      LEffort: string;
       LSupported: Boolean;
     begin
-      if not Assigned(GCommandExecutor) then
-        _ResolveExecutorGraph; // Welcome-page self-heal — see OnSetAgentMode
-      // File-backed, per-executor list (models.json), read from the FRESH config
-      // each call so a focus re-feed reflects an executor/model change made in
-      // Options. Model ids are alphanumeric/dash → safe in JSON unescaped.
-      LKind := GCommandExecutor.Kind;
-      LModels := TExecutorModels.ModelsForKind(LKind);
-      // A picked override (FModel) only applies to its own executor; if the
-      // executor changed it would be stale, so drop it when it's not in the
-      // current list and fall back to the configured model.
-      LOverride := GCommandExecutor.Model;
-      if LOverride <> '' then
+      LInstalled := DefaultACPRegistry.GetInstalledAgents;
+      if Length(LInstalled) = 0 then
       begin
-        LInList := False;
-        for M in LModels do
-          if M = LOverride then
-          begin
-            LInList := True;
-            Break;
-          end;
-        if not LInList then
+        DefaultACPRegistry.Reload;
+        LInstalled := DefaultACPRegistry.GetInstalledAgents;
+      end;
+
+      if not DefaultACPRegistry.GetActiveAgent(LActiveAgent) then
+      begin
+        if Length(LInstalled) > 0 then
         begin
-          GCommandExecutor.SetModel('');
-          LOverride := '';
+          LActiveAgent := LInstalled[0];
+          DefaultACPRegistry.SetActiveAgent(LActiveAgent.Id);
         end;
       end;
-      if LOverride <> '' then
-        LCurrent := LOverride
-      else
+
+      LCurrentProvider := LActiveAgent.Id;
+      LCurrentModel := LActiveAgent.SelectedModelId;
+      if (LCurrentModel = '') and (Length(LActiveAgent.Models) > 0) then
       begin
-        // Prefer the model remembered for THIS executor (per-kind store); fall
-        // back to the configured single Model only when nothing is remembered.
-        LCurrent := TExecutorModels.SelectedModelForKind(LKind);
-        if LCurrent = '' then
-          LCurrent := GCommandExecutor.GetConfigModel;
+        LCurrentModel := LActiveAgent.Models[0].Id;
+        DefaultACPRegistry.SetActiveModel(LCurrentModel);
       end;
-      LArr := '';
-      for M in LModels do
-      begin
-        if LArr <> '' then
-          LArr := LArr + ',';
-        LArr := LArr + '"' + M + '"';
+
+      LRoot := TJSONObject.Create;
+      try
+        LProvidersJson := TJSONArray.Create;
+        for LAgent in LInstalled do
+        begin
+          LProvObj := TJSONObject.Create;
+          LProvObj.AddPair('id', LAgent.Id);
+          LProvObj.AddPair('name', LAgent.Name);
+          LProvidersJson.AddElement(LProvObj);
+        end;
+        LRoot.AddPair('providers', LProvidersJson);
+        LRoot.AddPair('currentProvider', LCurrentProvider);
+
+        LModelsJson := TJSONArray.Create;
+        for LModel in LActiveAgent.Models do
+          LModelsJson.AddElement(TJSONString.Create(LModel.Id));
+        if (LModelsJson.Count = 0) and Assigned(GCommandExecutor) then
+        begin
+          for LCurrentModel in TExecutorModels.ModelsForKind(GCommandExecutor.Kind) do
+            LModelsJson.AddElement(TJSONString.Create(LCurrentModel));
+          if (LModelsJson.Count > 0) and (LCurrentModel <> '') then
+            LCurrentModel := LModelsJson.Items[0].Value;
+        end;
+        LRoot.AddPair('models', LModelsJson);
+        LRoot.AddPair('current', LCurrentModel);
+
+        if LActiveAgent.Name <> '' then
+          LRoot.AddPair('executor', LActiveAgent.Name)
+        else if Assigned(GCommandExecutor) then
+          LRoot.AddPair('executor', TProviderRegistry.ExecutorKindDisplayName(GCommandExecutor.Kind))
+        else
+          LRoot.AddPair('executor', 'AI Agent');
+
+        LEffort := '';
+        LSupported := False;
+        if Assigned(GCommandExecutor) then
+        begin
+          LKind := GCommandExecutor.Kind;
+          LSupported := TExecutorCapabilities.SupportsReasoningEffort(LKind);
+          if LSupported then
+            LEffort := TExecutorModels.SelectedEffortForKind(LKind);
+        end;
+        LRoot.AddPair('effort', LEffort);
+        LRoot.AddPair('effortSupported', TJSONBool.Create(LSupported));
+
+        Result := LRoot.ToJSON;
+      finally
+        LRoot.Free;
       end;
-      // Reasoning-effort pill state: whether the active executor exposes the
-      // control, and the remembered token (empty = Default). The page shows/hides
-      // the pill on effortSupported and highlights the current level.
-      LSupported := TExecutorCapabilities.SupportsReasoningEffort(LKind);
-      LEffort := '';
-      if LSupported then
-        LEffort := TExecutorModels.SelectedEffortForKind(LKind);
-      if LSupported then
-        LSupStr := 'true'
-      else
-        LSupStr := 'false';
-      Result := '{"models":[' + LArr + '],"current":"' + LCurrent +
-        '","executor":"' + TProviderRegistry.ExecutorKindDisplayName(LKind) +
-        '","effort":"' + LEffort + '","effortSupported":' + LSupStr + '}';
     end;
   GChatPanel.OnOpenSettings :=
     procedure

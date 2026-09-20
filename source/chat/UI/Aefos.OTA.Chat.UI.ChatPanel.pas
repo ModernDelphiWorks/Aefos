@@ -1,4 +1,4 @@
-﻿unit Aefos.OTA.Chat.UI.ChatPanel;
+unit Aefos.OTA.Chat.UI.ChatPanel;
 
 {
   Dockable chat panel — primary output and command surface.
@@ -205,6 +205,8 @@ type
     procedure WMSetFocus(var Message: TWMSetFocus); message WM_SETFOCUS;
     procedure WMMouseActivate(var Message: TWMMouseActivate); message WM_MOUSEACTIVATE;
     procedure CMActivate(var Message: TMessage); message CM_ACTIVATE;
+    function CanResize(var NewWidth, NewHeight: Integer): Boolean; override;
+    procedure WMGetMinMaxInfo(var Message: TWMGetMinMaxInfo); message WM_GETMINMAXINFO;
   private
     FCmdEntries: TArray<TCommandEntry>;
     FPalette: ICommandPalette;
@@ -271,6 +273,8 @@ type
     // fresh session, so we only reset on an ACTUAL change (the page may echo the
     // current mode on load — that must never wipe the conversation).
     FAgentMode: Boolean;
+    // Header provider selector: OnSetProvider forwards the picked ACP provider id.
+    FOnSetProvider: TProc<string>;
     // Header model selector: OnSetModel forwards the picked model to
     // SetCommandExecutorModel; OnGetModels returns the {models,current} JSON.
     FOnSetModel: TProc<string>;
@@ -449,6 +453,8 @@ type
     // False = Chat (conversation only). Forwarded to SetCommandExecutorAgentMode.
     property OnSetAgentMode: TProc<Boolean>
       read FOnSetAgentMode write FOnSetAgentMode;
+    // Header provider selector. OnSetProvider: the picked ACP provider/agent id.
+    property OnSetProvider: TProc<string> read FOnSetProvider write FOnSetProvider;
     // Header model selector. OnSetModel: the picked model id. OnGetModels: the
     // {"models":[...],"current":"..."} JSON fed to the dropdown. Wired in Register.
     property OnSetModel: TProc<string> read FOnSetModel write FOnSetModel;
@@ -673,6 +679,8 @@ begin
   FQueuedMessages := TStringList.Create;
   Width := 420;
   Height := 600;
+  Constraints.MinWidth := 380;
+  Constraints.MinHeight := 420;
   OnShow := _OnFormShow;
   OnResize := _OnFormResize;
   ActiveControl := FInput;
@@ -1187,13 +1195,40 @@ procedure TAefosChatPanel.SetParent(AParent: TWinControl);
 begin
   inherited SetParent(AParent);
   if AParent <> nil then
+  begin
     Self.DoubleBuffered := False;
+    if Assigned(HostDockSite) then
+    begin
+      if HostDockSite.Constraints.MinWidth < 380 then
+        HostDockSite.Constraints.MinWidth := 380;
+      if HostDockSite.Constraints.MinHeight < 420 then
+        HostDockSite.Constraints.MinHeight := 420;
+    end;
+  end;
   if Assigned(FFocusLifecycle) then
     FFocusLifecycle.HandleSetParent(AParent);
   // Docking/undocking changes the root form Vcl.Edge consults for accelerator
   // keys — move the OnShortCut hook to the new root (no-op when unchanged).
   if not (csDestroying in ComponentState) then
     _HookRootShortCut;
+end;
+
+function TAefosChatPanel.CanResize(var NewWidth, NewHeight: Integer): Boolean;
+begin
+  Result := inherited CanResize(NewWidth, NewHeight);
+  if NewWidth < 380 then
+    NewWidth := 380;
+  if NewHeight < 420 then
+    NewHeight := 420;
+end;
+
+procedure TAefosChatPanel.WMGetMinMaxInfo(var Message: TWMGetMinMaxInfo);
+begin
+  inherited;
+  if Message.MinMaxInfo^.ptMinTrackSize.X < 380 then
+    Message.MinMaxInfo^.ptMinTrackSize.X := 380;
+  if Message.MinMaxInfo^.ptMinTrackSize.Y < 420 then
+    Message.MinMaxInfo^.ptMinTrackSize.Y := 420;
 end;
 
 procedure TAefosChatPanel.BeginFocusShutdown;
@@ -1846,6 +1881,14 @@ end;
 
 procedure TAefosChatPanel._OnFormResize(Sender: TObject);
 begin
+  if Assigned(HostDockSite) then
+  begin
+    if HostDockSite.Constraints.MinWidth < 380 then
+      HostDockSite.Constraints.MinWidth := 380;
+    if HostDockSite.Constraints.MinHeight < 420 then
+      HostDockSite.Constraints.MinHeight := 420;
+  end;
+
   if Assigned(FWelcomePanelCenter) and Assigned(FWelcomePanel) then
   begin
     FWelcomePanelCenter.Left := (FWelcomePanel.Width - FWelcomePanelCenter.Width) div 2;
@@ -2323,6 +2366,15 @@ begin
       if Assigned(FOnNewSession) then
         FOnNewSession();
     end;
+    Exit;
+  end;
+  // Header provider selector: the page posts 'hdr:provider:<id>' when a provider is picked.
+  if AMessage.StartsWith('hdr:provider:') then
+  begin
+    if Assigned(FOnSetProvider) then
+      FOnSetProvider(Copy(AMessage, Length('hdr:provider:') + 1, MaxInt));
+    if Assigned(FOnGetModels) and Assigned(FController) then
+      FController.SetModelsJson(FOnGetModels());
     Exit;
   end;
   // Header model selector: the page requests the list on load ('hdr:models'),

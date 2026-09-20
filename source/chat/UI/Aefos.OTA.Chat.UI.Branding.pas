@@ -1,4 +1,4 @@
-﻿unit Aefos.OTA.Chat.UI.Branding;
+unit Aefos.OTA.Chat.UI.Branding;
 
 {
   Splash-screen + About-box registration for the Chat host BPL (Aefos.OTA).
@@ -70,9 +70,19 @@ begin
         GLogoBmp := TBitmap.Create;
         GLogoBmp.PixelFormat := pf24bit;
         GLogoBmp.SetSize(24, 24);
-        GLogoBmp.Canvas.Brush.Color := clBlack;
+
+        // Fill entire 24x24 canvas with transparent key color (clFuchsia) so the splash
+        // keys out only the 4 outer corner pixels, leaving all dark/black logo pixels opaque.
+        GLogoBmp.Canvas.Brush.Color := clFuchsia;
         GLogoBmp.Canvas.FillRect(Rect(0, 0, 24, 24));
-        GLogoBmp.Canvas.StretchDraw(Rect(0, 0, 24, 24), LPng);
+
+        // Draw solid rounded rectangle badge background in white
+        GLogoBmp.Canvas.Brush.Color := clWhite;
+        GLogoBmp.Canvas.Pen.Color   := RGB(200, 210, 225);
+        GLogoBmp.Canvas.RoundRect(0, 0, 24, 24, 6, 6);
+
+        // Draw PNG icon over the solid badge
+        GLogoBmp.Canvas.StretchDraw(Rect(1, 1, 23, 23), LPng);
       finally
         LPng.Free;
       end;

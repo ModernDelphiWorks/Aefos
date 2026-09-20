@@ -1,4 +1,4 @@
-unit Aefos.OTA.Terminal.UI.Options;
+﻿unit Aefos.OTA.Terminal.UI.Options;
 
 interface
 
@@ -13,18 +13,23 @@ uses
 
 type
   TTerminalMCPOptionsFrame = class(TFrame)
-    LblEnabled:      TLabel;
-    ChkEnabled:      TCheckBox;
-    LblSession:      TLabel;
-    EdtSession:      TEdit;
-    LblAuditPath:    TLabel;
-    EdtAuditPath:    TEdit;
-    BtnOpenAuditDir: TButton;
-    LblAuditResolved: TLabel;
-    LblConsentTimeout: TLabel;
-    EdtConsentTimeout: TEdit;
-    BtnTestMcp: TButton;
-    LblMcpStatus: TLabel;
+    lblTitle:            TLabel;
+    gbMCPServer:         TGroupBox;
+    LblMcpHelp:          TLabel;
+    ChkEnabled:          TCheckBox;
+    LblSession:          TLabel;
+    EdtSession:          TEdit;
+    BtnTestMcp:          TButton;
+    LblMcpStatus:        TLabel;
+    gbAudit:             TGroupBox;
+    LblAuditPath:        TLabel;
+    EdtAuditPath:        TEdit;
+    BtnOpenAuditDir:     TButton;
+    LblAuditResolvedTag: TLabel;
+    LblAuditResolved:    TLabel;
+    gbSecurity:          TGroupBox;
+    LblConsentTimeout:   TLabel;
+    EdtConsentTimeout:   TEdit;
     procedure BtnOpenAuditDirClick(Sender: TObject);
     procedure BtnTestMcpClick(Sender: TObject);
   public

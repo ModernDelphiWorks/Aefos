@@ -1,4 +1,4 @@
-﻿unit Aefos.Lazarus.WorkspaceFacade;
+unit Aefos.Lazarus.WorkspaceFacade;
 
 { Aefos AI - Lazarus edition: MCP workspace facade backend (Phase F seam).
 
@@ -170,6 +170,7 @@ type
     function GetSelection: TMCPSelectionInfo;
     function CurrentIdeViewIntent: TMCPToolIntent;
     function EditUnit(const AUnitPath, AOldText, ANewText: string; out AError: string): TMCPEditOutcome;
+    function ApplyTextEdits(const AUnitPath: string; const AEdits: TSourceEdits; out AError: string): TMCPEditOutcome;
     function RequestConsent(const AToolName, ASummary, ADetail: string): TMCPConsentDecision;
     function DeleteUnit(const AUnitPath: string; out AError: string): TMCPFileActionOutcome;
     function OverwriteFile(const AFilePath, AContent: string; out AError: string): TMCPFileActionOutcome;
@@ -897,6 +898,72 @@ begin
   // changed line(s) so the developer can Approve (keep) or Reject (restore LBody,
   // the pre-edit whole buffer). NotifyApplied never raises out and is a no-op when
   // review is off, so the applied edit / eoApplied path is unchanged when silent.
+  TAefosLazGutterReview.NotifyApplied(LEditor, AUnitPath, LBody, LNew);
+  Result := eoApplied;
+end;
+
+function TAefosLazWorkspaceFacade.ApplyTextEdits(const AUnitPath: string;
+  const AEdits: TSourceEdits; out AError: string): TMCPEditOutcome;
+var
+  LEditor: TSourceEditorInterface;
+  LBody, LNew: UnicodeString;
+  LBodyBytes: TBytes;
+  I, LOffset, LLen: Integer;
+  LReplBytes: TBytes;
+  LHead, LTail, LNewBytes: TBytes;
+begin
+  AError := '';
+  Result := eoUnitNotOpen;
+  if Trim(AUnitPath) = '' then
+  begin
+    AError := 'ApplyTextEdits: a unit path is required';
+    Exit;
+  end;
+  if Length(AEdits) = 0 then
+  begin
+    AError := 'ApplyTextEdits: no edits';
+    Exit;
+  end;
+  LEditor := _ResolveEditor(AUnitPath);
+  if LEditor = nil then
+    Exit;
+  _EnsureCodeEditorFront(LEditor);
+  TAefosLazGutterReview.AutoAcceptUnitOnNewEdit(LEditor);
+  LBody := _FromLcl(LEditor.SourceText);
+  LBodyBytes := TEncoding.UTF8.GetBytes(LBody);
+
+  for I := High(AEdits) downto 0 do
+  begin
+    LOffset := AEdits[I].Offset;
+    LLen := AEdits[I].Length;
+    if (LOffset < 0) or (LOffset > Length(LBodyBytes)) or (LOffset + LLen > Length(LBodyBytes)) then
+    begin
+      AError := 'ApplyTextEdits: edit out of bounds';
+      Exit(eoAnchorNotFound);
+    end;
+    LReplBytes := TEncoding.UTF8.GetBytes(AEdits[I].Text);
+    SetLength(LHead, LOffset);
+    if LOffset > 0 then
+      Move(LBodyBytes[0], LHead[0], LOffset);
+    SetLength(LTail, Length(LBodyBytes) - (LOffset + LLen));
+    if Length(LTail) > 0 then
+      Move(LBodyBytes[LOffset + LLen], LTail[0], Length(LTail));
+    SetLength(LNewBytes, Length(LHead) + Length(LReplBytes) + Length(LTail));
+    if Length(LHead) > 0 then
+      Move(LHead[0], LNewBytes[0], Length(LHead));
+    if Length(LReplBytes) > 0 then
+      Move(LReplBytes[0], LNewBytes[Length(LHead)], Length(LReplBytes));
+    if Length(LTail) > 0 then
+      Move(LTail[0], LNewBytes[Length(LHead) + Length(LReplBytes)], Length(LTail));
+    LBodyBytes := LNewBytes;
+  end;
+
+  LNew := TEncoding.UTF8.GetString(LBodyBytes);
+  if not _WriteWholeBuffer(LEditor, LNew) then
+  begin
+    Result := eoUnitNotOpen;
+    Exit;
+  end;
   TAefosLazGutterReview.NotifyApplied(LEditor, AUnitPath, LBody, LNew);
   Result := eoApplied;
 end;

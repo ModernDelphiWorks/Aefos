@@ -153,11 +153,19 @@ $LazExe     = Join-Path $LazDir 'lazarus.exe'
 # can drop it beside the produced test exe; the LINK itself does not need it.
 # ---------------------------------------------------------------------------
 Write-Host "-- ensuring SQLite DLL --"
-& (Join-Path $ScriptDir 'build-sqlite-fpc.ps1')
-if ($LASTEXITCODE -ne 0) {
-    throw "build-sqlite-fpc.ps1 failed (exit $LASTEXITCODE). SQLite DLL required for the runnable gate."
-}
 $SqliteDllPath = Join-Path $RepoRoot 'source\data\ThirdParty\sqlite\bin\sqlite3.dll'
+try {
+    & (Join-Path $ScriptDir 'build-sqlite-fpc.ps1')
+} catch {
+    if (Test-Path -LiteralPath $SqliteDllPath) {
+        Write-Host "  build-sqlite-fpc.ps1 could not run ($($_.Exception.Message)); DLL exists -- continuing." -ForegroundColor Yellow
+    } else {
+        throw "build-sqlite-fpc.ps1 failed and $SqliteDllPath is missing. Error: $($_.Exception.Message)"
+    }
+}
+if (-not (Test-Path -LiteralPath $SqliteDllPath)) {
+    throw "SQLite DLL still missing at $SqliteDllPath after build attempt."
+}
 
 # ---------------------------------------------------------------------------
 # libvterm runtime DLL (the terminal engine). The Lazarus terminal core
@@ -235,7 +243,7 @@ if (-not $BuildIde) {
 # ---------------------------------------------------------------------------
 Write-Host "`n-- Stage 2: isolated test IDE --" -ForegroundColor Cyan
 
-# Hygiene: a probe (e.g. a terminal controller probe) compiled without
+# Hygiene: a probe (e.g. tests\lazarus-terminal\controllerprobe) compiled without
 # -FU leaves .ppu/.o next to the SHARED core sources; --build-ide then aborts with
 # an "ambiguous unit" because the same unit resolves from two places. Sweep those
 # stray outputs from the shared source dirs before rebuilding the IDE (the package's

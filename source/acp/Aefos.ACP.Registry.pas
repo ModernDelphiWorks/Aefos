@@ -14,9 +14,14 @@ interface
 uses
   SysUtils,
   Classes,
-  IOUtils,
-  System.Net.HttpClient,
+  {$IFDEF FPC}
+  Aefos.Compat.IO,
+  Aefos.Compat.Json,
+  {$ELSE}
+  System.IOUtils,
   System.JSON,
+  {$ENDIF}
+  Aefos.Compat.Http,
   Aefos.ACP.Types;
 
 type
@@ -326,10 +331,10 @@ begin
       if Assigned(LRoot) then
       begin
         try
-          if not LRoot.TryGetValue<string>('activeAgent', LActiveId) then
+          if not (LRoot.TryGetValue<string>('activeAgent', LActiveId)) then
             LActiveId := '';
 
-          if LRoot.TryGetValue<TJSONArray>('installed', LInstalledArr) and Assigned(LInstalledArr) then
+          if (LRoot.TryGetValue<TJSONArray>('installed', LInstalledArr)) and Assigned(LInstalledArr) then
           begin
             for I := 0 to LInstalledArr.Count - 1 do
             begin
@@ -337,7 +342,7 @@ begin
               if not (LVal is TJSONObject) then
                 Continue;
               LAgentObj := LVal as TJSONObject;
-              if not LAgentObj.TryGetValue<string>('id', LAgentId) or (LAgentId = '') then
+              if (not (LAgentObj.TryGetValue<string>('id', LAgentId))) or (LAgentId = '') then
                 Continue;
 
               LFoundInCatalog := False;
@@ -364,7 +369,7 @@ begin
               if LAgentObj.TryGetValue<Integer>('selectedAuthKind', LAuthKindInt) then
                 LAgent.SelectedAuthKind := TACPAuthKind(LAuthKindInt);
 
-              if LAgentObj.TryGetValue<TJSONArray>('models', LModelsArr) and Assigned(LModelsArr) and (LModelsArr.Count > 0) then
+              if (LAgentObj.TryGetValue<TJSONArray>('models', LModelsArr)) and Assigned(LModelsArr) and (LModelsArr.Count > 0) then
               begin
                 SetLength(LAgent.Models, 0);
                 for J := 0 to LModelsArr.Count - 1 do
@@ -373,11 +378,11 @@ begin
                   if not (LModelVal is TJSONObject) then
                     Continue;
                   LModelObj := LModelVal as TJSONObject;
-                  if not LModelObj.TryGetValue<string>('id', LModelId) or (LModelId = '') then
+                  if (not (LModelObj.TryGetValue<string>('id', LModelId))) or (LModelId = '') then
                     Continue;
                   FillChar(LModel, SizeOf(LModel), 0);
                   LModel.Id := LModelId;
-                  if not LModelObj.TryGetValue<string>('name', LModel.Name) or (LModel.Name = '') then
+                  if (not (LModelObj.TryGetValue<string>('name', LModel.Name))) or (LModel.Name = '') then
                     LModel.Name := LModel.Id;
                   LModelObj.TryGetValue<string>('description', LModel.Description);
                   LModelObj.TryGetValue<Integer>('contextLength', LModel.ContextLength);
@@ -977,18 +982,16 @@ end;
 
 function TACPRegistry.FetchRemoteCatalog(out AError: string): Boolean;
 var
-  LHttpClient: THTTPClient;
-  LResponse: IHTTPResponse;
+  LStatusCode: Integer;
   LContent: string;
 begin
   AError := '';
-  LHttpClient := THTTPClient.Create;
   try
-    try
-      LResponse := LHttpClient.Get('https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json');
-      if (LResponse.StatusCode >= 200) and (LResponse.StatusCode < 300) then
+    if TAefosHttp.TryGetText('https://cdn.agentclientprotocol.com/registry/v1/latest/registry.json',
+      LStatusCode, LContent, AError) then
+    begin
+      if (LStatusCode >= 200) and (LStatusCode < 300) then
       begin
-        LContent := LResponse.ContentAsString(TEncoding.UTF8);
         TFile.WriteAllText(FCatalogCachePath, LContent, TEncoding.UTF8);
         LoadCatalogFromCache;
         NotifyChange;
@@ -996,18 +999,18 @@ begin
       end
       else
       begin
-        AError := 'HTTP ' + IntToStr(LResponse.StatusCode);
+        AError := 'HTTP ' + IntToStr(LStatusCode);
         Result := False;
       end;
-    except
-      on E: Exception do
-      begin
-        AError := E.Message;
-        Result := False;
-      end;
+    end
+    else
+      Result := False;
+  except
+    on E: Exception do
+    begin
+      AError := E.Message;
+      Result := False;
     end;
-  finally
-    LHttpClient.Free;
   end;
 end;
 

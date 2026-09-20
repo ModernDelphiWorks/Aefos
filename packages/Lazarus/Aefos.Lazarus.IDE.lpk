@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <Package Version="4">
     <PathDelim Value="\"/>
@@ -9,7 +9,7 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
-        <OtherUnitFiles Value="..\..\source\lazarus\ide;..\..\source\lazarus\webview;..\..\source\lazarus\terminal;..\..\source\lazarus\data;..\..\source\lazarus\license;..\..\source\webview;..\..\source\mcp\Core;..\..\source\compat;..\..\source\providers;..\..\source\chat\Core;..\..\source\chat\UI;..\..\source\terminal\Core;..\..\source\terminal\UI;..\..\source\license;..\..\cli"/>
+        <OtherUnitFiles Value="..\..\source\acp;..\..\source\lazarus\ide;..\..\source\lazarus\webview;..\..\source\lazarus\terminal;..\..\source\lazarus\data;..\..\source\lazarus\license;..\..\source\webview;..\..\source\mcp\Core;..\..\source\compat;..\..\source\providers;..\..\source\chat\Core;..\..\source\chat\UI;..\..\source\terminal\Core;..\..\source\terminal\UI;..\..\source\license;..\..\cli"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Parsing>
@@ -19,7 +19,7 @@
     <Description Value="Aefos AI - Lazarus edition IDE integration (design package skeleton). Registers the top-level Aefos AI menu."/>
     <License Value="GPL-3.0-or-later WITH additional permissions - see LICENSE and ADDITIONAL-PERMISSIONS.md"/>
     <Version Minor="7"/>
-    <Files Count="72">
+    <Files Count="75">
 
       <Item1>
         <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.Register.pas"/>
@@ -298,6 +298,18 @@
         <Filename Value="..\..\source\lazarus\ide\Aefos.Lazarus.AppIdentity.pas"/>
         <UnitName Value="Aefos.Lazarus.AppIdentity"/>
       </Item72>
+      <Item73>
+        <Filename Value="..\..\source\acp\Aefos.ACP.Types.pas"/>
+        <UnitName Value="Aefos.ACP.Types"/>
+      </Item73>
+      <Item74>
+        <Filename Value="..\..\source\acp\Aefos.ACP.Registry.pas"/>
+        <UnitName Value="Aefos.ACP.Registry"/>
+      </Item74>
+      <Item75>
+        <Filename Value="..\..\source\acp\Aefos.ACP.Client.pas"/>
+        <UnitName Value="Aefos.ACP.Client"/>
+      </Item75>
     </Files>
     <RequiredPkgs Count="6">
       <Item1>

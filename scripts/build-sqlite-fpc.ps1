@@ -83,6 +83,10 @@ function Resolve-Gcc {
 
 $gccPath = Resolve-Gcc -Override $Gcc -WantArch $Arch
 if (-not $gccPath) {
+  if (Test-Path -LiteralPath $dllOut) {
+    Write-Host "DLL exists at $dllOut (no $Arch mingw gcc found to recompile; continuing with existing DLL)." -ForegroundColor Yellow
+    return
+  }
   throw @"
 No $Arch mingw-w64 gcc found. SQLite cannot be built for FPC without one.
 Install one (see this script's header) and re-run with:

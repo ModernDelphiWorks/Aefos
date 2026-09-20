@@ -104,9 +104,15 @@ type
   end;
 
   // Callbacks for agent interaction
+  {$IFDEF FPC}
+  TACPPromptChunkProc = procedure(const AChunk: string) of object;
+  TACPPromptDoneProc = procedure(const AFullText: string) of object;
+  TACPErrorProc = procedure(const AErrorCode: Integer; const AMessage: string) of object;
+  {$ELSE}
   TACPPromptChunkProc = reference to procedure(const AChunk: string);
   TACPPromptDoneProc = reference to procedure(const AFullText: string);
   TACPErrorProc = reference to procedure(const AErrorCode: Integer; const AMessage: string);
+  {$ENDIF}
 
 implementation
 

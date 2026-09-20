@@ -1308,7 +1308,6 @@ end;
 procedure TAefosChatPanel._OpenCommandEditorNew;
 var
   LObj: TJSONObject;
-  LUpsell: string;
 begin
   // /command path (ADR-250): open the HTML editor on a blank "new" form.
   if not (Assigned(FController) and Assigned(FRegistry)) then

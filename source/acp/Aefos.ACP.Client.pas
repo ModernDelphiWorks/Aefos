@@ -100,6 +100,8 @@ function TACPClient.SendPrompt(const APrompt: string;
   const AOnChunk: TACPPromptChunkProc;
   const AOnDone: TACPPromptDoneProc;
   const AOnError: TACPErrorProc): Boolean;
+var
+  LRequestId: Int64;
 begin
   if not FConnected then
   begin
@@ -108,7 +110,8 @@ begin
     Exit(False);
   end;
 
-  // Stdio JSON-RPC dispatch loop
+  LRequestId := NextRequestId;
+  // Stdio JSON-RPC dispatch loop with LRequestId
   Result := True;
 end;
 

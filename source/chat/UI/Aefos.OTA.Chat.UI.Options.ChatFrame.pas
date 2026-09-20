@@ -8,7 +8,6 @@ uses
   Vcl.Forms,
   Vcl.StdCtrls,
   Vcl.Dialogs,
-  Aefos.Provider.Types,
   Aefos.OTA.Chat.UI.Options.Binding;
 
 type

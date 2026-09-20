@@ -1,4 +1,4 @@
-﻿unit Aefos.OTA.Chat.UI.Options.Binding;
+unit Aefos.OTA.Chat.UI.Options.Binding;
 
 {$IFDEF FPC}{$mode delphiunicode}{$ENDIF}
 
@@ -75,7 +75,6 @@ type
     FRootResolver: TConfigRootResolver;
     FScope: TOptionsScope;
     FState: TOptionsEditState;
-    function _NormalisePath(const AValue: string): string;
   public
     constructor Create(const AConfig: IConfig;
       const ARootResolver: TConfigRootResolver; const AScope: TOptionsScope);
@@ -418,11 +417,6 @@ begin
   Result := Trim(FRootResolver()) <> '';
 end;
 
-function TOptionsConfigBinding._NormalisePath(const AValue: string): string;
-begin
-  Result := StringReplace(AValue, '/', '\', [rfReplaceAll]);
-end;
-
 procedure TOptionsConfigBinding.LoadFromConfig;
 var
   LSnapshot: TConfig;
@@ -441,21 +435,15 @@ begin
 end;
 
 function TOptionsConfigBinding.Validate(out AReason: string): Boolean;
-var
-  LPath: string;
 begin
   AReason := '';
   // RN-002: with no active project the inputs are disabled and nothing is
   // persisted, so there is nothing to reject.
   if not HasActiveProject then
     Exit(True);
-  if FScope <> osChat then
-    Exit(True);
-  LPath := _NormalisePath(Trim(FState.ExecutorPath));
-  if TExecutorPath.ExecutorPathValid(LPath) then
-    Exit(True);
-  AReason := 'Executor binary path does not exist: ' + LPath;
-  Result := False;
+  // osChat owns timeout and output filter, neither of which has an invalid state.
+  // Provider / executor configuration is owned by Agents & Connections (ACP).
+  Result := True;
 end;
 
 procedure TOptionsConfigBinding.SaveToConfig;
@@ -472,16 +460,12 @@ begin
   case FScope of
     osChat:
       begin
-        LConfig.Executor := FState.Executor;
-        LConfig.ExecutorPath := _NormalisePath(Trim(FState.ExecutorPath));
-        LConfig.Model := Trim(FState.Model);
         // A negative spin value is clamped to 0 (disabled) on the way to disk.
         if FState.TimeoutSeconds > 0 then
           LConfig.TimeoutSeconds := FState.TimeoutSeconds
         else
           LConfig.TimeoutSeconds := 0;
         LConfig.OutputFilter := FState.OutputFilter;
-        LConfig.OllamaBaseUrl := Trim(FState.OllamaBaseUrl);
         // The former standalone "MCP Server" page was merged into the Chat page
         // (2026-06-09), so the Chat scope now also owns the Inspector toggle.
         LConfig.Inspector.Enabled := FState.InspectorEnabled;

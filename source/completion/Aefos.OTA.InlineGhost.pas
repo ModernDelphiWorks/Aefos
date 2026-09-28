@@ -689,6 +689,12 @@ begin
   LRequest.ExecutorPath := APath;
   LRequest.Args := LProfile.BuildDispatchArgs(LCtx);
   LRequest.Prompt := TAefosInlineCompletion.BuildInstructPrompt(APrefix, ASuffix);
+  // The driver decides where the prompt goes, exactly as the chat does
+  // (TAefosCliHarness copies the same flag). Without this the prompt was always
+  // appended as the last argument: a stdin driver then got it TWICE on Codex
+  // (its args already end in the `-` placeholder) and could still hit the
+  // 32767-character command-line cap on the others.
+  LRequest.PromptViaStdin := LProfile.PromptViaStdin;
   LRequest.Executor := TProviderRegistry.ExecutorKindToString(AKind);
   // Bounded, and generously: a cloud round trip is ~4s and a cold one is worse,
   // but a completion that has not arrived in half a minute is not coming.

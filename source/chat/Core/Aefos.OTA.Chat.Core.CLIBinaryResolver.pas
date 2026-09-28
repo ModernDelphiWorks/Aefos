@@ -97,6 +97,18 @@ begin
   Result := '';
 end;
 
+function _ExeFileName(const ABinaryName: string): string;
+begin
+  // Profiles name their binary either way: 'claude.exe' (Claude) or 'codex'
+  // (Codex). A folder lookup must not turn the first into 'claude.exe.exe',
+  // which is exactly how the ~/.local/bin rung missed claude.exe on its first
+  // live test (2026-09-28).
+  if _HasExtension(ABinaryName) then
+    Result := ABinaryName
+  else
+    Result := ABinaryName + '.exe';
+end;
+
 function _NextPathEntry(const APathList: string; var APos: Integer): string;
 var
   LEnd: Integer;
@@ -169,7 +181,7 @@ begin
   if LHome = '' then
     Exit;
   LPath := TPath.Combine(TPath.Combine(TPath.Combine(LHome, '.local'), 'bin'),
-    ABinaryName + '.exe');
+    _ExeFileName(ABinaryName));
   if TFile.Exists(LPath) then
     Result := LPath;
 end;
@@ -187,7 +199,7 @@ begin
     Exit;
   LPath := TPath.Combine(
     TPath.Combine(TPath.Combine(TPath.GetHomePath, 'Aefos'), 'bin'),
-    ABinaryName + '.exe');
+    _ExeFileName(ABinaryName));
   if TFile.Exists(LPath) then
     Result := LPath;
 end;

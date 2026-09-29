@@ -74,8 +74,16 @@ type
       mcpServers key of AExtraServersJson (the user's extra servers; '' or malformed
       = none; a duplicate 'aefos' there is ignored). This is the single MCP source
       every CLI is pointed at, so the chat no longer depends on a per-project
-      .mcp.json. Also ensures the bridge itself exists. }
-    class function EnsureGlobalConfig(const ASession, AExtraServersJson: string): string; static;
+      .mcp.json. Also ensures the bridge itself exists.
+        ACopilotShape picks the dialect of the http entry, and the FILE it goes
+      to: Copilot gets aefos-mcp-copilot.json, whose http entry carries the
+      tools allow-list its own `mcp add` writes; every other CLI gets
+      aefos-mcp.json with the plain MCP shape. Two files, because Claude Code
+      2.1.283 rejects that allow-list ("tools.0: Invalid input") and drops the
+      WHOLE server -- and a shared file would let one dispatch rewrite the
+      shape under another CLI's feet. }
+    class function EnsureGlobalConfig(const ASession, AExtraServersJson: string;
+      const ACopilotShape: Boolean = False): string; static;
 
     { Merges the built-in 'aefos' server (bridge -> named pipe, ASession) into the
       Gemini global settings at %USERPROFILE%\.gemini\settings.json (or
@@ -227,18 +235,29 @@ begin
   Result := GHttpEndpoint;
 end;
 
-// The http form of the built-in server: what `copilot mcp add --transport http`
-// writes, measured against GitHub Copilot CLI 1.0.82 rather than guessed.
-function _BuildHttpServerObject(const AUrl: string): TJSONObject;
+// The http form of the built-in server. The Copilot shape is what
+// `copilot mcp add --transport http` writes, measured against GitHub Copilot CLI
+// 1.0.82 rather than guessed. The plain shape leaves the tools allow-list out:
+// Claude Code 2.1.283 validates that key against its own schema, answers
+//   --mcp-config: mcpServers.aefos-delphi: Skipped -- invalid MCP server
+//   config for "aefos-delphi": tools.0: Invalid input
+// and runs the turn with NO aefos server at all -- the chat then says the IDE
+// is not connected while the listener is up and answering (field report
+// 2026-09-29, reproduced with the CLI's --debug-to-stderr).
+function _BuildHttpServerObject(const AUrl: string;
+  const ACopilotShape: Boolean): TJSONObject;
 var
   LTools: TJSONArray;
 begin
-  LTools := TJSONArray.Create;
-  LTools.Add('*');
   Result := TJSONObject.Create;
   Result.AddPair('type', 'http');
   Result.AddPair('url', AUrl);
-  Result.AddPair('tools', LTools);
+  if ACopilotShape then
+  begin
+    LTools := TJSONArray.Create;
+    LTools.Add('*');
+    Result.AddPair('tools', LTools);
+  end;
 end;
 
 function _BuildServerObject(const ASession: string): TJSONObject;
@@ -357,7 +376,8 @@ begin
   end;
 end;
 
-class function TMCPProvision.EnsureGlobalConfig(const ASession, AExtraServersJson: string): string;
+class function TMCPProvision.EnsureGlobalConfig(const ASession, AExtraServersJson: string;
+  const ACopilotShape: Boolean): string;
 var
   LRoot, LServers: TJSONObject;
   LExtraVal, LExtraServersVal: TJSONValue;
@@ -366,7 +386,10 @@ begin
   EnsureBridge;
   if not TDirectory.Exists(AppDataDir) then
     TDirectory.CreateDirectory(AppDataDir);
-  Result := TPath.Combine(AppDataDir, 'aefos-mcp.json');
+  if ACopilotShape then
+    Result := TPath.Combine(AppDataDir, 'aefos-mcp-copilot.json')
+  else
+    Result := TPath.Combine(AppDataDir, 'aefos-mcp.json');
   LRoot := TJSONObject.Create;
   try
     LServers := TJSONObject.Create;
@@ -377,7 +400,8 @@ begin
     // Falls back to the bridge whenever the transport is not up, so a build
     // where the HTTP listener failed to bind still ships a working config.
     if GHttpEndpoint <> '' then
-      LServers.AddPair(SERVER_KEY, _BuildHttpServerObject(GHttpEndpoint))
+      LServers.AddPair(SERVER_KEY, _BuildHttpServerObject(GHttpEndpoint,
+        ACopilotShape))
     else
       LServers.AddPair(SERVER_KEY, _BuildServerObject(ASession));
     // Merge the user's extra servers (the "MCP Servers" modal) so every CLI sees

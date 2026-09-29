@@ -610,7 +610,10 @@ begin
   if Trim(System.SysUtils.GetEnvironmentVariable('AEFOS_CLI_ADDON_MCP')) = '1' then
     LMergedMcp := TMCPServerMerge.MergeServers(LMergedMcp,
       TMCPProvision.LoadAddonAggregate);
-  AWiring.McpConfigPath := TMCPProvision.EnsureGlobalConfig('plugin', LMergedMcp);
+  // Copilot reads its own dialect of the http entry (the tools allow-list), and
+  // Claude rejects that dialect outright -- so each gets the file in its shape.
+  AWiring.McpConfigPath := TMCPProvision.EnsureGlobalConfig('plugin', LMergedMcp,
+    AProfileKind = ekCopilot);
   AWiring.McpBridgePath := TMCPProvision.BridgePath;
   AWiring.McpSession := 'plugin';
   // The built-in host's server KEY (the tool namespace mcp__<name>), distinct

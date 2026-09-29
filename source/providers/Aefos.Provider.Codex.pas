@@ -352,19 +352,27 @@ begin
             '"-NonInteractive","-File","' + LBridge +
             '","-Session","' + ACtx.McpSession + '"]'];
   end;
+  // The prompt travels on stdin (see PromptViaStdin), and `-` is the positional
+  // PROMPT that tells Codex to read it from there. It must be the LAST token and
+  // it must be explicit: `codex exec` falls back to stdin when the prompt is
+  // absent, but `codex exec resume <id>` only reads stdin when `-` is given
+  // (both documented by `codex exec --help` / `codex exec resume --help`).
+  Result := Result + ['-'];
 end;
 
 function TCodexExecutorProfile.PromptViaStdin: Boolean;
 begin
-  // Left on the command line: `codex exec` takes the prompt positionally (see
-  // BuildDispatchArgs) and this driver's stdin contract was not verified against
-  // a real codex binary, so flipping it would be a guess on the path every turn
-  // of every Codex chat goes through. The transport supports it the moment
-  // someone can prove the dialect -- this is a one-line change, not a redesign.
-  //   Until then an over-long command line no longer dies as an opaque
-  // CreateProcess 206: the dispatcher checks the length up front and says what
-  // actually happened (Dispatcher.ProcessRunner._RejectOverLongCommandLine).
-  Result := False;
+  // On stdin, not on the command line: the prompt carries the project context,
+  // and CreateProcess caps a command line at 32767 characters, so a Codex turn
+  // with a project open died as `CreateProcess failed ... (last error: 206)`
+  // (field report 2026-09-28, codex gpt-5.6-sol). The dialect was proven live
+  // against codex-cli 0.154.0 on 2026-09-28, both turns piped:
+  //   turn 1   printf '<prompt>' | codex exec --skip-git-repo-check -          -> exit 0
+  //   turn 2   printf '<prompt>' | codex exec resume <id> --skip-git-repo-check -
+  //            -> exit 0, and the reply proved the session remembered turn 1.
+  // The session id is still printed as `session id: <uuid>` on stderr, which is
+  // where TryCaptureSessionId already reads it. BuildDispatchArgs ends in `-`.
+  Result := True;
 end;
 
 function TCodexExecutorProfile.SessionSupport: TSessionSupport;
